@@ -3,37 +3,22 @@
 Skimmer v0.1
 
 How to run:
-> python skim.py files.txt  X   X
+> python skim.py files.txt -p ParticleType -o Outputdir
         files.txt is an ASCII list of files
-        XXXXXXXX
+        ParticleType (optional) : specify kind of particle to select. Default: Proton, Photon and Electrons are selected
+        Outputdir (optional) : specify output directory
         
 Terminal output:
-    A lot of output caused by the DmpSoftware. At the end, the run time is written to terminal
+    A lot of output caused by the DmpSoftware. At the end, run time and nr of events selected/skipped
 
 Files output:
-    Creates two directories:
-        ./merger_out/*dataset*/  contains the output root files, using the 5-digits convention we discussed.
-        ./merger_data/*dataset*/  contains:
-                                        - notmerged.txt : a text file containing the list of files that have not been merged (end of chunk). Empty if everything has been merged.
-                                        - merged.yaml :  a dictionary which maps new files to old files
+    Creates one directory, user defined. Contains skimmed files
 
 Other features:
-    
+	Skips files that have already been skimmed
 
 
 '''
-
-
-'''
-
-sys.argv :
-1 - file name
-2 - Beginning of loop
-3 - End of loop
-
-'''
-
-print "Importing..."
 
 import sys
 import os
@@ -69,11 +54,17 @@ class Skim(object):
 		
 	
 	def addPrefix(self):
+		'''
+		adds the XrootD prefix to the filelist, in case it is missing
+		'''
 		if not 'root://' in self.filelist[0]:
 			if not os.path.isfile(self.filelist[0]):
 				self.filelist = ['root://xrootd-dampe.cloud.ba.infn.it/' + x for x in self.filelist]
 		
 	def identifyParticle(self,part):
+		'''
+		Particle identification based on either the argument or the file name
+		'''
 		e = ['e','elec','electron','11','E','Elec','Electron']
 		p = ['p','prot','proton','2212','P','Prot','Proton']
 		gamma = ['g','gamma','photon','22','Gamma','Photon']
@@ -91,6 +82,9 @@ class Skim(object):
 			return None
 		
 	def openRootFile(self):
+		'''
+		Creates the DmpChain
+		'''
 		self.chain = DmpChain("CollectionTree")
 		for f in self.filelist:
 			if not self.alreadyskimmed(f):
@@ -108,7 +102,9 @@ class Skim(object):
 		return self.skipped 
 	
 	def alreadyskimmed(self,f):
-		
+		'''
+		Checks if file f has already been skimmed
+		'''
 		temp_f = os.path.basename(f).replace('.root','_UserSel.root')
 		temp_f = self.outputdir + '/' + temp_f
 		
