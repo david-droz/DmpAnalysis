@@ -3,6 +3,7 @@ from os import getcwd
 def makeScript(out,i,entree,part,outdir,begin,end):
 
 	scriptname = out + '_' + str(i) + '.txt'
+	tmpfile = out + '_' + str(i) + '.temp'
 
 	with open(scriptname,'w') as f:
 
@@ -18,10 +19,11 @@ def makeScript(out,i,entree,part,outdir,begin,end):
 		f.write(' \n')
 		f.write('dampe_init\n')
 		f.write('\n')
-		f.write('chunk=$(head -n ' + str(begin) + ' ' + str(entree) + ' | tail -n ' + str(end) + ')\n')
+		f.write('head -n ' + str(begin) + ' ' + str(entree) + ' | tail -n ' + str(end) + ' > ' + tmpfile + '\n')
 		f.write(' \n')
-		command = 'python skim.py $chunk -p ' + str(part) + ' -o ' + str(outdir)
+		command = 'python skim.py ' + tmpfile + ' -p ' + str(part) + ' -o ' + str(outdir)
 		f.write(command + '\n')
+		#f.write('rm ' + tmpfile + '\n')
 
 
 

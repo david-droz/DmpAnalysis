@@ -32,7 +32,7 @@ import argparse
 
 class Skim(object):
 	
-	def init(self,filename,particle=None,outputdir='skim_output'):
+	def __init__(self,filename,particle=None,outputdir='skim_output'):
 		
 		self.filename = filename
 		with open(filename,'r') as fi:
@@ -43,6 +43,7 @@ class Skim(object):
 		self.addPrefix()
 		
 		self.outputdir = outputdir
+		if not os.path.isdir(outputdir): os.mkdir(outputdir)
 		
 		self.particle = self.identifyParticle(particle)
 		
@@ -158,7 +159,7 @@ if __name__ == "__main__" :
 	parser.add_argument("-o", "--output", help="Output folder", default='skim_output')
 	args = parser.parse_args()
 	
-	skim = Skimmer(args.infile,args.particle,args.output)
+	skim = Skim(args.infile,args.particle,args.output)
 	
 	skim.run()
 	
