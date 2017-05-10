@@ -110,6 +110,7 @@ class Skim(object):
 		temp_f = self.outputdir + '/' + temp_f
 		
 		if os.path.isfile(temp_f):
+			print os.path.basename(f), " already skimmed"
 			return True
 		return False
 	
