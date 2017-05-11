@@ -87,6 +87,25 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 	return selectedE_train, selectedP_train, selectedE_validate, selectedP_validate, selectedE_test, selectedP_test
 
 
+def getLabels():
+	
+	lab = []
+	
+	ebgo = 'BGO_E_layer_'
+	for i in range(14):
+		lab.append(ebgo + str(i))
+	erms = 'BGO_E_RMS_layer_'
+	for i in range(14):
+		lab.append(erms + str(i))
+	lab.append('BGO_RMS_longitudinal')
+	lab.append('BGO_RMS_radial')
+	lab.append('BGO_E_total_corrected')
+	lab.append('BGO_total_hits')
+	lab.append('timestamp')
+	lab.append('label')
+	
+	return lab
+
 if __name__ == '__main__':
 	
 	electronFiles = glob.glob('tmp/elec*.npy')
@@ -94,6 +113,9 @@ if __name__ == '__main__':
 	
 	nrofe = getNrEvents(electronFiles)
 	nrofp = getNrEvents(protonFiles)
+	
+	
+	labels = getLabels()
 	
 	
 	# Training
@@ -106,6 +128,9 @@ if __name__ == '__main__':
 	
 	
 	# Now: load and merge all .npy files
+		# To do that: either use the efficient numpy reading as suggested on StackOverflow, and then memmap
+		# Or convert to Pandas DataFrame
+		# Or use the large memory available on some ATLAS nodes
 	
 	# Then: split into the three datasets. Do it like:  small_dataset = big_dataset[ listofindices ,:]
 	
