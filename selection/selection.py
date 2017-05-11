@@ -138,7 +138,7 @@ def getValues(pev):
 		14 - 27 : RMS of energy deposited in layer i
 		28 : longitudinal RMS ( DmpEvtBgoRec::GetRMS_l )
 		29 : radial RMS ( DmpEvtBgoRec::GetRMS_r )
-		30 : total BGO energy
+		30 : total BGO energy (corrected)
 		31 : total hits
 		32 : timestamp
 		33 : Particle ID (0 for proton, 1 for electron)
@@ -187,7 +187,8 @@ def getValues(pev):
 	templist.append( pev.pEvtBgoRec().GetRMS_l() )
 	templist.append( pev.pEvtBgoRec().GetRMS_r() )
 	
-	templist.append( pev.pEvtBgoRec().GetTotalEnergy() )
+	#~ templist.append( pev.pEvtBgoRec().GetTotalEnergy() )
+	templist.append( pev.pEvtBgoRec().GetElectronEcor() )
 	templist.append( pev.pEvtBgoRec().GetTotalHits() )
 	
 	
