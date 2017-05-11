@@ -6,7 +6,9 @@ Run after selection.py
 
 import sys
 import numpy as np
-
+from tree_tools import np2root
+import random
+import glob 
 
 
 
@@ -31,3 +33,5 @@ import numpy as np
 
 if __name__ == '__main__':
 	
+	electronFiles = glob.glob('tmp/elec*.npy')
+	protonFiles = glob.glob('tmp/prot*.npy')

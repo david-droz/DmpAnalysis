@@ -111,7 +111,9 @@ class Skim(object):
 		
 		if os.path.isfile(temp_f):
 			print os.path.basename(f), " already skimmed"
+			del temp_f
 			return True
+		del temp_f
 		return False
 	
 	def run(self):
@@ -147,8 +149,6 @@ class Skim(object):
 		print "- Skipped ", self.skipped, " events"
 		print "Run time: ", time.strftime('%H:%M:%S', time.gmtime(self.getRunTime()))
 		self.chain.Terminate()
-		del temp_f
-
 		
 		
 
