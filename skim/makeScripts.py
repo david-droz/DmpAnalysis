@@ -2,7 +2,7 @@ from os import getcwd
 
 def makeScript(out,i,entree,part,outdir,begin,end):
 
-	scriptname = out + '_' + str(i) + '.txt'
+	scriptname = out + '_' + str(i) + '.sh'
 	tmpfile = out.replace('s_','tmp_') + '_' + str(i) + '.temp'
 
 	with open(scriptname,'w') as f:
