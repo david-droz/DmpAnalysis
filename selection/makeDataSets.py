@@ -9,7 +9,8 @@ import numpy as np
 from tree_tools import np2root
 import random
 import glob 
-
+import struct
+import ast
 
 
 
@@ -31,12 +32,51 @@ import glob
 # Also don't forget to implement Stephan's method to turn that into a ROOT file
 
 
+#~ def getNrEvents(filelist):
+	#~ a = 0
+	#~ for f in filelist:
+		#~ arr = np.load(f)
+		#~ a = a + arr.shape[0]
+		#~ del arr
+	#~ return a
+	
 def getNrEvents(filelist):
+	'''
+	http://stackoverflow.com/questions/43917512/python-merge-many-big-numpy-arrays-with-unknown-shape-that-would-not-fit-in-m
+	'''
+	npy_magic = b"\x93NUMPY"
+	npy_v1_header = struct.Struct(
+	        "<"   # little-endian encoding
+	        "6s"  # 6 byte magic string
+	        "B"   # 1 byte major number
+	        "B"   # 1 byte minor number
+	        "H"   # 2 byte header length
+	        # ... header string follows
+	)
+	npy_v2_header = struct.Struct(
+	        "<"   # little-endian encoding
+	        "6s"  # 6 byte magic string
+	        "B"   # 1 byte major number
+	        "B"   # 1 byte minor number
+	        "L"   # 4 byte header length
+	        # ... header string follows
+	)
+	def read_npy_file_header(filename):
+	    with open(filename, 'rb') as fp:
+	        buf = fp.read(npy_v1_header.size)
+	        magic, major, minor, hdr_size = npy_v1_header.unpack(buf)
+	        if magic != npy_magic:
+	            raise IOError("Not an npy file")
+	        if major not in (0,1):
+	            raise IOError("Unknown npy file version")
+	        if major == 2:
+	            fp.seek(0)
+	            buf = fp.read(npy_v2_header.size)
+	            magic, major, minor, hdr_size = npy_v2_header.unpack(buf)
+	        return ast.literal_eval(fp.read(hdr_size).decode('ascii'))
 	a = 0
 	for f in filelist:
-		arr = np.load(f)
-		a = a + arr.shape[0]
-		del arr
+		a = a + read_npy_file_header(f)
 	return a
 
 
@@ -114,6 +154,8 @@ if __name__ == '__main__':
 	nrofe = getNrEvents(electronFiles)
 	nrofp = getNrEvents(protonFiles)
 	
+	with np.load(electronFiles[0]) as arr:
+		nrofvars = arr.shape[1]
 	
 	labels = getLabels()
 	
@@ -125,6 +167,16 @@ if __name__ == '__main__':
 	testMixture = XXXXXXXXXXXXXXXXXXX				#  Ratio protons/electrons for testing
 	
 	selectedE_train, selectedP_train, selectedE_validate, selectedP_validate, selectedE_test, selectedP_test = getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixture,testMixture)
+	
+	#~ mmp_e = np.memmap('dataset_elec.npy',dtype='float64',mode='w+',shape=(nrofe,nrofvars))
+	#~ mmp_p = np.memmap('dataset_prot.npy',dtype='float64',mode='w+',shape=(nrofp,nrofvars))
+	#~ 
+	#~ for i,f in enumerate(electronFiles):
+		#~ mmp_e[i,:] = np.load(f)
+	#~ for i,f in enumerate(protonFiles):
+		#~ mmp_p[i,:] = np.load(f)
+	
+	## Forget about memmap, I cannot get it to work.
 	
 	
 	# Now: load and merge all .npy files
