@@ -1,6 +1,12 @@
 '''
 
-Run after selection.py
+makeDataSets.py  v0.1
+
+Merges together the output of selection.py and creates training/validation/testing sets. Takes a lot of memory!
+
+Usage:
+	> python makeDataSets.py --train_split 0.6 --validation_split 0.2 --validation_mixture 100 --test_mixture 100
+
 
 '''
 
@@ -11,26 +17,7 @@ import random
 import glob 
 import struct
 import ast
-
-
-
-
-
-
-
-# Pick training/validation/testing set:
-# Make a list of all available indexes for both electrons and protons
-# Randomly choose indexes:
-#		for i in xrange(training_size):
-#			training_indexes.append(  random_elements_from_list_of_indexes  )
-# Can use method "pop" to be sure to not repeat indexes
-#
-# This allows to select a number N of electrons and protons for all sets
-# For the validation and testing sets, can use oversampling (bootstrapping ?) for protons
-
-
-# Also don't forget to implement Stephan's method to turn that into a ROOT file
-
+import argparse
 
 #~ def getNrEvents(filelist):
 	#~ a = 0
@@ -150,40 +137,84 @@ if __name__ == '__main__':
 	
 	electronFiles = glob.glob('tmp/elec*.npy')
 	protonFiles = glob.glob('tmp/prot*.npy')
+	for f in [electronFiles,protonFiles]: f.sort()
 	
 	nrofe = getNrEvents(electronFiles)
 	nrofp = getNrEvents(protonFiles)
 	
 	with np.load(electronFiles[0]) as arr:
 		nrofvars = arr.shape[1]
-	
 	labels = getLabels()
 	
+	parser = argparse.ArgumentParser()
+	parser.add_argument("-ts", "--train_split", help="Fraction of total electrons that go into training [0;1]",default=0.6,type=float)
+	parser.add_argument("-vs", "--validation_split", help="Fraction of total electrons that go into validation [0;1-train_split]",default=0.2,type=float)
+	parser.add_argument("-vm", "--validation_mixture", help="Ratio of protons to electrons in validation set ( > 1)",default=100,type=int)
+	parser.add_argument("-tm", "--test_mixture", help="Ratio of protons to electrons in testing set ( > 1)", default=100,type=int)
+		
+	args = parser.parse_args()
 	
-	# Training
-	trainingFraction = XXXXXXXXXXXXXXXXXXXXXXXXX	# Fraction of electrons that go into training
-	validationFraction = XXXXXXXXXXXXXXXXX			# Fraction of electrons that go into validation
-	validationMixture = XXXXXXXXXXXXXXXX			# Ratio protons/electrons for validation. Number greater than 1.
-	testMixture = XXXXXXXXXXXXXXXXXXX				#  Ratio protons/electrons for testing
+	if args.train_split + args.validation_split >= 1.:
+		raise Exception("Train split and validation split make up more than 100% of data")
+	
+	# Fractions and mixtures
+	trainingFraction = args.train_split				# Fraction of electrons that go into training
+	validationFraction = args.validation_split		# Fraction of electrons that go into validation
+	validationMixture = args.validation_mixture		# Ratio protons/electrons for validation. Number greater than 1.
+	testMixture = args.test_mixture				#  Ratio protons/electrons for testing
 	
 	selectedE_train, selectedP_train, selectedE_validate, selectedP_validate, selectedE_test, selectedP_test = getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixture,testMixture)
 	
-	#~ mmp_e = np.memmap('dataset_elec.npy',dtype='float64',mode='w+',shape=(nrofe,nrofvars))
-	#~ mmp_p = np.memmap('dataset_prot.npy',dtype='float64',mode='w+',shape=(nrofp,nrofvars))
-	#~ 
-	#~ for i,f in enumerate(electronFiles):
-		#~ mmp_e[i,:] = np.load(f)
-	#~ for i,f in enumerate(protonFiles):
-		#~ mmp_p[i,:] = np.load(f)
+	# Merging and splitting - electrons
+	arr_e = np.load(electronFiles[0])
+	i = 0
+	for f in electronFiles:
+		if i==0:
+			i=i+1
+			continue
+		arr_e = np.concatenate( (arr_e , np.load(f) ) )
+	np.random.shuffle(arr_e)
+	set_e_train = arr_e[ selectedE_train, :]
+	set_e_validate = arr_e[ selectedE_validate, :]
+	set_e_test = arr_e[ selectedE_test, :]
+	del arr_e
+	np.save('data_training_elecs.npy',set_e_train)
+	np.save('data_validate_elecs.npy',set_e_validate)
+	np.save('data_testing_elecs.npy',set_e_test)
 	
-	## Forget about memmap, I cannot get it to work.
+	# Protons
+	arr_p = np.load(protonFiles[0])
+	i = 0
+	for f in protonFiles:
+		if i==0:
+			i=i+1
+			continue
+		arr_p = np.concatenate( (arr_p , np.load(f) ) )
+	np.random.shuffle(arr_p)
+	set_p_train = arr_p[ selectedP_train, :]
+	set_p_validate = arr_p[ selectedP_validate, :]
+	set_p_test = arr_p[ selectedP_test, :]
+	del arr_p
+	np.save('data_training_prots.npy',set_p_train)
+	np.save('data_validate_prots.npy',set_p_validate)
+	np.save('data_testing_prots.npy',set_p_test)
+	
+	train_set = np.concatenate( (set_e_train, set_p_train ) )
+	np.random.shuffle(train_set)
+	np.save('dataset_training.npy',train_set)
+	np2root(train_set,getLabels(),outname='dataset_training.root')
+	del train_set
+	
+	validate_set = np.concatenate( (set_e_validate, set_p_validate ) )
+	np.random.shuffle(validate_set)
+	np.save('dataset_validate.npy',validate_set)
+	np2root(validate_set,getLabels(),outname='dataset_validate.root')
+	del validate_set
+	
+	test_set = np.concatenate( (set_e_test, set_p_test ) )
+	np.random.shuffle(test_set)
+	np.save('dataset_testing.npy',test_set)
+	np2root(test_set,getLabels(),outname='dataset_testing.root')
+	del test_set
 	
 	
-	# Now: load and merge all .npy files
-		# To do that: either use the efficient numpy reading as suggested on StackOverflow, and then memmap
-		# Or convert to Pandas DataFrame
-		# Or use the large memory available on some ATLAS nodes
-	
-	# Then: split into the three datasets. Do it like:  small_dataset = big_dataset[ listofindices ,:]
-	
-	# Then: Save as both numpy files and root file
