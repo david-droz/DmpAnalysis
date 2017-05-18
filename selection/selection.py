@@ -69,6 +69,10 @@ def selection(pev,particle):
 	
 	if pev.pEvtSimuPrimaries().pvpart_pdg != particle:
 		return False
+		
+	if pev.pEvtBgoRec().GetElectronEcor() < 1e+5:	# 100 GeV
+		return False
+		
 	BHET = sum([ 
 				sum([
 					pev.pEvtBgoRec().GetEdep(i,j) for j in xrange(22)
