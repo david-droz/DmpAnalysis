@@ -19,14 +19,7 @@ import struct
 import ast
 import argparse
 
-#~ def getNrEvents(filelist):
-	#~ a = 0
-	#~ for f in filelist:
-		#~ arr = np.load(f)
-		#~ a = a + arr.shape[0]
-		#~ del arr
-	#~ return a
-	
+
 def getNrEvents(filelist):
 	'''
 	http://stackoverflow.com/questions/43917512/python-merge-many-big-numpy-arrays-with-unknown-shape-that-would-not-fit-in-m
@@ -178,9 +171,9 @@ if __name__ == '__main__':
 	set_e_validate = arr_e[ selectedE_validate, :]
 	set_e_test = arr_e[ selectedE_test, :]
 	del arr_e
-	np.save('data_training_elecs.npy',set_e_train)
+	np.save('data_train_elecs.npy',set_e_train)
 	np.save('data_validate_elecs.npy',set_e_validate)
-	np.save('data_testing_elecs.npy',set_e_test)
+	np.save('data_test_elecs.npy',set_e_test)
 	
 	# Protons
 	arr_p = np.load(protonFiles[0])
@@ -199,10 +192,11 @@ if __name__ == '__main__':
 	np.save('data_validate_prots.npy',set_p_validate)
 	np.save('data_testing_prots.npy',set_p_test)
 	
+	# Concatenate electrons and protons
 	train_set = np.concatenate( (set_e_train, set_p_train ) )
 	np.random.shuffle(train_set)
-	np.save('dataset_training.npy',train_set)
-	np2root(train_set,getLabels(),outname='dataset_training.root')
+	np.save('dataset_train.npy',train_set)
+	np2root(train_set,getLabels(),outname='dataset_train.root')
 	del train_set
 	
 	validate_set = np.concatenate( (set_e_validate, set_p_validate ) )
@@ -213,8 +207,8 @@ if __name__ == '__main__':
 	
 	test_set = np.concatenate( (set_e_test, set_p_test ) )
 	np.random.shuffle(test_set)
-	np.save('dataset_testing.npy',test_set)
-	np2root(test_set,getLabels(),outname='dataset_testing.root')
+	np.save('dataset_test.npy',test_set)
+	np2root(test_set,getLabels(),outname='dataset_test.root')
 	del test_set
 	
 	
