@@ -32,14 +32,15 @@ def ParamsID(a):
 	Using hash function to build an unique identifier for each dictionary
 	'''
 	ID = 1
-	for x in ['activation','acti_ou','init','optimizer']:
-		ID = ID * int(hashlib.sha256(a[x].encode('utf-8')).hexdigest(), 16) % 10**8 
-	ID = ID * int(hashlib.sha256(str(a['dropout']).encode('utf-8')).hexdigest(), 16) % 10**8
-	ID = ID * int(hashlib.sha256(str(len(a['architecture'])).encode('utf-8')).hexdigest(), 16) % 10**8
+	for x in ['acti_out','init','optimizer']:
+		ID = ID + int(hashlib.sha256(a[x].encode('utf-8')).hexdigest(), 16)
+	ID = ID + int(hashlib.sha256(str(a['activation'] + 'b').encode('utf-8')).hexdigest(), 16) 
+	ID = ID + int(hashlib.sha256(str(a['dropout']).encode('utf-8')).hexdigest(), 16) 
+	ID = ID + int(hashlib.sha256(str(len(a['architecture'])).encode('utf-8')).hexdigest(), 16)
 	for y in a['architecture']:
-		ID = ID * int(hashlib.sha256(str(y).encode('utf-8')).hexdigest(), 16) % 10**8
+		ID = ID + int(hashlib.sha256(str(y).encode('utf-8')).hexdigest(), 16) 
 	ID = ID + int(a['batchnorm'])
-	return ID
+	return (ID % 10**10)
 
 def getRandomParams():
 	'''
