@@ -1,4 +1,10 @@
+'''
 
+getModel.py
+
+Contains a single function to build a Keras DNN method based on a dictionary of arguments. 
+
+'''
 
 def get_model(args,dim=14):
 	
@@ -15,6 +21,8 @@ def get_model(args,dim=14):
 		- metrics: a list of string, metrics to evaluate
 		
 		No L1/L2 regularization (yet)
+	
+	dim is the number of variables to be fed to the DNN. Use  np.array::shape[1] to find that.
 	'''
 
 	from keras.models import Sequential
