@@ -174,6 +174,9 @@ if __name__ == '__main__':
 	np.save('data_train_elecs.npy',set_e_train)
 	np.save('data_validate_elecs.npy',set_e_validate)
 	np.save('data_test_elecs.npy',set_e_test)
+	np2root(set_e_train,getLabels(),outname='dataset_electrons_train.root')
+	np2root(set_e_validate,getLabels(),outname='dataset_electrons_validate.root')
+	np2root(set_e_test,getLabels(),outname='dataset_electrons_test.root')
 	
 	# Protons
 	arr_p = np.load(protonFiles[0])
@@ -191,6 +194,9 @@ if __name__ == '__main__':
 	np.save('data_training_prots.npy',set_p_train)
 	np.save('data_validate_prots.npy',set_p_validate)
 	np.save('data_testing_prots.npy',set_p_test)
+	np2root(set_p_train,getLabels(),outname='dataset_protons_train.root')
+	np2root(set_p_validate,getLabels(),outname='dataset_protons_validate.root')
+	np2root(set_p_test,getLabels(),outname='dataset_protons_test.root')
 	
 	# Concatenate electrons and protons
 	train_set = np.concatenate( (set_e_train, set_p_train ) )
