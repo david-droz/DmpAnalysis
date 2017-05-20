@@ -3,55 +3,77 @@ import time
 import cPickle as pickle
 import sys
 import os
+import random
+import hashlib
 
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.externals import joblib
 from sklearn.metrics import roc_curve, roc_auc_score, precision_score, average_precision_score, precision_recall_curve
 from sklearn.model_selection import RandomizedSearchCV
 
+def ParamsID(a):
+	'''
+	Using hash function to build an unique identifier for each dictionary
+	'''
+	ID = 1
+	for x in a.keys():
+		ID = ID + int(hashlib.sha256(str(a[x]).encode('utf-8')).hexdigest(), 16)
+
+	return (ID % 10**10)
+
+def getRandomParams():
+	'''
+	Returns a dictionary containing all the parameters to train the Scikit BDT.
+	'''
+	p_lr = [1.0,0.1,0.01,0.001,0.0001]
+	p_n = [25,50,100,150,200,250,300,400,500]
+	p_max = [2,3,4,5,6,3]
+	p_leaves = [1,10,50,100,0.001,0.0001,1,1]
+	
+						
+	mydic = {}
+	mydic['lr'] = random.choice(p_lr)
+	mydic['n'] = random.choice(p_n)
+	mydic['max'] = random.choice(p_max)
+	mydic['leaves'] = random.choice(p_leaves)
+
+	return mydic
+
+def XY_split(fname):
+	arr = np.load(fname)
+	X = arr[:,0:-1]
+	Y = arr[:,-1]
+	return X,Y
+def load_training(fname='dataset_train.npy'): return XY_split(fname)
+def load_validation(fname='dataset_validate.npy'): return XY_split(fname)
+def load_test(fname='dataset_test.npy'): return XY_split(fname)
+
 
 def _run(n_estimators=100,lr=1.0,maxdepth=3,testfraction=0.001,leaves=1):
 	
 
-	e_data = np.load('/home/drozd/BDT/dataset_elec.npy')
-	e_data = e_data[np.any(e_data,axis=1)]  
-	p_data = np.load('/home/drozd/BDT/dataset_prot.npy')
-	p_data = p_data[np.any(p_data,axis=1)]  
-	if e_data.shape[0] > p_data.shape[0]:
-		datasize = int(0.85*p_data.shape[0])
-	else:
-		datasize = int(0.85*e_data.shape[0])
-	dataset = np.concatenate(( e_data[0:datasize,:] , p_data[0:datasize,:] ))
-	e_val = e_data[datasize:-1,:]
-	p_val = p_data[datasize:-1,:]
-	del e_data
-	del p_data
-	nrofe = e_val.shape[0]
-	nrofp = p_val.shape[0]
+	X_train, Y_train = load_training()
+	X_val, Y_val = load_validation()
 	
-	if os.path.isfile('/home/drozd/BDT/test/validation_set.npy'):
-		test = np.load('/home/drozd/BDT/test/validation_set.npy')
-	else:
-		if nrofp > (1./testfraction)*nrofe :
-			test = np.concatenate((  e_val[0:-1,:]     ,   p_val[0:int((1./testfraction) * nrofe),:]    ))
-		else:
-			lim_e = int((testfraction)*nrofp) 
-			test = np.concatenate(( e_val[0:lim_e,:]   ,  p_val[0:int((1./testfraction) * lim_e),:]  ))
-		np.random.shuffle(test)
-		np.save('/home/drozd/BDT/test/validation_set.npy',test)
+	params = getRandomParams()
 	
-	del e_val
-	del p_val
-	X_train = dataset[:,0:-1]
-	X_val = test[:,0:-1]
-	Y_train = dataset[:,-1]
-	Y_val = test[:,-1]
-	del dataset
-	del test
+	if not os.path.isdir('models'): os.mkdir('models')
 	
+	ID = ParamsID(params)										# Get an unique ID associated to the parameters
+	with open('models/params_' + str(ID) + '.pick','w') as f:	# Save the parameters into a file determined by unique ID
+		pickle.dump(params,f)
 	
-	clf = GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=lr,max_depth=maxdepth, min_samples_leaf=leaves)
+	clf = GradientBoostingClassifier(n_estimators=params['n'], learning_rate=params['lr'],max_depth=params['max'], min_samples_leaf=params['leaves'])
 	clf.fit(X_train, Y_train)
+	
+	
+	
+	
+	
+	############
+	###### Rework below this line
+	############
+	
 	
 	score = clf.score(X_val,Y_val)
 	print "Score: ", score
