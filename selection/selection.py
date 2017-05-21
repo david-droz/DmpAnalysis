@@ -36,7 +36,7 @@ def openRootFile(efilelist):
 		chain.Add(f)
 	if not chain.GetEntries():
 		raise IOError("0 events in DmpChain - something went wrong")
-	return echaine
+	return chain
 
 def identifyParticle(part):
 	'''
@@ -219,8 +219,10 @@ def analysis(files,pid,nr):
 	
 	if pid == 11:
 		outstr = './tmp/elec_' + str(nr) + '.npy'
-	else:
+	elif pid == 2212:
 		outstr = './tmp/prot_' + str(nr) + '.npy'
+	elif pid == 22:
+		outstr = './tmp/gamma_' + str(nr) + '.npy'
 		
 	if os.path.isfile(outstr):
 		return
@@ -281,14 +283,18 @@ if __name__ == "__main__" :
 	with open(sys.argv[1],'r') as f:
 		for lines in f:
 			filelist.append(lines.replace('\n',''))
-	
-	nrofchunks = 300
-	chunksize = len(filelist)/nrofchunks
-	
+
 	if len(sys.argv) > 2:
 		particle = identifyParticle(sys.argv[2])
 	else:
 		particle = identifyParticle(sys.argv[1])
+	
+	if particle == 2212:
+		nrofchunks = 700
+	elif particle == 11:
+		nrofchunks = 250
+	chunksize = len(filelist)/nrofchunks
+	
 	
 	if not os.path.isdir('tmp'):
 		os.mkdir('tmp')
@@ -303,3 +309,5 @@ if __name__ == "__main__" :
 			chunk.append( filelist.pop(0) )
 		
 		analysis(chunk,particle,i)
+		
+	analysis(filelist,particle,nrofchunks)
