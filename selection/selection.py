@@ -57,9 +57,6 @@ def identifyParticle(part):
 	
 	raise Exception("Particle not identified - " + part)
 
-
-
-
 def selection(pev,particle):
 	'''
 	Returns True if good event, False otherwise
@@ -135,33 +132,21 @@ def selection(pev,particle):
 	
 	return True	
 
-def getValues(pev):
-	'''
-	templist:
-		0 - 13 : Energy in BGO layer i
-		14 - 27 : RMS of energy deposited in layer i
-		28 : longitudinal RMS ( DmpEvtBgoRec::GetRMS_l )
-		29 : radial RMS ( DmpEvtBgoRec::GetRMS_r )
-		30 : total BGO energy (corrected)
-		31 : total hits
-		32 : timestamp
-		33 : Particle ID (0 for proton, 1 for electron)
-	'''
+
+def getBGOvalues(pev):
 	templist = []
 	BHXS = [0. for i in xrange(14)]	
 	for i in xrange(14):	# Numbers of BGO layers
 		
-		####
 		templist.append(  pev.pEvtBgoRec().GetELayer(i)  )
-		####
-		
+
 		im = None				
 		em = 0.0;
-		for j in xrange(22):
+		for j in xrange(22):						# Find the maximum of energy (em) and its position (im)
 			ebar = pev.pEvtBgoRec().GetEdep(i,j)
 			if ebar < em : continue 
-			em = ebar                  
-			im = j		
+			em = ebar
+			im = j
 		if not em: continue
 		if im in [0,21]:
 			cog = 27.5 * im	
@@ -183,18 +168,119 @@ def getValues(pev):
 		BHXS[i] = math.sqrt( posrms / enelayer)
 	
 	for item in BHXS:
-		
-		####
 		templist.append( item )
-		####
 		
 	templist.append( pev.pEvtBgoRec().GetRMS_l() )
 	templist.append( pev.pEvtBgoRec().GetRMS_r() )
-	
-	#~ templist.append( pev.pEvtBgoRec().GetTotalEnergy() )
+
 	templist.append( pev.pEvtBgoRec().GetElectronEcor() )
 	templist.append( pev.pEvtBgoRec().GetTotalHits() )
 	
+	return templist
+
+def getPSDvalues(pev):
+	'''
+	https://dampevm3.unige.ch/doxygen/trunk/Documentation/html/classDmpEvtPsdHits.html
+	https://dampevm3.unige.ch/doxygen/trunk/Documentation/html/classDmpEvtPsdRec.html
+	
+	Returns a list:
+		1. Energy on layer 1
+		2. Energy on layer 2
+		3. Nr of hits on layer 1
+		4. Nr of hits on layer 2
+		5-8. RMS of energy on layer 1a, 1b, 2a, 2b.
+	
+	'''
+	templist = []
+	
+	templist.append(pev.pEvtPsdRec().GetLayerEnergy(0))
+	templist.append(pev.pEvtPsdRec().GetLayerEnergy(1))
+	templist.append(pev.pEvtPsdRec().GetLayerHits(0))
+	templist.append(pev.pEvtPsdRec().GetLayerHits(1))
+	
+	l_pos = []
+	l_z = []
+	l_energy = []
+	
+	PSD_total_hits = pev.NEvtPsdHits()
+	for i in xrange(PSD_total_hits):
+		pos = pev.pEvtPsdHits().GetHitX(i)
+		if pos == 0:
+			pos = pev.pEvtPsdHits().GetHitY(i)
+		z = pev.pEvtPsdHits().GetHitZ(i)
+		energy = pev.pEvtPsdHits().fEnergy[i]
+		
+		l_pos.append(pos)
+		l_z.append(z)
+		l_energy.append(energy)
+		
+	minz = min(l_z)
+	maxz = max(l_z)
+	bins = np.linspace(minz,maxz,5)		# 4 bins
+	
+	for i in xrange(4):
+		
+		cog = 0
+		ene_tot = 0
+		for j in xrange(PSD_total_hits):
+			if l_z[j] < bins[i] or l_z[j] > bins[i+1]:	# Wrong bin
+				continue
+			ene_tot = ene_tot + l_energy[j]
+			cog = cog + l_pos[j]*l_energy[j]
+		cog = cog/ene_tot
+		rms = 0
+		for j in xrange(PSD_total_hits):
+			if l_z[j] < bins[i] or l_z[j] > bins[i+1]:	# Wrong bin
+				continue
+			rms = rms + (l_energy[j] * (l_pos[j] - cog) * (l_pos[j] - cog) )
+		rms = math.sqrt(rms/ene_tot)
+	
+		templist.append(rms)
+	
+	return templist
+	
+def getSTKvalues(pev):
+	'''
+	https://dampevm3.unige.ch/doxygen/trunk/Documentation/html/classDmpEvent.html
+	https://dampevm3.unige.ch/doxygen/trunk/Documentation/html/classDmpStkTrack.html
+	
+	DmpEvent :  Int_t 	NStkSiCluster ()
+	'''
+	templist = ()
+	
+	raise Exception("Not ready yet")
+	
+	return templist	
+
+def getValues(pev):
+	'''
+	templist:
+		0 - 13 : Energy in BGO layer i
+		14 - 27 : RMS of energy deposited in layer i
+		28 : longitudinal RMS ( DmpEvtBgoRec::GetRMS_l )
+		29 : radial RMS ( DmpEvtBgoRec::GetRMS_r )
+		30 : total BGO energy (corrected)
+		31 : total BGO hits
+		----
+		32 - 33 : Energy in PSD layer 1,2
+		34 - 35 : Nr of hits in PSD layer 1,2
+		36 - 37 : RMS of energy deposited in PSD layer 1,2
+		----
+		
+		----
+		??? : timestamp
+		??? : Particle ID (0 for proton, 1 for electron)
+	'''
+	templist = []
+
+	### BGO
+	templist = templist + getBGOvalues(pev)
+	
+	### PSD
+	templist = templist + getPSDvalues(pev)
+	
+	### STK
+	templist = templist + getSTKvalues(pev)
 	
 	sec = pev.pEvtHeader().GetSecond()			
 	msec = pev.pEvtHeader().GetMillisecond()
@@ -216,13 +302,17 @@ def analysis(files,pid,nr):
 	'''
 	Select good events from a filelist and saves them as a numpy array
 	'''
+	folder = './tmp/'
+	temp_basename = os.path.basename(sys.argv[1])
+	temp_basename = os.path.splitext(temp_basename)[0]
+	folder = folder + temp_basename
 	
 	if pid == 11:
-		outstr = './tmp/elec_' + str(nr) + '.npy'
+		outstr = folder + '/elec_' + str(nr) + '.npy'
 	elif pid == 2212:
-		outstr = './tmp/prot_' + str(nr) + '.npy'
+		outstr = folder + '/prot_' + str(nr) + '.npy'
 	elif pid == 22:
-		outstr = './tmp/gamma_' + str(nr) + '.npy'
+		outstr = folder + '/gamma_' + str(nr) + '.npy'
 		
 	if os.path.isfile(outstr):
 		return
@@ -236,11 +326,10 @@ def analysis(files,pid,nr):
 		
 		if selection(pev,pid):
 			templist = getValues(pev)
+			a.append(templist)
 		else :
 			continue
-			
-			a.append(templist)
-
+		
 	arr = np.array(a)
 	
 	np.save(outstr,arr)
@@ -253,7 +342,7 @@ def merge():
 	
 	for particle in ['elec','prot']:
 		
-		listofsubarr = glob.glob('./tmp/' + particle + '*.npy')
+		listofsubarr = glob.glob('./tmp/*/' + particle + '*.npy')
 		
 		bigarr = np.load(listofsubarr[0])
 		
