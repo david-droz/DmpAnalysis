@@ -128,8 +128,8 @@ def getLabels():
 
 if __name__ == '__main__':
 	
-	electronFiles = glob.glob('tmp/elec*.npy')
-	protonFiles = glob.glob('tmp/prot*.npy')
+	electronFiles = glob.glob('tmp/*/elec*.npy')
+	protonFiles = glob.glob('tmp/*/prot*.npy')
 	for f in [electronFiles,protonFiles]: f.sort()
 	
 	nrofe = getNrEvents(electronFiles)
