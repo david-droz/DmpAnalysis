@@ -230,6 +230,9 @@ def getPSDvalues(pev):
 				continue
 			ene_tot = ene_tot + l_energy[j]
 			cog = cog + l_pos[j]*l_energy[j]
+		if ene_tot == 0:
+			templist.append(0)
+			continue
 		cog = cog/ene_tot
 		rms = 0
 		for j in xrange(PSD_total_hits):
@@ -288,10 +291,14 @@ def getSTKvalues(pev):
 				continue
 			ene_tot = ene_tot + l_energy[j]
 			cog = cog + l_pos[j]*l_energy[j]
+		if ene_tot == 0:
+			ene_per_bin.append(0)
+			rms_per_bin.append(0)
+			continue
 		cog = cog/ene_tot
 		rms = 0
 		ene_per_bin.append(ene_tot)
-		for j in xrange(PSD_total_hits):
+		for j in xrange(nrofclusters):
 			if l_z[j] < bins[i] or l_z[j] > bins[i+1]:	# Wrong bin
 				continue
 			rms = rms + (l_energy[j] * (l_pos[j] - cog) * (l_pos[j] - cog) )
@@ -363,6 +370,8 @@ def analysis(files,pid,nr):
 	temp_basename = os.path.basename(sys.argv[1])
 	temp_basename = os.path.splitext(temp_basename)[0]
 	folder = folder + temp_basename
+	
+	if not os.path.isdir(folder): os.mkdir(folder)
 	
 	if pid == 11:
 		outstr = folder + '/elec_' + str(nr) + '.npy'
