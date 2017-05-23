@@ -203,7 +203,7 @@ def getPSDvalues(pev):
 	PSD_total_hits = pev.NEvtPsdHits()
 	if PSD_total_hits == 0:
 		for i in xrange(4): 
-			templist.append(rms)
+			templist.append(0)
 		return templist
 
 	l_pos = np.zeros(PSD_total_hits)
