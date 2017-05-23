@@ -201,6 +201,10 @@ def getPSDvalues(pev):
 	templist.append(pev.pEvtPsdRec().GetLayerHits(1))
 
 	PSD_total_hits = pev.NEvtPsdHits()
+	if PSD_total_hits == 0:
+		for i in xrange(4): 
+			templist.append(rms)
+		return templist
 
 	l_pos = np.zeros(PSD_total_hits)
 	l_z = np.zeros(PSD_total_hits)
@@ -258,6 +262,12 @@ def getSTKvalues(pev):
 	nrofclusters = pev.NStkSiCluster()
 	templist.append(nrofclusters)
 	templist.append(pev.NStkKalmanTrack())
+	
+	if nrofclusters == 0:
+		for i in xrange(8):
+			templist.append(0)
+			templist.append(0)
+		return templist
 	
 	l_pos = np.zeros(nrofclusters)
 	l_z = np.zeros(nrofclusters)
