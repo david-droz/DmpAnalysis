@@ -237,6 +237,7 @@ def getPSDvalues(pev):
 	
 		templist.append(rms)
 	
+	del l_z, l_energy, l_post
 	return templist
 	
 def getSTKvalues(pev):
@@ -246,10 +247,59 @@ def getSTKvalues(pev):
 	
 	DmpEvent :  Int_t 	NStkSiCluster ()
 	'''
-	templist = ()
+	templist = []
 	
-	raise Exception("Not ready yet")
+	nrofclusters = pev.NStkSiCluster()
+	templist.append(nrofclusters)
 	
+	l_pos = []
+	l_z = []
+	l_energy = []
+	l_width = []
+	
+	for i in xrange(nrofclusters):
+		pos = pev.pStkSiCluster(i).GetH()
+		z = pev.pStkSiCluster(i).GetZ()
+		energy = pev.pStkSiCluster(i).getEnergy()
+		width = pev.pStkSiCluster(i).getWidth()
+		
+		l_pos.append(pos)
+		l_z.append(z)
+		l_energy.append(energy)
+		l_width.append(width)
+	
+	minz = min(l_z)
+	maxz = max(l_z)
+	bins = np.linspace(minz,maxz,9)		# 8 bins
+	
+	ene_per_bin = []
+	rms_per_bin = []
+	
+	for i in xrange(8):
+		
+		cog = 0
+		ene_tot = 0
+		for j in xrange(nrofclusters):
+			if l_z[j] < bins[i] or l_z[j] > bins[i+1]:	# Wrong bin
+				continue
+			ene_tot = ene_tot + l_energy[j]
+			cog = cog + l_pos[j]*l_energy[j]
+		cog = cog/ene_tot
+		rms = 0
+		ene_per_bin.append(ene_tot)
+		for j in xrange(PSD_total_hits):
+			if l_z[j] < bins[i] or l_z[j] > bins[i+1]:	# Wrong bin
+				continue
+			rms = rms + (l_energy[j] * (l_pos[j] - cog) * (l_pos[j] - cog) )
+		rms = math.sqrt(rms/ene_tot)
+		rms_per_bin.append(rms)
+
+	for x in ene_per_bin:
+		templist.append(x)
+	for y in rms_per_bin:
+		templist.append(y)
+	
+	del l_pos, l_z, l_energy, l_width, ene_per_bin, rms_per_bin
 	return templist	
 
 def getValues(pev):
@@ -264,12 +314,14 @@ def getValues(pev):
 		----
 		32 - 33 : Energy in PSD layer 1,2
 		34 - 35 : Nr of hits in PSD layer 1,2
-		36 - 37 : RMS of energy deposited in PSD layer 1,2
+		36 - 39 : RMS of energy deposited in PSD layer 1a,1b,2a,2b
 		----
-		
+		40 : nr of Si clusters
+		41 - 48 : energy in STK clusters, 8 vertical bins
+		49 - 56 : RMS of energy in STK clusters, 8 vertical bins
 		----
-		??? : timestamp
-		??? : Particle ID (0 for proton, 1 for electron)
+		57 : timestamp
+		58 : Particle ID (0 for proton, 1 for electron)
 	'''
 	templist = []
 
@@ -334,7 +386,7 @@ def analysis(files,pid,nr):
 	
 	np.save(outstr,arr)
 	
-	#~ return arr.shape[0]
+	del arr, a, dmpch
 	return
 		
 def merge():
@@ -379,9 +431,9 @@ if __name__ == "__main__" :
 		particle = identifyParticle(sys.argv[1])
 	
 	if particle == 2212:
-		nrofchunks = 700
+		nrofchunks = 1000
 	elif particle == 11:
-		nrofchunks = 250
+		nrofchunks = 350
 	chunksize = len(filelist)/nrofchunks
 	
 	
@@ -400,3 +452,5 @@ if __name__ == "__main__" :
 		analysis(chunk,particle,i)
 		
 	analysis(filelist,particle,nrofchunks)
+	
+	print 'Run time: ', str(strftime('%H:%M:%S', gmtime( time.time() - t0 )))
