@@ -254,6 +254,7 @@ def getSTKvalues(pev):
 	
 	nrofclusters = pev.NStkSiCluster()
 	templist.append(nrofclusters)
+	templist.append(pev.NStkKalmanTrack())
 	
 	l_pos = np.zeros(nrofclusters)
 	l_z = np.zeros(nrofclusters)
@@ -320,11 +321,12 @@ def getValues(pev):
 		36 - 39 : RMS of energy deposited in PSD layer 1a,1b,2a,2b
 		----
 		40 : nr of Si clusters
-		41 - 48 : energy in STK clusters, 8 vertical bins
-		49 - 56 : RMS of energy in STK clusters, 8 vertical bins
+		41 : nr of tracks
+		42 - 49 : energy in STK clusters, 8 vertical bins
+		50 - 57 : RMS of energy in STK clusters, 8 vertical bins
 		----
-		57 : timestamp
-		58 : Particle ID (0 for proton, 1 for electron)
+		58 : timestamp
+		59 : Particle ID (0 for proton, 1 for electron)
 	'''
 	templist = []
 
