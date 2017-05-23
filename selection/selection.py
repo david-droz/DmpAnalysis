@@ -240,7 +240,7 @@ def getPSDvalues(pev):
 	
 		templist.append(rms)
 	
-	del l_z, l_energy, l_post
+	del l_z, l_energy, l_pos
 	return templist
 	
 def getSTKvalues(pev):
