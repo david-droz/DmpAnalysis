@@ -26,6 +26,8 @@ from ROOT import gSystem
 gSystem.Load("libDmpEvent.so")
 import ROOT
 import cPickle as pickle
+import gc
+gc.enable()
 
 def openRootFile(efilelist): 
 	'''
@@ -197,12 +199,13 @@ def getPSDvalues(pev):
 	templist.append(pev.pEvtPsdRec().GetLayerEnergy(1))
 	templist.append(pev.pEvtPsdRec().GetLayerHits(0))
 	templist.append(pev.pEvtPsdRec().GetLayerHits(1))
-	
-	l_pos = []
-	l_z = []
-	l_energy = []
-	
+
 	PSD_total_hits = pev.NEvtPsdHits()
+
+	l_pos = np.zeros(PSD_total_hits)
+	l_z = np.zeros(PSD_total_hits)
+	l_energy = np.zeros(PSD_total_hits)
+	
 	for i in xrange(PSD_total_hits):
 		pos = pev.pEvtPsdHits().GetHitX(i)
 		if pos == 0:
@@ -210,12 +213,12 @@ def getPSDvalues(pev):
 		z = pev.pEvtPsdHits().GetHitZ(i)
 		energy = pev.pEvtPsdHits().fEnergy[i]
 		
-		l_pos.append(pos)
-		l_z.append(z)
-		l_energy.append(energy)
+		l_pos[i] = pos
+		l_z[i] = z
+		l_energy[i] = energy
 		
-	minz = min(l_z)
-	maxz = max(l_z)
+	minz = np.min(l_z)
+	maxz = np.max(l_z)
 	bins = np.linspace(minz,maxz,5)		# 4 bins
 	
 	for i in xrange(4):
@@ -252,10 +255,10 @@ def getSTKvalues(pev):
 	nrofclusters = pev.NStkSiCluster()
 	templist.append(nrofclusters)
 	
-	l_pos = []
-	l_z = []
-	l_energy = []
-	l_width = []
+	l_pos = np.zeros(nrofclusters)
+	l_z = np.zeros(nrofclusters)
+	l_energy = np.zeros(nrofclusters)
+	l_width = np.zeros(nrofclusters)
 	
 	for i in xrange(nrofclusters):
 		pos = pev.pStkSiCluster(i).GetH()
@@ -263,13 +266,13 @@ def getSTKvalues(pev):
 		energy = pev.pStkSiCluster(i).getEnergy()
 		width = pev.pStkSiCluster(i).getWidth()
 		
-		l_pos.append(pos)
-		l_z.append(z)
-		l_energy.append(energy)
-		l_width.append(width)
+		l_pos[i] = pos
+		l_z[i] = z
+		l_energy[i] = energy
+		l_width[i] = width
 	
-	minz = min(l_z)
-	maxz = max(l_z)
+	minz = np.min(l_z)
+	maxz = np.max(l_z)
 	bins = np.linspace(minz,maxz,9)		# 8 bins
 	
 	ene_per_bin = []
