@@ -8,7 +8,7 @@ import hashlib
 
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout
-from keras.callbacks import ModelCheckpoint, EarlyStopping, Callback, LearningRateScheduler
+from keras.callbacks import ModelCheckpoint, EarlyStopping, Callback, LearningRateScheduler, ReduceLROnPlateau
 from keras.constraints import maxnorm
 from keras.layers.advanced_activations import PReLU, ELU, LeakyReLU
 
@@ -16,7 +16,8 @@ from scipy.stats import randint as sp_randint
 
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.externals import joblib
-from sklearn.metrics import roc_curve, roc_auc_score, precision_score, average_precision_score, precision_recall_curve
+from sklearn.metrics import roc_curve, roc_auc_score, precision_score, average_precision_score, precision_recall_curve, recall_score
+from sklearn.metrics import f1_score
 from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
 
 from keras.wrappers.scikit_learn import KerasClassifier
@@ -104,13 +105,25 @@ def run():
 	with open('models/params_' + str(ID) + '.pick','w') as f:	# Save the parameters into a file determined by unique ID
 		pickle.dump(params,f)
 		
-	callbacks = []
 	chck = ModelCheckpoint("models/weights_"+str(ID)+"__{epoch:02d}-{val_loss:.2f}-{val_acc:.2f}.hdf5")
+	earl = EarlyStopping(monitor='loss',min_delta=0.0001,patience=5)			# Alternative: train epoch per epoch, evaluate something at every epoch.
+	rdlronplt = ReduceLROnPlateau(monitor='loss',patience=4,min_lr=0.001)
+	callbacks = [chck,earl,rdlronplt]
 	
-	# To do next: add more callbacks, i.e. EarlyStopping, ReduceLROnPlateau
-	# Then, history = model.fit(). Supply manually validation set.
-	# Then, evaluate many metrics on the validation set. Use model.predict(X_val)
+	history = model.fit(X_train,Y_train,batch_size=200,epochs=200,verbose=2,callbacks=callbacks,validation_data=(X_val,Y_val))
 	
+	predictions_binary = model.predict(X_val)			# Array of 0 and 1
+	predictions_proba = model.predict_proba(X_val)		# Array of numbers [0,1]
+	
+	purity = precision_score(Y_val,predictions_binary)			# Precision:  true positive / (true + false positive). Purity (how many good events in my prediction?)
+	completeness = recall_score(Y_val,predictions_binary)		# Recall: true positive / (true positive + false negative). Completeness (how many good events did I find?)
+	F1score = f1_score(Y_val,predictions_binary)				# Average of precision and recall
+	
+	l_precision, l_recall, l_thresholds = precision_recall_curve(Y_val,predictions_proba)
+	
+	prec_95 = [x for x in l_precision if x>0.95]
+	# Keep working here.  Goal is to find the best false positive rate (or other metric?) for a precision above 95%.
+	# Would (1 - recall) make sense?   I guess: write the equations to make sure of that.
 	
 if __name__ == '__main__' :
 	
