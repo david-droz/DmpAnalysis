@@ -89,19 +89,36 @@ def XY_split(fname):
 def load_training(fname='dataset_train.npy'): return XY_split(fname)
 def load_validation(fname='dataset_validate.npy'): return XY_split(fname)
 def load_test(fname='dataset_test.npy'): return XY_split(fname)
-	
+
+def save_history(hist, hist_filename):
+	import pandas as pd
+
+	df_history = pd.DataFrame(np.asarray(hist.history.get("loss")), columns=['loss'])
+	df_history['acc'] = pd.Series(np.asarray(hist.history.get("acc")), index=df_history.index)
+	df_history['val_loss'] = pd.Series(np.asarray(hist.history.get("val_loss")), index=df_history.index)
+	df_history['val_acc'] = pd.Series(np.asarray(hist.history.get("val_acc")), index=df_history.index)
+	df_history.to_hdf(hist_filename, key='history', mode='w')	
 	
 def run():
+	
+	t0 = time.time()
 	
 	X_train, Y_train = load_training()
 	X_val, Y_val = load_validation()
 	
-	params = getRandomParams()
+	
+	while True:
+		params = getRandomParams()
+		ID = ParamsID(params)										# Get an unique ID associated to the parameters
+		if not os.path.isfile('results/' + str(ID) + '/purity_completeness.txt'):		# Check if set of params has already been tested. Don't write file yet because what's below can get interrupted
+			break
+	
+	
 	model = getModel.get_model(params,X_train.shape[1])
 	
 	if not os.path.isdir('models'): os.mkdir('models')
 	
-	ID = ParamsID(params)										# Get an unique ID associated to the parameters
+	
 	with open('models/params_' + str(ID) + '.pick','w') as f:	# Save the parameters into a file determined by unique ID
 		pickle.dump(params,f)
 		
@@ -110,7 +127,7 @@ def run():
 	rdlronplt = ReduceLROnPlateau(monitor='loss',patience=4,min_lr=0.001)
 	callbacks = [chck,earl,rdlronplt]
 	
-	history = model.fit(X_train,Y_train,batch_size=200,epochs=200,verbose=2,callbacks=callbacks,validation_data=(X_val,Y_val))
+	history = model.fit(X_train,Y_train,batch_size=200,epochs=200,verbose=0,callbacks=callbacks,validation_data=(X_val,Y_val))
 	
 	predictions_binary = model.predict(X_val)			# Array of 0 and 1
 	predictions_proba = model.predict_proba(X_val)		# Array of numbers [0,1]
@@ -121,10 +138,42 @@ def run():
 	
 	l_precision, l_recall, l_thresholds = precision_recall_curve(Y_val,predictions_proba)
 	
-	prec_95 = [x for x in l_precision if x>0.95]
-	# Keep working here.  Goal is to find the best false positive rate (or other metric?) for a precision above 95%.
-	# Would (1 - recall) make sense?   I guess: write the equations to make sure of that.
+	
+	# 1 - precision = 1 - (TP/(TP + FP)) = (TP + FP)/(TP + FP) - (TP / (TP+FP)) = FP/(TP+FP) = FPR
+	
+	prec_95 = None
+	recall_95 = None
+	for i in xrange(len(l_precision)):
+		if l_precision[i] > 0.95 :
+			if prec_95 is None:
+				prec_95 = l_precision[i]
+				recall_95 = l_recall[i]
+			else:
+				if l_precision[i] < prec_95:
+					prec_95 = l_precision[i]
+					recall_95 = l_recall[i]
+					
+	print "Precision: ", prec_95
+	print "Recall: ", recall_95
+	print "Iteration run time: ", time.strftime('%H:%M:%S', time.gmtime(time.time() - t0))	
+	
+	if not os.path.isdir('results'): os.mkdir('results')
+	if not os.path.isdir('results/' + str(ID)) : os.mkdir('results/' + str(ID))
+	with open('results/' + str(ID) + '/results.pick','w') as f:
+		pickle.dump([l_precision,l_recall,l_thresholds],f)
+	numpy.save('results/' + str(ID) + '/predictions.npy',predictions_proba)
+	numpy.save('results/' + str(ID) + '/Y_Val.npy',Y_val)
+	with open('results/' + str(ID) + '/purity_completeness.txt','w') as g:
+		g.write("Precision: "+str(prec_95)+'\n')
+		g.write("Recall: "+str(recall_95)+'\n')
+	save_history(history,'results/'+str(ID)+'/history.hdf')
+	
+		
+		
 	
 if __name__ == '__main__' :
 	
+	for x in xrange(5):
+		print '------------ ', x, ' ----------------'
+		run()
 
