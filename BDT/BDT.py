@@ -1,3 +1,19 @@
+'''
+
+BDT.py
+
+Trains a Scikit-learn Gradient-Boosted Tree on the DAMPE electron-proton separation problem.
+
+- Runs five times, each time on a random set of parameters
+- Parameters are chosen randomly with getRandomParams(), which contains lists of possible parameters. Set of parameters saved in ./models
+- Results are saved in ./results/*ID*/   where ID is a hash number corresponding to the set of parameters
+- Main results are printed to screen:  Precision (purity) and Recall (completeness)
+
+
+
+'''
+
+
 import numpy as np
 import time
 import cPickle as pickle
@@ -8,7 +24,8 @@ import hashlib
 
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.externals import joblib
-from sklearn.metrics import roc_curve, roc_auc_score, precision_score, average_precision_score, precision_recall_curve
+from sklearn.metrics import roc_curve, roc_auc_score, precision_score, average_precision_score, precision_recall_curve, recall_score
+from sklearn.metrics import f1_score
 from sklearn.model_selection import RandomizedSearchCV
 
 def ParamsID(a):
@@ -64,9 +81,7 @@ def _run():
 		if not os.path.isfile('results/' + str(ID) + '/purity_completeness.txt'):		# Check if set of params has already been tested. Don't write file yet because what's below can get interrupted
 			break
 	
-	
-	model = getModel.get_model(params,X_train.shape[1])
-	
+
 	if not os.path.isdir('models'): os.mkdir('models')
 	
 	
