@@ -1,3 +1,22 @@
+'''
+
+DNN.py
+
+Trains a Keras deep neural network on the DAMPE electron-proton separation problem.
+
+- Runs five times, each time on a random set of parameters
+- DNN parameters are chosen randomly with getRandomParams(), which contains lists of possible parameters. Set of parameters saved in ./models
+- DNN model is created dynamically from getModel.py
+- Model is saved after each epoch in ./models
+- Results are saved in ./results/*ID*/   where ID is a hash number corresponding to the set of parameters
+- Main results are printed to screen:  Precision (purity) and Recall (completeness)
+
+
+
+'''
+
+
+
 import numpy as np
 import time
 import cPickle as pickle
