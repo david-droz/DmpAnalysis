@@ -49,17 +49,27 @@ def load_validation(fname='dataset_validate.npy'): return XY_split(fname)
 def load_test(fname='dataset_test.npy'): return XY_split(fname)
 
 
-def _run(n_estimators=100,lr=1.0,maxdepth=3,testfraction=0.001,leaves=1):
+def _run():
 	
 
+	t0 = time.time()
+	
 	X_train, Y_train = load_training()
 	X_val, Y_val = load_validation()
 	
-	params = getRandomParams()
+	
+	while True:
+		params = getRandomParams()
+		ID = ParamsID(params)										# Get an unique ID associated to the parameters
+		if not os.path.isfile('results/' + str(ID) + '/purity_completeness.txt'):		# Check if set of params has already been tested. Don't write file yet because what's below can get interrupted
+			break
+	
+	
+	model = getModel.get_model(params,X_train.shape[1])
 	
 	if not os.path.isdir('models'): os.mkdir('models')
 	
-	ID = ParamsID(params)										# Get an unique ID associated to the parameters
+	
 	with open('models/params_' + str(ID) + '.pick','w') as f:	# Save the parameters into a file determined by unique ID
 		pickle.dump(params,f)
 	
@@ -67,93 +77,52 @@ def _run(n_estimators=100,lr=1.0,maxdepth=3,testfraction=0.001,leaves=1):
 	clf.fit(X_train, Y_train)
 	
 	
+	predictions_binary = clf.predict(X_val)			# Array of 0 and 1
+	predictions_proba = clf.predict_proba(X_val)		# Array of numbers [0,1]
+	
+	purity = precision_score(Y_val,predictions_binary)			# Precision:  true positive / (true + false positive). Purity (how many good events in my prediction?)
+	completeness = recall_score(Y_val,predictions_binary)		# Recall: true positive / (true positive + false negative). Completeness (how many good events did I find?)
+	F1score = f1_score(Y_val,predictions_binary)				# Average of precision and recall
+	
+	l_precision, l_recall, l_thresholds = precision_recall_curve(Y_val,predictions_proba)
 	
 	
+	# 1 - precision = 1 - (TP/(TP + FP)) = (TP + FP)/(TP + FP) - (TP / (TP+FP)) = FP/(TP+FP) = FPR
 	
-	############
-	###### Rework below this line
-	############
+	prec_95 = None
+	recall_95 = None
+	for i in xrange(len(l_precision)):
+		if l_precision[i] > 0.95 :
+			if prec_95 is None:
+				prec_95 = l_precision[i]
+				recall_95 = l_recall[i]
+			else:
+				if l_precision[i] < prec_95:
+					prec_95 = l_precision[i]
+					recall_95 = l_recall[i]
+					
+	print "Precision: ", prec_95
+	print "Recall: ", recall_95
+	print "Iteration run time: ", time.strftime('%H:%M:%S', time.gmtime(time.time() - t0))	
 	
+	if not os.path.isdir('results'): os.mkdir('results')
+	if not os.path.isdir('results/' + str(ID)) : os.mkdir('results/' + str(ID))
+	with open('results/' + str(ID) + '/results.pick','w') as f:
+		pickle.dump([l_precision,l_recall,l_thresholds],f)
+	numpy.save('results/' + str(ID) + '/predictions.npy',predictions_proba)
+	numpy.save('results/' + str(ID) + '/Y_Val.npy',Y_val)
+	with open('results/' + str(ID) + '/purity_completeness.txt','w') as g:
+		g.write("Precision: "+str(prec_95)+'\n')
+		g.write("Recall: "+str(recall_95)+'\n')
 	
-	score = clf.score(X_val,Y_val)
-	print "Score: ", score
-	score_train = clf.score(X_train,Y_train)
-
+		
+		
 	
-	outstr = '/home/drozd/BDT/models/model_' + str(n_estimators) + '_' + str(lr)+'_'+str(maxdepth)+'_'+str(testfraction)+'_'+str(leaves)+'.pkl'
-	joblib.dump(clf, outstr)
-	
-	prediction = clf.predict_proba(X_val)[:,1]			# Array of actual probabilities. Should be the one for electrons
-														# Otherwise, use [:,0]
-	
-	prediction_binary = clf.predict(X_val)
-	
-	#~ fpr, tpr, thresholds = roc_curve(Y_val, prediction, pos_label=2)
-	fpr, tpr, thresholds = roc_curve(Y_val, prediction)
-	auc_score = roc_auc_score(Y_val, prediction)
-	print "AUC: ", auc_score
-	precision = precision_score(Y_val,prediction_binary)
-	print "Precision: ", precision 
-	
-	precision_PRC, recall_PRC, thresholds_PRC = precision_recall_curve(Y_val, prediction)
-	AU_PRC = average_precision_score(Y_val, prediction)
-	
-	#~ print "Min TPR: ", tpr[0]
-	#~ print "Max TPR: ", tpr[-1]
-	#~ print "Min FPR: ", fpr[0]
-	#~ print "Max FPR: ", fpr[-1]
-	
-	outstr = '/home/drozd/BDT/results/results_' + str(n_estimators) + '_' + str(lr)+'_'+str(maxdepth)+'_'+str(testfraction)+'_'+str(leaves)+'.pickle'
-	with open(outstr,'w') as f:
-		pickle.dump([score,score_train,prediction,prediction_binary,precision,fpr,tpr,thresholds,auc_score],f)
-	
-	return score, fpr, tpr, thresholds, auc_score
-	
-	
-
-
 if __name__ == '__main__' :
 	
-	t0 = time.time()
-	
-	try:
-		n_estimators = int(sys.argv[1])
-	except:
-		print "Sys.argv[1] not recognised!"
-		n_estimators = 100
-	try:
-		lr = float(sys.argv[2])
-	except:
-		print "Sys.argv[2] not recognised"
-		lr = 1.
-		
-	try:
-		maxdepth = int(sys.argv[3])
-	except:
-		print "Sys.argv[3] not recognised"
-		maxdepth = 3
-	
-	try:
-		feuille = int(sys.argv[4])
-	except:
-		print "Sys.argv[4] not recognised"
-		feuille = 1
-	
-	for f in ['/home/drozd/BDT/test','/home/drozd/BDT/results','/home/drozd/BDT/models']:	
-		if not os.path.isdir(f):
-			os.mkdir(f)
-	
-	
-	try:
-		accuracy, fpr, tpr, thresholds, auc_score = _run(n_estimators=n_estimators,lr=lr,maxdepth=maxdepth,leaves=feuille)
-	except KeyboardInterrupt:
-		print "Interrupted"
-		print "Total running time: ", time.strftime('%H:%M:%S', time.gmtime(time.time() - t0))	
-		sys.exit()
-	except Exception:
-		raise
+	for x in xrange(5):
+		print '------------ ', x, ' ----------------'
+		run()
 
-	#~ print "Testing accuracy: ", accuracy	
-	print "Total running time: ", time.strftime('%H:%M:%S', time.gmtime(time.time() - t0))	
-	
+
 	
