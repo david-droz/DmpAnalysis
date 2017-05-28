@@ -56,7 +56,8 @@ def getNrEvents(filelist):
 	        return ast.literal_eval(fp.read(hdr_size).decode('ascii'))
 	a = 0
 	for f in filelist:
-		a = a + read_npy_file_header(f)
+		#print read_npy_file_header(f)
+		a = a + read_npy_file_header(f)['shape'][0]
 	return a
 
 
@@ -71,7 +72,7 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 	available_P = range(nrofp)
 	selectedE_train = []
 	selectedP_train = []
-	for i in xrange(trainingfraction * nrofe):	
+	for i in xrange(int(trainingFraction * nrofe)):	
 		j = random.randint(0,len(available_E)-1)
 		k = random.randint(0,len(available_P)-1)
 		selectedE_train.append( available_E.pop(j) )
@@ -80,7 +81,7 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 	# Has to be unbalanced
 	selectedE_validate = []
 	selectedP_validate = []
-	for i in xrange(validationFraction * nrofe):
+	for i in xrange(int(validationFraction * nrofe)):
 		j = random.randint(0,len(available_E)-1)
 		selectedE_validate.append( available_E.pop(j) )
 	if (validationMixture * len(selectedE_validate) ) > ( 0.7*len(available_P)) :		# Not enough protons, sampling with replacement
@@ -135,8 +136,9 @@ if __name__ == '__main__':
 	nrofe = getNrEvents(electronFiles)
 	nrofp = getNrEvents(protonFiles)
 	
-	with np.load(electronFiles[0]) as arr:
-		nrofvars = arr.shape[1]
+	arr = np.load(electronFiles[0])
+	nrofvars = arr.shape[1]
+	del arr
 	labels = getLabels()
 	
 	parser = argparse.ArgumentParser()
