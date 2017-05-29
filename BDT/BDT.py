@@ -58,7 +58,7 @@ def getRandomParams():
 
 def XY_split(fname):
 	arr = np.load(fname)
-	X = arr[:,0:-1]
+	X = arr[:,0:-2]				# Last two columns are timestamp and particle ID
 	Y = arr[:,-1]
 	return X,Y
 def load_training(fname='dataset_train.npy'): return XY_split(fname)
