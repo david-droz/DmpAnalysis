@@ -122,6 +122,21 @@ def getLabels():
 	lab.append('BGO_RMS_radial')
 	lab.append('BGO_E_total_corrected')
 	lab.append('BGO_total_hits')
+	
+	for i in range(2):
+		lab.append('PSD_E_layer_' + str(i))
+	for i in range(2):
+		lab.append('PSD_hits_layer_' + str(i))
+	for k in ['1a','1b','2a','2b']:
+		lab.append('PSD_E_RMS_layer_' + k)
+		
+	lab.append('STK_NClusters')
+	lab.append('STK_NTracks')
+	for i in range(8):
+		lab.append('STK_E_' + str(i))
+	for i in range(8):
+		lab.append('STK_E_RMS_' + str(i))
+		
 	lab.append('timestamp')
 	lab.append('label')
 	
