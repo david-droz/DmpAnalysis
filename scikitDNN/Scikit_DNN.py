@@ -63,12 +63,20 @@ def getRandomParams():
 
 def XY_split(fname):
 	arr = np.load(fname)
-	X = arr[:,0:-1]
+	X = arr[:,0:-2]				### Last two columns are timestamp and particle id
 	Y = arr[:,-1]
 	return X,Y
 def load_training(fname='dataset_train.npy'): return XY_split(fname)
 def load_validation(fname='dataset_validate.npy'): return XY_split(fname)
 def load_test(fname='dataset_test.npy'): return XY_split(fname)
+
+def _normalise(arr):
+	for i in xrange(arr.shape[1]):
+		if np.all(arr[:,i] > 0) :
+			arr[:,i] = (arr[:,i] - np.mean(arr[:,i]) + 1.) / np.std(arr[:,i])		# Mean = 1 if all values are strictly positive (from paper)
+		else:
+			arr[:,i] = (arr[:,i] - np.mean(arr[:,i])) / np.std(arr[:,i])	
+	return arr
 
 
 def _run():
@@ -76,6 +84,9 @@ def _run():
 	t0 = time.time()
 	X_train, Y_train = load_training()
 	X_val, Y_val = load_validation()
+	
+	X_train = _normalise(X_train)
+	X_val = _normalise(X_val)
 	
 	while True:
 		params = getRandomParams()
