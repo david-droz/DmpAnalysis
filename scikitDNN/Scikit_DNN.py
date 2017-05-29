@@ -137,7 +137,7 @@ def _run():
 	with open('results/' + str(ID) + '/results.pick','w') as f:
 		pickle.dump([l_precision,l_recall,l_thresholds],f)
 	numpy.save('results/' + str(ID) + '/predictions.npy',predictions_proba)
-	numpy.save('results/' + str(ID) + '/Y_Val.npy',Y_val)
+	numpy.save('results/Y_Val.npy',Y_val)
 	with open('results/' + str(ID) + '/purity_completeness.txt','w') as g:
 		g.write("Precision: "+str(prec_95)+'\n')
 		g.write("Recall: "+str(recall_95)+'\n')
