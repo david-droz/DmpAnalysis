@@ -19,6 +19,7 @@ import struct
 import ast
 import argparse
 import os
+import time
 
 
 def getNrEvents(filelist):
@@ -145,6 +146,10 @@ def getLabels():
 
 if __name__ == '__main__':
 	
+	print "Starting up..."
+	
+	t0 = time.time()
+	
 	electronFiles = glob.glob('tmp/*/elec*.npy')
 	protonFiles = glob.glob('tmp/*/prot*.npy')
 	for f in [electronFiles,protonFiles]: f.sort()
@@ -156,6 +161,8 @@ if __name__ == '__main__':
 	nrofvars = arr.shape[1]
 	del arr
 	labels = getLabels()
+	
+	print "Got labels (", str(strftime('%H:%M:%S', gmtime( time.time() - t0 ))), ')'
 	
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-ts", "--train_split", help="Fraction of total electrons that go into training [0;1]",default=0.6,type=float)
@@ -176,8 +183,13 @@ if __name__ == '__main__':
 	
 	selectedE_train, selectedP_train, selectedE_validate, selectedP_validate, selectedE_test, selectedP_test = getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixture,testMixture)
 	
+	print "Got indices (", str(strftime('%H:%M:%S', gmtime( time.time() - t0 ))), ')'
+	
 	# Merging and splitting - electrons
 	if not os.path.isfile('dataset_electron_test.root'):
+		
+		print "--- Electrons ---"
+		
 		arr_e = np.load(electronFiles[0])
 		i = 0
 		for f in electronFiles:
@@ -185,11 +197,13 @@ if __name__ == '__main__':
 				i=i+1
 				continue
 			arr_e = np.concatenate( (arr_e , np.load(f) ) )
+		print "Built the large array (", str(strftime('%H:%M:%S', gmtime( time.time() - t0 ))), ')'
 		np.random.shuffle(arr_e)
 		set_e_train = arr_e[ selectedE_train, :]
 		set_e_validate = arr_e[ selectedE_validate, :]
 		set_e_test = arr_e[ selectedE_test, :]
 		del arr_e
+		print "Saving train, validate, test arrays (", str(strftime('%H:%M:%S', gmtime( time.time() - t0 ))), ')'
 		np.save('data_train_elecs.npy',set_e_train)
 		np.save('data_validate_elecs.npy',set_e_validate)
 		np.save('data_test_elecs.npy',set_e_test)
@@ -197,10 +211,14 @@ if __name__ == '__main__':
 		np2root(set_e_validate,getLabels(),outname='dataset_electrons_validate.root')
 		np2root(set_e_test,getLabels(),outname='dataset_electrons_test.root')
 		del set_e_train, set_e_validate, set_e_test
+		print "Done saving (", str(strftime('%H:%M:%S', gmtime( time.time() - t0 ))), ')'
 
 	
 	# Protons
 	if not os.path.isfile('dataset_protons_test.root'):
+		
+		print "--- Protons ---"
+		
 		arr_p = np.load(protonFiles[0])
 		i = 0
 		for f in protonFiles:
@@ -208,11 +226,13 @@ if __name__ == '__main__':
 				i=i+1
 				continue
 			arr_p = np.concatenate( (arr_p , np.load(f) ) )
+		print "Built the large array (", str(strftime('%H:%M:%S', gmtime( time.time() - t0 ))), ')'
 		np.random.shuffle(arr_p)
 		set_p_train = arr_p[ selectedP_train, :]
 		set_p_validate = arr_p[ selectedP_validate, :]
 		set_p_test = arr_p[ selectedP_test, :]
 		del arr_p
+		print "Saving train, validate, test arrays (", str(strftime('%H:%M:%S', gmtime( time.time() - t0 ))), ')'
 		np.save('data_training_prots.npy',set_p_train)
 		np.save('data_validate_prots.npy',set_p_validate)
 		np.save('data_testing_prots.npy',set_p_test)
@@ -220,8 +240,10 @@ if __name__ == '__main__':
 		np2root(set_p_validate,getLabels(),outname='dataset_protons_validate.root')
 		np2root(set_p_test,getLabels(),outname='dataset_protons_test.root')
 		del set_p_train, set_p_validate, set_p_test
+		print "Done saving (", str(strftime('%H:%M:%S', gmtime( time.time() - t0 ))), ')'
 	
 	# Concatenate electrons and protons
+	print "Building train set..."
 	set_e_train = np.load('data_train_elecs.npy')
 	set_p_train = np.load('data_train_prots.npy')
 	train_set = np.concatenate( (set_e_train, set_p_train ) )
@@ -229,7 +251,9 @@ if __name__ == '__main__':
 	np.save('dataset_train.npy',train_set)
 	np2root(train_set,getLabels(),outname='dataset_train.root')
 	del train_set, set_e_train, set_p_train
+	print "Done  (", str(strftime('%H:%M:%S', gmtime( time.time() - t0 ))), ')'
 	
+	print "Building validation set..."
 	set_e_validate = np.load('data_validate_elecs.npy')
 	set_p_validate = np.load('data_validate_prots.npy')
 	validate_set = np.concatenate( (set_e_validate, set_p_validate ) )
@@ -237,7 +261,9 @@ if __name__ == '__main__':
 	np.save('dataset_validate.npy',validate_set)
 	np2root(validate_set,getLabels(),outname='dataset_validate.root')
 	del validate_set, set_e_validate, set_p_validate
+	print "Done  (", str(strftime('%H:%M:%S', gmtime( time.time() - t0 ))), ')'
 	
+	print "Building test set..."
 	set_e_test = np.load('data_test_elecs.npy')
 	set_p_test = np.load('data_test_prots.npy')
 	test_set = np.concatenate( (set_e_test, set_p_test ) )
@@ -245,5 +271,4 @@ if __name__ == '__main__':
 	np.save('dataset_test.npy',test_set)
 	np2root(test_set,getLabels(),outname='dataset_test.root')
 	del test_set, set_e_test, set_p_test
-	
-	
+	print "Done (", str(strftime('%H:%M:%S', gmtime( time.time() - t0 ))), ')'
