@@ -16,5 +16,19 @@ if __name__ == '__main__':
 	predictions = np.load('./results/' + str(ID) + '/predictions.npy')
 	truth = np.load('./results/Y_Val.npy')
 	
+	elecs = []
+	prots = []
 	
-	# Histogram of the predict_proba. Have to identify protons and electrons
+	for i in xrange(truth.shape[0]):
+		if truth[i] == 1:
+			elecs.append(predictions[i])
+		else:
+			prots.append(predictions[i])
+			
+	fig1 = plt.figure()
+	plt.hist(elecs,20,label='e')
+	plt.hist(prots,20,label='p')
+	plt.legend(loc='best')
+	plt.yscale('log')
+	plt.show()
+	
