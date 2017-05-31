@@ -239,22 +239,22 @@ if __name__ == '__main__':
 		print "Built the large array (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
 		np.random.shuffle(arr_p)
 		
-		"Saving train (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
+		print "Saving train (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
 		if not os.path.isfile('dataset_protons_train.root'):
 			set_p_train = arr_p[ selectedP_train, :]
 			np.save('data_training_prots.npy',set_p_train)
 			np2root(set_p_train,getLabels(),outname='dataset_protons_train.root')
 			del set_p_train
 		
-		"Saving validate (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
+		print "Saving validate (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
 		if not os.path.isfile('dataset_protons_validate.root'):
 			set_p_validate = arr_p[ selectedP_validate, :]
 			np.save('data_validate_prots.npy',set_p_validate)
 			np2root(set_p_validate,getLabels(),outname='dataset_protons_validate.root')
 			del set_p_validate
 		
-		"Saving test (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
-		it not os.path.isfile('dataset_protons_test.root'):
+		print "Saving test (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
+		if not os.path.isfile('dataset_protons_test.root'):
 			set_p_test = arr_p[ selectedP_test, :]
 			np.save('data_testing_prots.npy',set_p_test)
 			np2root(set_p_test,getLabels(),outname='dataset_protons_test.root')
