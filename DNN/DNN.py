@@ -142,12 +142,9 @@ def run():
 		if not os.path.isfile('results/' + str(ID) + '/purity_completeness.txt'):		# Check if set of params has already been tested. Don't write file yet because what's below can get interrupted
 			break
 	
-	
 	model = getModel.get_model(params,X_train.shape[1])
 	
 	if not os.path.isdir('models'): os.mkdir('models')
-	
-	
 	with open('models/params_' + str(ID) + '.pick','w') as f:	# Save the parameters into a file determined by unique ID
 		pickle.dump(params,f)
 		
@@ -166,7 +163,6 @@ def run():
 	F1score = f1_score(Y_val,predictions_binary)				# Average of precision and recall
 	
 	l_precision, l_recall, l_thresholds = precision_recall_curve(Y_val,predictions_proba)
-	
 	
 	# 1 - precision = 1 - (TP/(TP + FP)) = (TP + FP)/(TP + FP) - (TP / (TP+FP)) = FP/(TP+FP) = FPR
 	
