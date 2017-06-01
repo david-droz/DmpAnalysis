@@ -1,6 +1,6 @@
 '''
 
-makeDataSets.py  v0.2
+makeDataSets.py  v0.3
 
 Merges together the output of selection.py and creates training/validation/testing sets. Takes a lot of memory!
 
@@ -71,28 +71,36 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 	i.e. if the list returned is [4,9,15], it means I use events number 4,9, and 15.
 	'''
 	
+	# Let's go for 1M events for training, 25k electrons for validation and 25k for testing
+	# https://stackoverflow.com/questions/10048069/what-is-the-most-pythonic-way-to-pop-a-random-element-from-a-list
+	
 	if os.path.isfile('indices.pick'):
 		with open('indices.pick','r') as f:
 			a = pickle.load(f)
 		return a[0], a[1], a[2], a[3], a[4], a[5]
 	
-	# Training
+	# ---- Training ----
+	
 	available_E = range(nrofe)
 	available_P = range(nrofp)
 	selectedE_train = []
 	selectedP_train = []
-	for i in xrange(int(trainingFraction * nrofe)):	
-		j = random.randint(0,len(available_E)-1)
-		k = random.randint(0,len(available_P)-1)
-		selectedE_train.append( available_E.pop(j) )
-		selectedP_train.append( available_P.pop(k) )
-	# Validation
+	
+	random.shuffle(available_E)							# Pick randomly
+	random.shuffle(available_P)
+	
+	for i in xrange(int(1e+6)):								# 1M events
+		selectedE_train.append( available_E.pop() )			# Use "pop" : don't want to reuse events
+		selectedP_train.append( available_P.pop() )			# Same number of events for training
+
+	# ---- Validation ----
 	# Has to be unbalanced
+	
 	selectedE_validate = []
-	selectedP_validate = []
-	for i in xrange(int(validationFraction * nrofe)):
-		j = random.randint(0,len(available_E)-1)
-		selectedE_validate.append( available_E.pop(j) )
+	selectedP_validate = []		
+	for i in xrange(25000):								# 25k electrons because otherwise it will be too long
+		selectedE_validate.append( available_E.pop() )
+	
 	if (validationMixture * len(selectedE_validate) ) > ( 0.7*len(available_P)) :		# Not enough protons, sampling with replacement
 		# Oversampling with replacement
 		for i in xrange(validationMixture * len(selectedE_validate)):
@@ -100,19 +108,23 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 			selectedP_validate.append( available_P[j] )
 	else:
 		for i in xrange(validationMixture * len(selectedE_validate)):
-			j = random.randint(0,len(available_P)-1)
-			selectedP_validate.append( available_P.pop(j) )		
-	# Testing - Also has to be unbalanced
-	selectedE_test = [  x for x in available_E  ]
+			selectedP_validate.append( available_P.pop() )	
+				
+	# ---- Testing ----
+	
+	selectedE_test = []
 	selectedP_test = []
+	
+	for i in xrange(25000):								# 25k electrons
+		selectedE_test.append( available_E.pop() )
+		
 	if (testMixture * len(selectedE_test)) > len(available_P) :   # Not enough protons
 		for i in xrange(testMixture * len(selectedE_test)):
 			j = random.randint(0,len(available_P)-1)
 			selectedP_test.append( available_P[j] )
 	else:			
 		for i in xrange(testMixture * len(selectedE_test)):
-			j = random.randint(0,len(available_P)-1)
-			selectedP_test.append( available_P.pop(j) )
+			selectedP_test.append( available_P.pop() )
 	
 	with open('indices.pick','w') as f:
 		pickle.dump([selectedE_train, selectedP_train, selectedE_validate, selectedP_validate, selectedE_test, selectedP_test],f)
