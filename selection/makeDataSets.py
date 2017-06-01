@@ -98,7 +98,7 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 	
 	selectedE_validate = []
 	selectedP_validate = []		
-	for i in xrange(25000):								# 25k electrons because otherwise it will be too long
+	for i in xrange(60000):								# 60k electrons because otherwise it will be too long
 		selectedE_validate.append( available_E.pop() )
 	
 	if (validationMixture * len(selectedE_validate) ) > ( 0.7*len(available_P)) :		# Not enough protons, sampling with replacement
@@ -115,7 +115,7 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 	selectedE_test = []
 	selectedP_test = []
 	
-	for i in xrange(25000):								# 25k electrons
+	for i in xrange(60000):								# 25k electrons
 		selectedE_test.append( available_E.pop() )
 		
 	if (testMixture * len(selectedE_test)) > len(available_P) :   # Not enough protons
@@ -254,7 +254,7 @@ if __name__ == '__main__':
 		print "Saving train (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
 		if not os.path.isfile('dataset_protons_train.root'):
 			set_p_train = arr_p[ selectedP_train, :]
-			np.save('data_training_prots.npy',set_p_train)
+			np.save('data_train_prots.npy',set_p_train)
 			np2root(set_p_train,getLabels(),outname='dataset_protons_train.root')
 			del set_p_train
 		
@@ -268,7 +268,7 @@ if __name__ == '__main__':
 		print "Saving test (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
 		if not os.path.isfile('dataset_protons_test.root'):
 			set_p_test = arr_p[ selectedP_test, :]
-			np.save('data_testing_prots.npy',set_p_test)
+			np.save('data_test_prots.npy',set_p_test)
 			np2root(set_p_test,getLabels(),outname='dataset_protons_test.root')
 			del set_p_test
 		
