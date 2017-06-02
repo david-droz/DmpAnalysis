@@ -14,6 +14,7 @@ Looks for datasets in ../dataset_train.npy ; ../dataset_validate.npy
 
 '''
 
+from __future__ import print_function, division, absolute_import
 
 import numpy as np
 import time
@@ -23,8 +24,6 @@ import os
 import random
 import hashlib
 import sys
-
-from __future__ import print_function, division, absolute_import
 
 from scipy.stats import randint as sp_randint
 

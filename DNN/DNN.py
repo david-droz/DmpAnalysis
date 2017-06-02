@@ -17,6 +17,7 @@ Looks for datasets in ../dataset_train.npy ; ../dataset_validate.npy
 '''
 
 
+from __future__ import division, print_function, absolute_import
 
 import numpy as np
 import time
@@ -26,8 +27,6 @@ import os
 import random
 import hashlib
 import sys
-
-from __future__ import division, print_function, absolute_import
 
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout

@@ -13,6 +13,7 @@ Trains a Scikit-learn Gradient-Boosted Tree on the DAMPE electron-proton separat
 
 '''
 
+from __future__ import print_function, division, absolute_import
 
 import numpy as np
 import time
@@ -22,8 +23,6 @@ import os
 import random
 import hashlib
 import sys
-
-from __future__ import print_function, division, absolute_import
 
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.externals import joblib
