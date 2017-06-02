@@ -106,7 +106,7 @@ def load_validation(fname='../dataset_validate.npy'): return XY_split(fname)
 def load_test(fname='../dataset_test.npy'): return XY_split(fname)
 
 def _normalise(arr):
-	for i in xrange(arr.shape[1]):
+	for i in range(arr.shape[1]):
 		if np.all(arr[:,i] > 0) :
 			arr[:,i] = (arr[:,i] - np.mean(arr[:,i]) + 1.) / np.std(arr[:,i])		# Mean = 1 if all values are strictly positive (from paper)
 		else:
@@ -168,7 +168,7 @@ def run():
 	
 	prec_95 = None
 	recall_95 = None
-	for i in xrange(len(l_precision)):
+	for i in range(len(l_precision)):
 		if l_precision[i] > 0.95 :
 			if prec_95 is None:
 				prec_95 = l_precision[i]

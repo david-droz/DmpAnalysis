@@ -112,7 +112,7 @@ def _run():
 	
 	prec_95 = None
 	recall_95 = None
-	for i in xrange(len(l_precision)):
+	for i in range(len(l_precision)):
 		if l_precision[i] > 0.95 :
 			if prec_95 is None:
 				prec_95 = l_precision[i]
