@@ -115,10 +115,10 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 	selectedE_test = []
 	selectedP_test = []
 	
-	for i in xrange(60000):								# 60k electrons
+	for i in xrange(60000):											# 60k electrons
 		selectedE_test.append( available_E.pop() )
 		
-	if (testMixture * len(selectedE_test)) > len(available_P) :   # Not enough protons
+	if (testMixture * len(selectedE_test)) > len(available_P) :		# Not enough protons
 		for i in xrange(testMixture * len(selectedE_test)):
 			j = random.randint(0,len(available_P)-1)
 			selectedP_test.append( available_P[j] )
