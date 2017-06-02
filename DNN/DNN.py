@@ -34,15 +34,8 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping, Callback, LearningRa
 from keras.constraints import maxnorm
 from keras.layers.advanced_activations import PReLU, ELU, LeakyReLU
 
-from scipy.stats import randint as sp_randint
-
-from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.externals import joblib
 from sklearn.metrics import roc_curve, roc_auc_score, precision_score, average_precision_score, precision_recall_curve, recall_score
 from sklearn.metrics import f1_score
-from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
-
-from keras.wrappers.scikit_learn import KerasClassifier
 
 import getModel
 
