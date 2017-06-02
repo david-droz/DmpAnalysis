@@ -11,7 +11,8 @@ Trains a Keras deep neural network on the DAMPE electron-proton separation probl
 - Results are saved in ./results/*ID*/   where ID is a hash number corresponding to the set of parameters
 - Main results are printed to screen:  Precision (purity) and Recall (completeness)
 
-
+Looks for datasets in ../dataset_train.npy ; ../dataset_validate.npy
+	Can change that by suppling them as arguments to the program
 
 '''
 
@@ -19,11 +20,14 @@ Trains a Keras deep neural network on the DAMPE electron-proton separation probl
 
 import numpy as np
 import time
-import cPickle as pickle
+import pickle
 import sys
 import os
 import random
 import hashlib
+import sys
+
+from __future__ import division, print_function, absolute_import
 
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout
@@ -105,9 +109,9 @@ def XY_split(fname):
 	X = arr[:,0:-2]				### Last two columns are timestamp and particle id
 	Y = arr[:,-1]
 	return X,Y
-def load_training(fname='dataset_train.npy'): return XY_split(fname)
-def load_validation(fname='dataset_validate.npy'): return XY_split(fname)
-def load_test(fname='dataset_test.npy'): return XY_split(fname)
+def load_training(fname='../dataset_train.npy'): return XY_split(fname)
+def load_validation(fname='../dataset_validate.npy'): return XY_split(fname)
+def load_test(fname='../dataset_test.npy'): return XY_split(fname)
 
 def _normalise(arr):
 	for i in xrange(arr.shape[1]):
@@ -130,8 +134,12 @@ def run():
 	
 	t0 = time.time()
 	
-	X_train, Y_train = load_training()
-	X_val, Y_val = load_validation()
+	if len(sys.argv) == 1:
+		X_train, Y_train = load_training()
+		X_val, Y_val = load_validation()
+	else:
+		X_train, Y_train = load_training(sys.argv[1])
+		X_val, Y_val = load_validation(sys.argv[2])
 	
 	X_train = _normalise(X_train)
 	X_val = _normalise(X_val)
@@ -178,9 +186,9 @@ def run():
 					prec_95 = l_precision[i]
 					recall_95 = l_recall[i]
 					
-	print "Precision: ", prec_95
-	print "Recall: ", recall_95
-	print "Iteration run time: ", time.strftime('%H:%M:%S', time.gmtime(time.time() - t0))	
+	print("Precision:", prec_95)
+	print("Recall:", recall_95)
+	print("Iteration run time: ", time.strftime('%H:%M:%S', time.gmtime(time.time() - t0))	)
 	
 	if not os.path.isdir('results'): os.mkdir('results')
 	if not os.path.isdir('results/' + str(ID)) : os.mkdir('results/' + str(ID))
@@ -198,7 +206,7 @@ def run():
 	
 if __name__ == '__main__' :
 	
-	for x in xrange(5):
-		print '------------ ', x, ' ----------------'
+	for x in range(5):
+		print('------------ ', x, ' ----------------')
 		run()
 
