@@ -91,7 +91,7 @@ def _run():
 	if not os.path.isdir('models'): os.mkdir('models')
 	
 	
-	with open('models/params_' + str(ID) + '.pick','w') as f:	# Save the parameters into a file determined by unique ID
+	with open('models/params_' + str(ID) + '.pick','wb') as f:	# Save the parameters into a file determined by unique ID
 		pickle.dump(params,f)
 	
 	clf = GradientBoostingClassifier(n_estimators=params['n'], learning_rate=params['lr'],max_depth=params['max'], min_samples_leaf=params['leaves'])
@@ -128,7 +128,7 @@ def _run():
 	
 	if not os.path.isdir('results'): os.mkdir('results')
 	if not os.path.isdir('results/' + str(ID)) : os.mkdir('results/' + str(ID))
-	with open('results/' + str(ID) + '/results.pick','w') as f:
+	with open('results/' + str(ID) + '/results.pick','wb') as f:
 		pickle.dump([l_precision,l_recall,l_thresholds],f)
 	numpy.save('results/' + str(ID) + '/predictions.npy',predictions_proba)
 	numpy.save('results/Y_Val.npy',Y_val)
