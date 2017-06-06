@@ -53,7 +53,7 @@ def getRandomParams():
 	p_n = [(50,), (100,), (200,), (300,), (400,), (500,), (100,50), (30,15,7), (100,50,25), (200,100)]
 	p_epoch = [50, 100, 200, 300,400]
 	p_alpha = [1,1e-1,1e-2,1e-3, 1e-4,1e-5]
-	p_algo = ['adam','sgd','l-bfgs']
+	p_algo = ['adam','sgd','lbfgs']
 					
 	mydic = {}
 	mydic['lr'] = random.choice(p_lr)
