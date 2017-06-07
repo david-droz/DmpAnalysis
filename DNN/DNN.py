@@ -148,7 +148,7 @@ def run():
 	with open('models/params_' + str(ID) + '.pick','wb') as f:	# Save the parameters into a file determined by unique ID
 		pickle.dump(params,f)
 		
-	chck = ModelCheckpoint("models/weights_"+str(ID)+"__{epoch:02d}-{val_loss:.2f}-{val_acc:.2f}.hdf5")
+	chck = ModelCheckpoint("models/weights_"+str(ID)+"__{epoch:02d}-{val_loss:.2f}.hdf5")
 	earl = EarlyStopping(monitor='loss',min_delta=0.0001,patience=5)			# Alternative: train epoch per epoch, evaluate something at every epoch.
 	rdlronplt = ReduceLROnPlateau(monitor='loss',patience=4,min_lr=0.001)
 	callbacks = [chck,earl,rdlronplt]
