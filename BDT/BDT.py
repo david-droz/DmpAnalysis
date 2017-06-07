@@ -99,7 +99,7 @@ def _run():
 	
 	
 	predictions_binary = clf.predict(X_val)			# Array of 0 and 1
-	predictions_proba = clf.predict_proba(X_val)		# Array of numbers [0,1]
+	predictions_proba = clf.predict_proba(X_val)[:,1]		# Array of numbers [0,1]
 	
 	purity = precision_score(Y_val,predictions_binary)			# Precision:  true positive / (true + false positive). Purity (how many good events in my prediction?)
 	completeness = recall_score(Y_val,predictions_binary)		# Recall: true positive / (true positive + false negative). Completeness (how many good events did I find?)

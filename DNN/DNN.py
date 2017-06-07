@@ -156,7 +156,7 @@ def run():
 	history = model.fit(X_train,Y_train,batch_size=200,epochs=200,verbose=0,callbacks=callbacks,validation_data=(X_val,Y_val))
 	
 	predictions_binary = model.predict(X_val)			# Array of 0 and 1
-	predictions_proba = model.predict_proba(X_val)		# Array of numbers [0,1]
+	predictions_proba = model.predict_proba(X_val)[:,1]		# Array of numbers [0,1]
 	
 	purity = precision_score(Y_val,predictions_binary)			# Precision:  true positive / (true + false positive). Purity (how many good events in my prediction?)
 	completeness = recall_score(Y_val,predictions_binary)		# Recall: true positive / (true positive + false negative). Completeness (how many good events did I find?)
