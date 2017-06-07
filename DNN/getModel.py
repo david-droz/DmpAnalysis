@@ -34,7 +34,7 @@ def get_model(args,dim=14):
 	
 	model = Sequential()
 	model.add(Dense(args['architecture'][0],
-					units=dim,
+					input_shape=(dim,),
 					kernel_initializer=args['init'],
 					activation=args['activation']))
 	for i in args['architecture'][1:-1] :
