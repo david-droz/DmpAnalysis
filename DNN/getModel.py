@@ -47,6 +47,6 @@ def get_model(args,dim=14):
 		model.add(BatchNormalization())
 	model.add(Dense(args['architecture'][-1],kernel_initializer=args['init'],activation=args['acti_out']))
 	
-	model.compile(loss=args['loss'], optimizer=args['optimizer'], metrics=args['metric'])
+	model.compile(loss=args['loss'], optimizer=args['optimizer'], metrics=args['metrics'])
 		
 	return model
