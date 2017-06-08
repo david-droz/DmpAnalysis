@@ -139,9 +139,9 @@ def _run():
 	if not os.path.isdir('results'): os.mkdir('results')
 	if not os.path.isdir('results/' + str(ID)) : os.mkdir('results/' + str(ID))
 	with open('results/' + str(ID) + '/results.pick','wb') as f:
-		pickle.dump([l_precision,l_recall,l_thresholds],f)
+		pickle.dump([l_precision,l_recall,l_thresholds],f,protocol=2)
 	np.save('results/' + str(ID) + '/predictions.npy',predictions_proba)
-	np.save('results/Y_Val.npy',Y_val,protocol=2)
+	np.save('results/Y_Val.npy',Y_val)
 	with open('results/' + str(ID) + '/purity_completeness.txt','w') as g:
 		g.write("Precision: "+str(prec_95)+'\n')
 		g.write("Recall: "+str(recall_95)+'\n')
