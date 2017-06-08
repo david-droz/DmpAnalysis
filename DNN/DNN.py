@@ -66,7 +66,7 @@ def getRandomParams():
 	p_batchnorm = [True, True, False]			# Repetition of values to increase probability
 	p_activation = ['relu','relu','relu','sigmoid','softplus','elu','elu']
 	#~ p_activation = ['relu','relu','relu','sigmoid','softplus','elu','elu',PRelu(),PRelu(),ELU(),LeakyReLU()]	 
-	p_acti_out = ['sigmoid','sigmoid','sigmoid','relu']
+	p_acti_out = ['sigmoid']
 	p_init = ['uniform','glorot_uniform','glorot_normal','lecun_uniform','he_uniform','he_normal']
 	p_loss = ['binary_crossentropy']
 	p_optimizer = ['adagrad','adadelta','adam','adamax','nadam','sgd']
