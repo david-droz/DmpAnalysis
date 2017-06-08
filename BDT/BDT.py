@@ -121,7 +121,17 @@ def _run():
 				if l_precision[i] < prec_95:
 					prec_95 = l_precision[i]
 					recall_95 = l_recall[i]
-					
+	
+	if prec_95 is None or recall_95 < 1e-1:
+		l_f1 = []
+		for i in range(len(l_precision)):
+			l_f1.append( 2*(l_precision[i] * l_recall[i])/(l_precision[i] + l_recall[i])    )
+		mf1 = max(l_f1)
+		for i in range(len(l_f1)):
+			if l_f1[i] == mf1:
+				prec_95 = l_precision[i]
+				recall_95 = l_recall[i]				
+	
 	print("Precision: ", prec_95)
 	print("Recall: ", recall_95)
 	print("Iteration run time: ", time.strftime('%H:%M:%S', time.gmtime(time.time() - t0))	)
