@@ -92,7 +92,7 @@ def _run():
 	
 	
 	with open('models/params_' + str(ID) + '.pick','wb') as f:	# Save the parameters into a file determined by unique ID
-		pickle.dump(params,f)
+		pickle.dump(params,f,protocol=2)
 	
 	clf = GradientBoostingClassifier(n_estimators=params['n'], learning_rate=params['lr'],max_depth=params['max'], min_samples_leaf=params['leaves'])
 	clf.fit(X_train, Y_train)
@@ -131,7 +131,7 @@ def _run():
 	with open('results/' + str(ID) + '/results.pick','wb') as f:
 		pickle.dump([l_precision,l_recall,l_thresholds],f)
 	np.save('results/' + str(ID) + '/predictions.npy',predictions_proba)
-	np.save('results/Y_Val.npy',Y_val)
+	np.save('results/Y_Val.npy',Y_val,protocol=2)
 	with open('results/' + str(ID) + '/purity_completeness.txt','w') as g:
 		g.write("Precision: "+str(prec_95)+'\n')
 		g.write("Recall: "+str(recall_95)+'\n')

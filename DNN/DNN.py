@@ -146,7 +146,7 @@ def run():
 	
 	if not os.path.isdir('models'): os.mkdir('models')
 	with open('models/params_' + str(ID) + '.pick','wb') as f:	# Save the parameters into a file determined by unique ID
-		pickle.dump(params,f)
+		pickle.dump(params,f,protocol=2)
 		
 	chck = ModelCheckpoint("models/weights_"+str(ID)+"__{epoch:02d}-{val_loss:.2f}.hdf5")
 	earl = EarlyStopping(monitor='loss',min_delta=0.0001,patience=5)			# Alternative: train epoch per epoch, evaluate something at every epoch.
@@ -185,7 +185,7 @@ def run():
 	if not os.path.isdir('results'): os.mkdir('results')
 	if not os.path.isdir('results/' + str(ID)) : os.mkdir('results/' + str(ID))
 	with open('results/' + str(ID) + '/results.pick','wb') as f:
-		pickle.dump([l_precision,l_recall,l_thresholds],f)
+		pickle.dump([l_precision,l_recall,l_thresholds],f,protocol=2)
 	np.save('results/' + str(ID) + '/predictions.npy',predictions_proba)
 	np.save('results/Y_Val.npy',Y_val)
 	with open('results/' + str(ID) + '/purity_completeness.txt','w') as g:

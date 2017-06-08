@@ -105,7 +105,7 @@ def _run():
 	if not os.path.isdir('models'): os.mkdir('models')
 	
 	with open('models/params_' + str(ID) + '.pick','wb') as f:	# Save the parameters into a file determined by unique ID
-		pickle.dump(params,f)
+		pickle.dump(params,f,protocol=2)
 	
 	clf = MLPClassifier(hidden_layer_sizes=params['n'],solver=params['algo'],alpha=params['alpha'],learning_rate=params['lr'],max_iter=params['epoch'] )
 	
@@ -143,7 +143,7 @@ def _run():
 	if not os.path.isdir('results'): os.mkdir('results')
 	if not os.path.isdir('results/' + str(ID)) : os.mkdir('results/' + str(ID))
 	with open('results/' + str(ID) + '/results.pick','wb') as f:
-		pickle.dump([l_precision,l_recall,l_thresholds],f)
+		pickle.dump([l_precision,l_recall,l_thresholds],f,protocol=2)
 	np.save('results/' + str(ID) + '/predictions.npy',predictions_proba)
 	np.save('results/Y_Val.npy',Y_val)
 	with open('results/' + str(ID) + '/purity_completeness.txt','w') as g:
