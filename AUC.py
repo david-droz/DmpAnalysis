@@ -48,7 +48,7 @@ l_PR = [  precision_recall_curve( Y_val,  np.load(IDlist[i]+'predictions.npy') ,
 l_PR_ID = [ IDlist[j] for j in bestPR_indices ]
 
 with open('metric_ROC.pick','wb') as f:
-	pickle.dump([L_ROC,l_ROC_ID],f,protocol=2)
+	pickle.dump([l_ROC,l_ROC_ID],f,protocol=2)
 with open('metric_PR.pick','wb') as g:
-	pickle.dump([L_PR,l_PR_ID],g,protocol=2)
+	pickle.dump([l_PR,l_PR_ID],g,protocol=2)
 
