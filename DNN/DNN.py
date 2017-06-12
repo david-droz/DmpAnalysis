@@ -203,6 +203,8 @@ def run():
 		g.write("Recall: "+str(recall_95)+'\n')
 	save_history(history,'results/'+str(ID)+'/history.hdf')
 	
+	del X_train, X_val, Y_train, Y_val, history, predictions_binary, predictions_proba
+	
 		
 		
 	

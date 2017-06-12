@@ -159,6 +159,8 @@ def _run():
 	with open('results/' + str(ID) + '/purity_completeness.txt','w') as g:
 		g.write("Precision: "+str(prec_95)+'\n')
 		g.write("Recall: "+str(recall_95)+'\n')
+		
+	del X_train, X_val, Y_train, Y_val, history, predictions_binary, predictions_proba
 	
 		
 		
