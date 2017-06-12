@@ -13,6 +13,9 @@ import pickle
 import sys
 import os
 import glob
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 from sklearn.metrics import roc_curve, roc_auc_score, precision_score, average_precision_score, precision_recall_curve, recall_score
 from sklearn.metrics import f1_score
@@ -52,3 +55,20 @@ with open('metric_ROC.pick','wb') as f:
 with open('metric_PR.pick','wb') as g:
 	pickle.dump([l_PR,l_PR_ID],g,protocol=2)
 
+fig1 = plt.figure()
+for i in range(len(l_ROC)):
+	plt.plot(l_ROC[i][0],l_ROC[i][1],label=l_ROC_ID[i])
+plt.legend(loc='best')
+plt.xlabel('False positive rate')
+plt.ylabel('True positive rate')
+plt.title('ROC')
+plt.savefig('ROC')
+
+fig2 = plt.figure()
+for i in range(len(l_PR)):
+	plt.plot(l_PR[i][0],l_PR[i][1],label=l_PR_ID[i])
+plt.legend(loc='best')
+plt.xlabel('Precision')
+plt.ylabel('Recall')
+plt.title('Precision-Recall')
+plt.savefig('PR')
