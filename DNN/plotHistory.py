@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-df = pd.read_hdf(sys.argv[1])
+df = pd.read_hdf('./results/'+sys.argv[1]+'/history.hdf')
 
 fig1 = plt.figure()
 plt.plot(df.index.tolist(),np.asarray(df["acc"]),'-',label='acc')
