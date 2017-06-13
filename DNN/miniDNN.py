@@ -186,7 +186,7 @@ def run():
 	with open(minidir + '/results.pick','wb') as f:
 		pickle.dump([l_precision,l_recall,l_thresholds],f,protocol=2)
 	np.save(minidir + '/predictions.npy',predictions_proba)
-	#~ np.save('results/Y_Val.npy',Y_val)
+	np.save(minidir + 'Y_Val.npy',Y_val)
 	with open(minidir + '/purity_completeness.txt','w') as g:
 		g.write("Precision: "+str(prec_95)+'\n')
 		g.write("Recall: "+str(recall_95)+'\n')
