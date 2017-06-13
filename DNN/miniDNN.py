@@ -116,7 +116,12 @@ def run():
 	
 	t0 = time.time()
 	
-	if int(sys.argv[1]) == 0:	
+	balanced = True
+	
+	if len(sys.argv) > 1:
+		if sys.argv[1] in ['0','unbalanced']: balanced=False 
+		
+	if balanced:	
 		full = np.load('../dataset_train.npy')
 		np.random.shuffle(full)
 		train = full[0:int(0.75*full.shape[0]),:]
@@ -133,12 +138,6 @@ def run():
 	X_train = _normalise(X_train)
 	X_val = _normalise(X_val)
 	
-	while True:
-		params = getRandomParams()
-		ID = ParamsID(params)										# Get an unique ID associated to the parameters
-		if not os.path.isfile('results/' + str(ID) + '/purity_completeness.txt'):		# Check if set of params has already been tested. Don't write file yet because what's below can get interrupted
-			break
-	
 	model = Sequential()
 	model.add(Dense(50,
 					input_shape=(X_train.shape[1],),
@@ -149,13 +148,9 @@ def run():
 	model.add(Dense(1,kernel_initializer='uniform',activation='sigmoid'))
 	model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-	
-	
-	if not os.path.isdir('models'): os.mkdir('models')
-	
 	callbacks = []
 	
-	history = model.fit(X_train,Y_train,batch_size=100,epochs=50,verbose=2,callbacks=callbacks,validation_data=(X_val,Y_val))
+	history = model.fit(X_train,Y_train,batch_size=100,epochs=25,verbose=2,callbacks=callbacks,validation_data=(X_val,Y_val))
 	
 	predictions_binary = np.around(model.predict(X_val))		# Array of 0 and 1
 	predictions_proba = model.predict_proba(X_val)				# Array of numbers [0,1]
@@ -166,44 +161,36 @@ def run():
 	
 	l_precision, l_recall, l_thresholds = precision_recall_curve(Y_val,predictions_proba)
 	
-	# 1 - precision = 1 - (TP/(TP + FP)) = (TP + FP)/(TP + FP) - (TP / (TP+FP)) = FP/(TP+FP) = FPR
-	
-	prec_95 = None
-	recall_95 = None
+
+	# Precision and Recall that maximise F1 score
+	l_f1 = []
 	for i in range(len(l_precision)):
-		if l_precision[i] > 0.95 :
-			if prec_95 is None:
-				prec_95 = l_precision[i]
-				recall_95 = l_recall[i]
-			else:
-				if l_precision[i] < prec_95:
-					prec_95 = l_precision[i]
-					recall_95 = l_recall[i]
-					
-	if prec_95 is None or recall_95 < 1e-1:
-		l_f1 = []
-		for i in range(len(l_precision)):
-			l_f1.append( 2*(l_precision[i] * l_recall[i])/(l_precision[i] + l_recall[i])    )
-		mf1 = max(l_f1)
-		for i in range(len(l_f1)):
-			if l_f1[i] == mf1:
-				prec_95 = l_precision[i]
-				recall_95 = l_recall[i]
+		l_f1.append( 2*(l_precision[i] * l_recall[i])/(l_precision[i] + l_recall[i])    )
+	mf1 = max(l_f1)
+	for i in range(len(l_f1)):
+		if l_f1[i] == mf1:
+			prec_95 = l_precision[i]
+			recall_95 = l_recall[i]
 					
 	print("Precision:", prec_95)
 	print("Recall:", recall_95)
-	print("Iteration run time: ", time.strftime('%H:%M:%S', time.gmtime(time.time() - t0))	)
+	print("Run time: ", time.strftime('%H:%M:%S', time.gmtime(time.time() - t0))	)
 	
 	if not os.path.isdir('results'): os.mkdir('results')
-	if not os.path.isdir('results/' + str(ID)) : os.mkdir('results/' + str(ID))
-	with open('results/' + str(ID) + '/results.pick','wb') as f:
+	
+	if balanced: minidir='./results/balanced'
+	else: minidir='./results/unbalanced'
+	if not os.path.isdir(minidir): os.mkdir(minidir)
+	
+	
+	with open(minidir + '/results.pick','wb') as f:
 		pickle.dump([l_precision,l_recall,l_thresholds],f,protocol=2)
-	np.save('results/' + str(ID) + '/predictions.npy',predictions_proba)
-	np.save('results/Y_Val.npy',Y_val)
-	with open('results/' + str(ID) + '/purity_completeness.txt','w') as g:
+	np.save(minidir + '/predictions.npy',predictions_proba)
+	#~ np.save('results/Y_Val.npy',Y_val)
+	with open(minidir + '/purity_completeness.txt','w') as g:
 		g.write("Precision: "+str(prec_95)+'\n')
 		g.write("Recall: "+str(recall_95)+'\n')
-	save_history(history,'results/'+str(ID)+'/history.hdf')
+	save_history(history,minidir+'/history.hdf')
 	
 	del X_train, X_val, Y_train, Y_val, history, predictions_binary, predictions_proba
 	
