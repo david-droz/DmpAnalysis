@@ -115,16 +115,20 @@ def save_history(hist, hist_filename):
 def run():
 	
 	t0 = time.time()
-		
-	full = np.load('../dataset_train.npy')
-	np.random.shuffle(full)
-	train = full[0:int(0.75*full.shape[0]),:]
-	test = full[int(0.75*full.shape[0]):,:]
-	X_train = train[:,0:-2]
-	Y_train = train[:,-1]
-	X_val = test[:,0:-2]
-	Y_val = test[:,-1]
-	del full, train, test
+	
+	if int(sys.argv[1]) == 0:	
+		full = np.load('../dataset_train.npy')
+		np.random.shuffle(full)
+		train = full[0:int(0.75*full.shape[0]),:]
+		test = full[int(0.75*full.shape[0]):,:]
+		X_train = train[:,0:-2]
+		Y_train = train[:,-1]
+		X_val = test[:,0:-2]
+		Y_val = test[:,-1]
+		del full, train, test
+	else:
+		X_train, Y_train = load_training()
+		X_val, Y_val = load_validation()		
 	
 	X_train = _normalise(X_train)
 	X_val = _normalise(X_val)
