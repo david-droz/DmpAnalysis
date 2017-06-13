@@ -115,13 +115,16 @@ def save_history(hist, hist_filename):
 def run():
 	
 	t0 = time.time()
-	
-	if len(sys.argv) == 1:
-		X_train, Y_train = load_training()
-		X_val, Y_val = load_validation()
-	else:
-		X_train, Y_train = load_training(sys.argv[1])
-		X_val, Y_val = load_validation(sys.argv[2])
+		
+	full = np.load('../dataset_train.npy')
+	np.random.shuffle(full)
+	train = full[0:int(0.75*full.shape[0]),:]
+	test = full[int(0.75*full.shape[0]):,:]
+	X_train = train[:,0:-2]
+	Y_train = train[:,-1]
+	X_val = test[:,0:-2]
+	Y_val = test[:,-1]
+	del full, train, test
 	
 	X_train = _normalise(X_train)
 	X_val = _normalise(X_val)
@@ -148,7 +151,7 @@ def run():
 	
 	callbacks = []
 	
-	history = model.fit(X_train,Y_train,batch_size=100,epochs=10,verbose=2,callbacks=callbacks,validation_data=(X_val,Y_val))
+	history = model.fit(X_train,Y_train,batch_size=100,epochs=50,verbose=2,callbacks=callbacks,validation_data=(X_val,Y_val))
 	
 	predictions_binary = np.around(model.predict(X_val))		# Array of 0 and 1
 	predictions_proba = model.predict_proba(X_val)				# Array of numbers [0,1]
