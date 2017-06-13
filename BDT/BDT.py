@@ -45,8 +45,8 @@ def getRandomParams():
 	Returns a dictionary containing all the parameters to train the Scikit BDT.
 	'''
 	p_lr = [1.0,0.1,0.01,0.001,0.0001]
-	p_n = [25,50,100,150,200,250,300,400,500]
-	p_max = [2,3,4,5,6,3]
+	p_n = [25,50,100,150,200,250,300,400,500,1000,1500,2000]
+	p_max = [2,3,4,5,6,3,7]
 	p_leaves = [1,10,50,100,0.001,0.0001,1,1]
 	
 						
