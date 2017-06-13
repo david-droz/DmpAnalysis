@@ -116,10 +116,10 @@ def _normalise(arr):
 def save_history(hist, hist_filename):
 	import pandas as pd
 
-	df_history = pd.DataFrame(np.asarray(hist.history.get("loss")), columns=['loss'])
-	df_history['acc'] = pd.Series(np.asarray(hist.history.get("acc")), index=df_history.index)
-	df_history['val_loss'] = pd.Series(np.asarray(hist.history.get("val_loss")), index=df_history.index)
-	df_history['val_acc'] = pd.Series(np.asarray(hist.history.get("val_acc")), index=df_history.index)
+	df_history = pd.DataFrame(np.asarray(hist.history["loss"]), columns=['loss'])
+	df_history['acc'] = pd.Series(np.asarray(hist.history["acc"]), index=df_history.index)
+	df_history['val_loss'] = pd.Series(np.asarray(hist.history["val_loss"]), index=df_history.index)
+	df_history['val_acc'] = pd.Series(np.asarray(hist.history["val_acc"]), index=df_history.index)
 	df_history.to_hdf(hist_filename, key='history', mode='w')	
 	
 def run():
@@ -149,14 +149,14 @@ def run():
 		pickle.dump(params,f,protocol=2)
 		
 	chck = ModelCheckpoint("models/weights_"+str(ID)+"__{epoch:02d}-{val_loss:.2f}.hdf5")
-	earl = EarlyStopping(monitor='loss',min_delta=0.0001,patience=5)			# Alternative: train epoch per epoch, evaluate something at every epoch.
-	rdlronplt = ReduceLROnPlateau(monitor='loss',patience=4,min_lr=0.001)
+	earl = EarlyStopping(monitor='loss',min_delta=0.0001,patience=15)			# Alternative: train epoch per epoch, evaluate something at every epoch.
+	rdlronplt = ReduceLROnPlateau(monitor='loss',patience=5,min_lr=0.001)
 	callbacks = [chck,earl,rdlronplt]
 	
-	history = model.fit(X_train,Y_train,batch_size=200,epochs=200,verbose=0,callbacks=callbacks,validation_data=(X_val,Y_val))
+	history = model.fit(X_train,Y_train,batch_size=200,epochs=400,verbose=2,callbacks=callbacks,validation_data=(X_val,Y_val))
 	
-	predictions_binary = np.around(model.predict(X_val))			# Array of 0 and 1
-	predictions_proba = model.predict_proba(X_val)		# Array of numbers [0,1]
+	predictions_binary = np.around(model.predict(X_val))		# Array of 0 and 1
+	predictions_proba = model.predict_proba(X_val)				# Array of numbers [0,1]
 	
 	purity = precision_score(Y_val,predictions_binary)			# Precision:  true positive / (true + false positive). Purity (how many good events in my prediction?)
 	completeness = recall_score(Y_val,predictions_binary)		# Recall: true positive / (true positive + false negative). Completeness (how many good events did I find?)
