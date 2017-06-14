@@ -191,6 +191,8 @@ if __name__ == '__main__':
 	parser.add_argument("-vs", "--validation_split", help="Fraction of total electrons that go into validation [0;1-train_split]",default=0.2,type=float)
 	parser.add_argument("-vm", "--validation_mixture", help="Ratio of protons to electrons in validation set ( > 1)",default=100,type=int)
 	parser.add_argument("-tm", "--test_mixture", help="Ratio of protons to electrons in testing set ( > 1)", default=100,type=int)
+	parser.add_argument("--onlyprotons",help="Run only for protons",action='store_true',default=False)
+	parser.add_argument("--onlyelectrons",help="Run only for electrons",action='store_true',default=False)
 		
 	args = parser.parse_args()
 	
@@ -208,7 +210,7 @@ if __name__ == '__main__':
 	print "Got indices (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
 	
 	# Merging and splitting - electrons
-	if not os.path.isfile('dataset_electrons_test.root'):
+	if not args.onlyprotons :
 		
 		print "--- Electrons ---"
 		
@@ -226,18 +228,18 @@ if __name__ == '__main__':
 		set_e_test = arr_e[ selectedE_test, :]
 		del arr_e
 		print "Saving train, validate, test arrays (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
-		np.save('data_train_elecs.npy',set_e_train)
-		np.save('data_validate_elecs.npy',set_e_validate)
-		np.save('data_test_elecs.npy',set_e_test)
-		np2root(set_e_train,getLabels(),outname='dataset_electrons_train.root')
-		np2root(set_e_validate,getLabels(),outname='dataset_electrons_validate.root')
-		np2root(set_e_test,getLabels(),outname='dataset_electrons_test.root')
+		np.save('data_train_elecs_%d.npy'%validationMixture,set_e_train)
+		np.save('data_validate_elecs_%d.npy'%validationMixture,set_e_validate)
+		np.save('data_test_elecs_%d.npy'%testMixture,set_e_test)
+		np2root(set_e_train,getLabels(),outname='dataset_electrons_train_%d.root'%validationMixture)
+		np2root(set_e_validate,getLabels(),outname='dataset_electrons_validate_%d.root'%validationMixture)
+		np2root(set_e_test,getLabels(),outname='dataset_electrons_test_%d.root'%testMixture)
 		del set_e_train, set_e_validate, set_e_test
 		print "Done saving (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
 
 	
 	# Protons
-	if not os.path.isfile('dataset_protons_test.root'):
+	if not args.onlyelectrons :
 		
 		print "--- Protons ---"
 		
@@ -252,56 +254,60 @@ if __name__ == '__main__':
 		np.random.shuffle(arr_p)
 		
 		print "Saving train (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
-		if not os.path.isfile('dataset_protons_train.root'):
+		if not os.path.isfile('dataset_protons_train_%d.root'%validationMixture):
 			set_p_train = arr_p[ selectedP_train, :]
-			np.save('data_train_prots.npy',set_p_train)
-			np2root(set_p_train,getLabels(),outname='dataset_protons_train.root')
+			np.save('data_train_prots_%d.npy'%validationMixture,set_p_train)
+			np2root(set_p_train,getLabels(),outname='dataset_protons_train_%d.root'%validationMixture)
 			del set_p_train
 		
 		print "Saving validate (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
-		if not os.path.isfile('dataset_protons_validate.root'):
+		if not os.path.isfile('dataset_protons_validate_%d.root'%validationMixture):
 			set_p_validate = arr_p[ selectedP_validate, :]
-			np.save('data_validate_prots.npy',set_p_validate)
-			np2root(set_p_validate,getLabels(),outname='dataset_protons_validate.root')
+			np.save('data_validate_prots_%d.npy'%validationMixture,set_p_validate)
+			np2root(set_p_validate,getLabels(),outname='dataset_protons_validate_%d.root'%validationMixture)
 			del set_p_validate
 		
 		print "Saving test (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
-		if not os.path.isfile('dataset_protons_test.root'):
+		if not os.path.isfile('dataset_protons_test_%d.root'%testMixture):
 			set_p_test = arr_p[ selectedP_test, :]
-			np.save('data_test_prots.npy',set_p_test)
-			np2root(set_p_test,getLabels(),outname='dataset_protons_test.root')
+			np.save('data_test_prots_%d.npy'%testMixture,set_p_test)
+			np2root(set_p_test,getLabels(),outname='dataset_protons_test_%d.root'%testMixture)
 			del set_p_test
 		
 		del arr_p
 		print "Done saving (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
+		
+		
 	
 	# Concatenate electrons and protons
-	print "Building train set..."
-	set_e_train = np.load('data_train_elecs.npy')
-	set_p_train = np.load('data_train_prots.npy')
-	train_set = np.concatenate( (set_e_train, set_p_train ) )
-	np.random.shuffle(train_set)
-	np.save('dataset_train.npy',train_set)
-	np2root(train_set,getLabels(),outname='dataset_train.root')
-	del train_set, set_e_train, set_p_train
-	print "Done  (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
+		if not args.onlyprotons and not args.onlyelectrons:
+		print "Building train set..."
+		set_e_train = np.load('data_train_elecs_%d.npy'%validationMixture)
+		set_p_train = np.load('data_train_prots_%d.npy'%validationMixture)
+		train_set = np.concatenate( (set_e_train, set_p_train ) )
+		np.random.shuffle(train_set)
+		np.save('dataset_train_%d.npy'%validationMixture,train_set)
+		np2root(train_set,getLabels(),outname='dataset_train_%d.root'%validationMixture)
+		del train_set, set_e_train, set_p_train
+		print "Done  (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
+		
+		print "Building validation set..."
+		set_e_validate = np.load('data_validate_elecs_%d.npy'%validationMixture)
+		set_p_validate = np.load('data_validate_prots_%d.npy'%validationMixture)
+		validate_set = np.concatenate( (set_e_validate, set_p_validate ) )
+		np.random.shuffle(validate_set)
+		np.save('dataset_validate_%d.npy'%validationMixture,validate_set)
+		np2root(validate_set,getLabels(),outname='dataset_validate_%d.root'%validationMixture)
+		del validate_set, set_e_validate, set_p_validate
+		print "Done  (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
+		
+		print "Building test set..."
+		set_e_test = np.load('data_test_elecs_%d.npy'%testMixture)
+		set_p_test = np.load('data_test_prots_%d.npy'%testMixture)
+		test_set = np.concatenate( (set_e_test, set_p_test ) )
+		np.random.shuffle(test_set)
+		np.save('dataset_test_%d.npy'%testMixture,test_set)
+		np2root(test_set,getLabels(),outname='dataset_test_%d.root'%testMixture)
+		del test_set, set_e_test, set_p_test
+		print "Done (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
 	
-	print "Building validation set..."
-	set_e_validate = np.load('data_validate_elecs.npy')
-	set_p_validate = np.load('data_validate_prots.npy')
-	validate_set = np.concatenate( (set_e_validate, set_p_validate ) )
-	np.random.shuffle(validate_set)
-	np.save('dataset_validate.npy',validate_set)
-	np2root(validate_set,getLabels(),outname='dataset_validate.root')
-	del validate_set, set_e_validate, set_p_validate
-	print "Done  (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
-	
-	print "Building test set..."
-	set_e_test = np.load('data_test_elecs.npy')
-	set_p_test = np.load('data_test_prots.npy')
-	test_set = np.concatenate( (set_e_test, set_p_test ) )
-	np.random.shuffle(test_set)
-	np.save('dataset_test.npy',test_set)
-	np2root(test_set,getLabels(),outname='dataset_test.root')
-	del test_set, set_e_test, set_p_test
-	print "Done (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
