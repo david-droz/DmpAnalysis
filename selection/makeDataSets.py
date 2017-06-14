@@ -282,7 +282,7 @@ if __name__ == '__main__':
 		
 	
 	# Concatenate electrons and protons
-		if not args.onlyprotons and not args.onlyelectrons:
+	if not args.onlyprotons and not args.onlyelectrons:
 		print "Building train set..."
 		set_e_train = np.load('data_train_elecs.npy')
 		set_p_train = np.load('data_train_prots.npy')
