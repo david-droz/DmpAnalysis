@@ -228,10 +228,10 @@ if __name__ == '__main__':
 		set_e_test = arr_e[ selectedE_test, :]
 		del arr_e
 		print "Saving train, validate, test arrays (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
-		np.save('data_train_elecs_%d.npy'%validationMixture,set_e_train)
+		np.save('data_train_elecs.npy',set_e_train)
 		np.save('data_validate_elecs_%d.npy'%validationMixture,set_e_validate)
 		np.save('data_test_elecs_%d.npy'%testMixture,set_e_test)
-		np2root(set_e_train,getLabels(),outname='dataset_electrons_train_%d.root'%validationMixture)
+		np2root(set_e_train,getLabels(),outname='dataset_electrons_train.root')
 		np2root(set_e_validate,getLabels(),outname='dataset_electrons_validate_%d.root'%validationMixture)
 		np2root(set_e_test,getLabels(),outname='dataset_electrons_test_%d.root'%testMixture)
 		del set_e_train, set_e_validate, set_e_test
@@ -254,10 +254,10 @@ if __name__ == '__main__':
 		np.random.shuffle(arr_p)
 		
 		print "Saving train (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
-		if not os.path.isfile('dataset_protons_train_%d.root'%validationMixture):
+		if not os.path.isfile('dataset_protons_train.root'):
 			set_p_train = arr_p[ selectedP_train, :]
-			np.save('data_train_prots_%d.npy'%validationMixture,set_p_train)
-			np2root(set_p_train,getLabels(),outname='dataset_protons_train_%d.root'%validationMixture)
+			np.save('data_train_prots.npy',set_p_train)
+			np2root(set_p_train,getLabels(),outname='dataset_protons_train.root')
 			del set_p_train
 		
 		print "Saving validate (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
@@ -282,12 +282,12 @@ if __name__ == '__main__':
 	# Concatenate electrons and protons
 		if not args.onlyprotons and not args.onlyelectrons:
 		print "Building train set..."
-		set_e_train = np.load('data_train_elecs_%d.npy'%validationMixture)
-		set_p_train = np.load('data_train_prots_%d.npy'%validationMixture)
+		set_e_train = np.load('data_train_elecs.npy')
+		set_p_train = np.load('data_train_prots.npy')
 		train_set = np.concatenate( (set_e_train, set_p_train ) )
 		np.random.shuffle(train_set)
-		np.save('dataset_train_%d.npy'%validationMixture,train_set)
-		np2root(train_set,getLabels(),outname='dataset_train_%d.root'%validationMixture)
+		np.save('dataset_train.npy',train_set)
+		np2root(train_set,getLabels(),outname='dataset_train.root')
 		del train_set, set_e_train, set_p_train
 		print "Done  (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
 		
