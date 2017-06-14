@@ -74,8 +74,10 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 	# Let's go for 1M events for training, 25k electrons for validation and 25k for testing
 	# https://stackoverflow.com/questions/10048069/what-is-the-most-pythonic-way-to-pop-a-random-element-from-a-list
 	
-	if os.path.isfile('indices.pick'):
-		with open('indices.pick','r') as f:
+	pickFile = 'indices_'+str(nrofe)+str(nrofp)+str(trainingFraction)+str(validationFraction)+str(validationMixture)+str(testMixture)+'.pick'
+	
+	if os.path.isfile(pickFile):
+		with open(pickFile,'rb') as f:
 			a = pickle.load(f)
 		return a[0], a[1], a[2], a[3], a[4], a[5]
 	
@@ -126,7 +128,7 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 		for i in xrange(testMixture * len(selectedE_test)):
 			selectedP_test.append( available_P.pop() )
 	
-	with open('indices.pick','w') as f:
+	with open(pickFile,'wb') as f:
 		pickle.dump([selectedE_train, selectedP_train, selectedE_validate, selectedP_validate, selectedE_test, selectedP_test],f)
 	
 	return selectedE_train, selectedP_train, selectedE_validate, selectedP_validate, selectedE_test, selectedP_test
