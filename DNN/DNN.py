@@ -117,9 +117,8 @@ def save_history(hist, hist_filename):
 	import pandas as pd
 
 	df_history = pd.DataFrame(np.asarray(hist.history["loss"]), columns=['loss'])
-	df_history['acc'] = pd.Series(np.asarray(hist.history["acc"]), index=df_history.index)
-	df_history['val_loss'] = pd.Series(np.asarray(hist.history["val_loss"]), index=df_history.index)
-	df_history['val_acc'] = pd.Series(np.asarray(hist.history["val_acc"]), index=df_history.index)
+	for key in hist.history.keys():
+		df_history[key] = pd.Series(np.asarray(hist.history[key]), index=df_history.index)
 	df_history.to_hdf(hist_filename, key='history', mode='w')	
 	
 def run():
@@ -148,7 +147,7 @@ def run():
 	with open('models/params_' + str(ID) + '.pick','wb') as f:	# Save the parameters into a file determined by unique ID
 		pickle.dump(params,f,protocol=2)
 		
-	chck = ModelCheckpoint("models/weights_"+str(ID)+"__{epoch:02d}-{val_loss:.2f}.hdf5")
+	chck = ModelCheckpoint("models/weights_"+str(ID)+"__{epoch:02d}-{val_loss:.2f}.hdf5",period=10)
 	earl = EarlyStopping(monitor='loss',min_delta=0.0001,patience=15)			# Alternative: train epoch per epoch, evaluate something at every epoch.
 	rdlronplt = ReduceLROnPlateau(monitor='loss',patience=5,min_lr=0.001)
 	callbacks = [chck,earl,rdlronplt]
@@ -168,6 +167,22 @@ def run():
 	
 	prec_95 = None
 	recall_95 = None
+	fscore_best = None
+	fscore_best_index = None
+	
+	for i in range(len(l_precision)):
+		fscore_temp = 2 * l_precision[i] * l_recall[i] / (l_precision[i]+l_recall[i])
+		if fscore_temp > fscore_best:
+			fscore_best = fscore_temp
+			fscore_best_index = i
+	
+	prec_95 = l_precision[fscore_best_index]
+	recall_95 = l_recall[fscore_best_index]
+	
+	if prec_95 < 0.6 or recall_95 < 0.1 :
+		prec_95 = purity
+		recall_95 = completeness
+	
 	for i in range(len(l_precision)):
 		if l_precision[i] > 0.95 :
 			if prec_95 is None:
@@ -178,15 +193,6 @@ def run():
 					prec_95 = l_precision[i]
 					recall_95 = l_recall[i]
 					
-	if prec_95 is None or recall_95 < 1e-1:
-		l_f1 = []
-		for i in range(len(l_precision)):
-			l_f1.append( 2*(l_precision[i] * l_recall[i])/(l_precision[i] + l_recall[i])    )
-		mf1 = max(l_f1)
-		for i in range(len(l_f1)):
-			if l_f1[i] == mf1:
-				prec_95 = l_precision[i]
-				recall_95 = l_recall[i]
 					
 	print("Precision:", prec_95)
 	print("Recall:", recall_95)
