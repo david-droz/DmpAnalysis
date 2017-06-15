@@ -112,6 +112,22 @@ def _run():
 	
 	prec_95 = None
 	recall_95 = None
+	fscore_best = None
+	fscore_best_index = None
+	
+	for i in range(len(l_precision)):
+		fscore_temp = 2 * l_precision[i] * l_recall[i] / (l_precision[i]+l_recall[i])
+		if fscore_temp > fscore_best:
+			fscore_best = fscore_temp
+			fscore_best_index = i
+	
+	prec_95 = l_precision[fscore_best_index]
+	recall_95 = l_recall[fscore_best_index]
+	
+	if prec_95 < 0.6 or recall_95 < 0.1 :
+		prec_95 = purity
+		recall_95 = completeness
+	
 	for i in range(len(l_precision)):
 		if l_precision[i] > 0.95 :
 			if prec_95 is None:
@@ -120,17 +136,7 @@ def _run():
 			else:
 				if l_precision[i] < prec_95:
 					prec_95 = l_precision[i]
-					recall_95 = l_recall[i]
-	
-	if prec_95 is None or recall_95 < 1e-1:
-		l_f1 = []
-		for i in range(len(l_precision)):
-			l_f1.append( 2*(l_precision[i] * l_recall[i])/(l_precision[i] + l_recall[i])    )
-		mf1 = max(l_f1)
-		for i in range(len(l_f1)):
-			if l_f1[i] == mf1:
-				prec_95 = l_precision[i]
-				recall_95 = l_recall[i]				
+					recall_95 = l_recall[i]		
 	
 	print("Precision: ", prec_95)
 	print("Recall: ", recall_95)
