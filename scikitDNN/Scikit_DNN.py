@@ -160,7 +160,7 @@ def _run():
 		g.write("Precision: "+str(prec_95)+'\n')
 		g.write("Recall: "+str(recall_95)+'\n')
 		
-	del X_train, X_val, Y_train, Y_val, history, predictions_binary, predictions_proba
+	del X_train, X_val, Y_train, Y_val, predictions_binary, predictions_proba
 	
 		
 		
