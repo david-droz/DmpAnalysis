@@ -165,10 +165,10 @@ def run():
 	
 	# 1 - precision = 1 - (TP/(TP + FP)) = (TP + FP)/(TP + FP) - (TP / (TP+FP)) = FP/(TP+FP) = FPR
 	
-	prec_95 = None
-	recall_95 = None
-	fscore_best = None
-	fscore_best_index = None
+	prec_95 = 0
+	recall_95 = 0
+	fscore_best = 0
+	fscore_best_index = 0
 	
 	for i in range(len(l_precision)):
 		fscore_temp = 2 * l_precision[i] * l_recall[i] / (l_precision[i]+l_recall[i])
@@ -182,16 +182,6 @@ def run():
 	if prec_95 < 0.6 or recall_95 < 0.1 :
 		prec_95 = purity
 		recall_95 = completeness
-	
-	for i in range(len(l_precision)):
-		if l_precision[i] > 0.95 :
-			if prec_95 is None:
-				prec_95 = l_precision[i]
-				recall_95 = l_recall[i]
-			else:
-				if l_precision[i] < prec_95:
-					prec_95 = l_precision[i]
-					recall_95 = l_recall[i]
 					
 					
 	print("Precision:", prec_95)
