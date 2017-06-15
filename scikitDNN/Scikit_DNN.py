@@ -141,16 +141,6 @@ def _run():
 	if prec_95 < 0.6 or recall_95 < 0.1 :
 		prec_95 = purity
 		recall_95 = completeness
-	
-	for i in range(len(l_precision)):
-		if l_precision[i] > 0.95 :
-			if prec_95 is None:
-				prec_95 = l_precision[i]
-				recall_95 = l_recall[i]
-			else:
-				if l_precision[i] < prec_95:
-					prec_95 = l_precision[i]
-					recall_95 = l_recall[i]
 					
 	print("Precision: ", prec_95)
 	print("Recall: ", recall_95)
