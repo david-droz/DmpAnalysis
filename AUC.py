@@ -70,6 +70,7 @@ print('-- Best F1 score on best AUC --')
 print('F1:',fscore_best)
 print('Precision:',best_f1_prec)
 print('Recall:',best_f1_recall)
+print('AUC:',bestPR_values[0])
 
 ################
 
