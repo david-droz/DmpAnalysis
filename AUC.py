@@ -26,6 +26,8 @@ Y_val = np.load('./results/Y_Val.npy')
 
 IDlist = glob.glob('./results/*/')
 IDlist.sort()
+IDlist = [x for x in IDlist if os.path.isfile(x+'predictions.npy')]
+
 l_AUC_ROC = []
 l_AUC_PR = []
 
@@ -33,12 +35,12 @@ for ID in IDlist:
 	
 	try:
 		Y_pred = np.load( ID + 'predictions.npy' )
+		l_AUC_ROC.append(roc_auc_score(Y_val,Y_pred))
+		l_AUC_PR.append(average_precision_score(Y_val,Y_pred))
 	except IOError:
 		continue
 	
-	l_AUC_ROC.append(roc_auc_score(Y_val,Y_pred))
-	
-	l_AUC_PR.append(average_precision_score(Y_val,Y_pred))
+
 
 bestROC_values = heapq.nlargest(10, l_AUC_ROC)
 bestROC_indices = [ l_AUC_ROC.index(x) for x in bestROC_values ]
