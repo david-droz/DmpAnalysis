@@ -94,14 +94,34 @@ print('Recall:',recall_best)
 
 #################
 
-precision_average = precision_score( Y_val,  np.load(IDlist[bestPR_indices[0]]+'/predictions.npy') )
-recall_average = recall_score( Y_val,  np.load(IDlist[bestPR_indices[0]]+'/predictions.npy') )
-f1_average = f1_score( Y_val,  np.load(IDlist[bestPR_indices[0]]+'/predictions.npy') )
+precision_average = precision_score( Y_val,  np.around(np.load(IDlist[bestPR_indices[0]]+'/predictions.npy') ))
+recall_average = recall_score( Y_val,  np.around(np.load(IDlist[bestPR_indices[0]]+'/predictions.npy') ))
+f1_average = f1_score( Y_val,  np.around(np.load(IDlist[bestPR_indices[0]]+'/predictions.npy') ))
 
 print('-- Average on best AUC --')
 print('F1:',f1_average)
 print('Precision',precision_average)
 print('Recall',recall_average)
+
+#################
+
+prec_95 = 0
+rc_95 = 0
+f1_95 = 0
+
+for i in range(len(best_AUC_l_precision)):
+	if best_AUC_l_precision[i] > 0.95:
+		temp_f1 = 2*(best_AUC_l_precision[i]*best_AUC_l_recall[i])/(best_AUC_l_precision[i]+best_AUC_l_recall[i])
+		if temp_f1 > f1_95:
+			prec_95 = best_AUC_l_precision[i]
+			rc_95 = best_AUC_l_recall[i]
+			f1_95 = temp_f1
+
+print('-- Precision 95% on best AUC --')
+print('F1:',f1_95)
+print('Precision',prec_95)
+print('Recall',rc_95)
+
 
 #################
 with open('metric_ROC.pick','wb') as f:
