@@ -149,13 +149,13 @@ def run():
 		
 	chck = ModelCheckpoint("models/weights_"+str(ID)+"__{epoch:02d}-{val_loss:.2f}.hdf5",period=10)
 	earl = EarlyStopping(monitor='loss',min_delta=0.0001,patience=15)			# Alternative: train epoch per epoch, evaluate something at every epoch.
-	rdlronplt = ReduceLROnPlateau(monitor='loss',patience=5,min_lr=0.001)
+	rdlronplt = ReduceLROnPlateau(monitor='loss',patience=3,min_lr=0.001)
 	callbacks = [chck,earl,rdlronplt]
 	
-	history = model.fit(X_train,Y_train,batch_size=200,epochs=400,verbose=2,callbacks=callbacks,validation_data=(X_val,Y_val))
+	history = model.fit(X_train,Y_train,batch_size=200,epochs=200,verbose=2,callbacks=callbacks,validation_data=(X_val,Y_val))
 	
 	predictions_binary = np.around(model.predict(X_val))		# Array of 0 and 1
-	predictions_proba = model.predict_proba(X_val)				# Array of numbers [0,1]
+	predictions_proba = model.predict(X_val)				# Array of numbers [0,1]
 	
 	purity = precision_score(Y_val,predictions_binary)			# Precision:  true positive / (true + false positive). Purity (how many good events in my prediction?)
 	completeness = recall_score(Y_val,predictions_binary)		# Recall: true positive / (true positive + false negative). Completeness (how many good events did I find?)
