@@ -34,6 +34,8 @@ if __name__ == '__main__':
 	fig1 = plt.figure()
 	plt.hist(elecs,50,label='e',alpha=0.5,histtype='step',color='green')
 	plt.hist(prots,50,label='p',alpha=0.5,histtype='step',color='red')
+	plt.xlabel('Classifier score')
+	plt.ylabel('Number of events')
 	plt.legend(loc='best')
 	plt.yscale('log')
 	plt.savefig('predictionHistogram')
