@@ -29,8 +29,8 @@ if __name__ == '__main__':
 			prots.append(predictions[i])
 			
 	fig1 = plt.figure()
-	plt.hist(elecs,20,label='e',alpha=0.5,histtype='stepfilled',color='green')
-	plt.hist(prots,20,label='p',alpha=0.5,histtype='stepfilled',color='red')
+	plt.hist(elecs,50,label='e',alpha=0.5,histtype='step',color='green')
+	plt.hist(prots,50,label='p',alpha=0.5,histtype='step',color='red')
 	plt.legend(loc='best')
 	plt.yscale('log')
 	plt.savefig('predictionHistogram')
