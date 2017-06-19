@@ -48,8 +48,8 @@ if __name__ == '__main__':
 		
 		for j in range(len(Y_val)):
 			if X_val[j,30] > bin_edges[i] and X_val[j,30] <= bin_edges[i+1]:
-				binpred.append( predictions[i] )
-				bintruth.append( Y_val[i] )
+				binpred.append( predictions[j] )
+				bintruth.append( Y_val[j] )
 		
 		l_precision, l_recall, l_thresholds = precision_recall_curve(bintruth,binpred)
 
