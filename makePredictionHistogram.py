@@ -16,7 +16,10 @@ if __name__ == '__main__':
 
 	ID = sys.argv[1]
 	
-	predictions = np.load('./results/' + str(ID) + '/predictions.npy')
+	try:
+		predictions = np.load('./results/' + str(ID) + '/predictions.npy')[:,0]
+	except IndexError:
+		predictions = np.load('./results/' + str(ID) + '/predictions.npy')
 	truth = np.load('./results/Y_Val.npy')
 	
 	elecs = []
