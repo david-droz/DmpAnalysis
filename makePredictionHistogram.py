@@ -3,7 +3,10 @@
 Make the histogram of ML predictions
 
 '''
+from __future__ import print_function, division, absolute_import
 
+import matplotlib
+matplotlib.use('Agg')
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
@@ -19,7 +22,7 @@ if __name__ == '__main__':
 	elecs = []
 	prots = []
 	
-	for i in xrange(truth.shape[0]):
+	for i in range(truth.shape[0]):
 		if truth[i] == 1:
 			elecs.append(predictions[i])
 		else:
@@ -30,5 +33,6 @@ if __name__ == '__main__':
 	plt.hist(prots,20,label='p')
 	plt.legend(loc='best')
 	plt.yscale('log')
-	plt.show()
+	plt.savefig('predictionHistogram')
+	#~ plt.show()
 	
