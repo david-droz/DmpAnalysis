@@ -107,7 +107,7 @@ if __name__ == '__main__':
 		recall_at_prec98.append(rc_98)
 
 	for x in [recall_at_prec95,recall_at_prec96,recall_at_prec97,recall_at_prec98]: 
-		print x
+		print(x)
 	
 	fig1 = plt.figure()
 	plt.plot(bin_centers,recall_at_prec95,label='precision > 0.95')
