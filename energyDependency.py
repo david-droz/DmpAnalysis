@@ -29,17 +29,19 @@ if __name__ == '__main__':
 	Y_val = truth[:,-1]
 	del truth
 	
-	bin_edges = np.logspace( 5 , 7 , num=7)			# 6 logarithmic bins from 100 GeV to 10 TeV
+	bin_edges = np.logspace( 5 , 7 , num=11)			# 10 logarithmic bins from 100 GeV to 10 TeV
 	bin_centers = [ (bin_edges[i] + bin_edges[i+1])/2 for i in range(len(bin_edges)-1)]
 	
 	recall_at_prec95 = []
 	recall_at_prec96 = []
 	recall_at_prec97 = []
 	recall_at_prec98 = []
+	recall_at_prec99 = []
 	precision_at_prec95 = []
 	precision_at_prec96 = []
 	precision_at_prec97 = []
 	precision_at_prec98 = []
+	precision_at_prec99 = []
 	
 	for i in range(len(bin_edges)-1):
 		
@@ -96,6 +98,13 @@ if __name__ == '__main__':
 					prec_98 = l_precision[i]
 					rc_98 = l_recall[i]
 					f1_98 = temp_f1
+			# 99%
+			if l_precision[i] > 0.99:
+				temp_f1 = 2*(l_precision[i]*l_recall[i])/(l_precision[i]+l_recall[i])
+				if temp_f1 > f1_99:
+					prec_99 = l_precision[i]
+					rc_99 = l_recall[i]
+					f1_99 = temp_f1
 					
 		precision_at_prec95.append(prec_95)
 		recall_at_prec95.append(rc_95)	
@@ -105,15 +114,15 @@ if __name__ == '__main__':
 		recall_at_prec97.append(rc_97)
 		precision_at_prec98.append(prec_98)
 		recall_at_prec98.append(rc_98)
+		precision_at_prec99.append(prec_99)
+		recall_at_prec99.append(rc_99)
 
-	for x in [recall_at_prec95,recall_at_prec96,recall_at_prec97,recall_at_prec98]: 
-		print(x)
-	
 	fig1 = plt.figure()
-	plt.plot(bin_centers,recall_at_prec95,label='precision > 0.95')
-	plt.plot(bin_centers,recall_at_prec96,label='precision > 0.96')
-	plt.plot(bin_centers,recall_at_prec97,label='precision > 0.97')
-	plt.plot(bin_centers,recall_at_prec98,label='precision > 0.98')
+	plt.plot(bin_centers,recall_at_prec95,'o-',label='precision > 0.95')
+	plt.plot(bin_centers,recall_at_prec96,'o-',label='precision > 0.96')
+	plt.plot(bin_centers,recall_at_prec97,'o-',label='precision > 0.97')
+	plt.plot(bin_centers,recall_at_prec98,'o-',label='precision > 0.98')
+	plt.plot(bin_centers,recall_at_prec99,'o-',label='precision > 0.99')
 	plt.xscale('log')
 	plt.xlabel('Energy [MeV]')
 	plt.ylabel('Recall')
@@ -121,10 +130,11 @@ if __name__ == '__main__':
 	plt.savefig('energy_recall')
 
 	fig2 = plt.figure()
-	plt.plot(bin_centers,precision_at_prec95,label='precision > 0.95')
-	plt.plot(bin_centers,precision_at_prec96,label='precision > 0.96')
-	plt.plot(bin_centers,precision_at_prec97,label='precision > 0.97')
-	plt.plot(bin_centers,precision_at_prec98,label='precision > 0.98')
+	plt.plot(bin_centers,precision_at_prec95,'o-',label='precision > 0.95')
+	plt.plot(bin_centers,precision_at_prec96,'o-',label='precision > 0.96')
+	plt.plot(bin_centers,precision_at_prec97,'o-',label='precision > 0.97')
+	plt.plot(bin_centers,precision_at_prec98,'o-',label='precision > 0.98')
+	plt.plot(bin_centers,precision_at_prec99,'o-',label='precision > 0.99')
 	plt.xscale('log')
 	plt.xlabel('Energy [MeV]')
 	plt.ylabel('Precision')
