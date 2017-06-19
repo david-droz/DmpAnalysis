@@ -68,6 +68,9 @@ if __name__ == '__main__':
 		prec_98 = 0
 		rc_98 = 0
 		f1_98 = 0
+		prec_99 = 0
+		rc_99 = 0
+		f1_99 = 0
 		for i in range(len(l_precision)):
 			
 			# 95%
