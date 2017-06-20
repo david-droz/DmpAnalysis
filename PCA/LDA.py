@@ -98,8 +98,8 @@ def _run():
 	
 	#~ electrons = p.transform( np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')[:,0:-2]  )
 	#~ protons = p.transform( np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')[:,0:-2]  )
-	electrons = p.transform( np.load('/home/drozd/analysis/data_test_elecs_100.npy')[:,0:-2]  )
-	protons = p.transform( np.load('/home/drozd/analysis/data_test_prots_100.npy')[:,0:-2]  )
+	electrons = p.transform( np.load('/home/drozd/analysis/data_test_elecs.npy')[:,0:-2]  )
+	protons = p.transform( np.load('/home/drozd/analysis/data_test_prots.npy')[:,0:-2]  )
 		
 	fig1 = plt.figure()
 	plt.hist(electrons[:,0],50,histtype='step',label='e')
