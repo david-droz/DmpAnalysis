@@ -99,16 +99,12 @@ def _run():
 	electrons = p.transform( np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')[:,0:-2]  )
 	protons = p.transform( np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')[:,0:-2]  )
 	
-	print(electrons.shape)
-	print(protons.shape)
-	
-	#~ for i in range(5):
-		#~ fig1 = plt.figure()
-		#~ plt.hist(electrons[:,i],50,histtype='step',label='e')
-		#~ plt.hist(protons[:,i],50,histtype='step',label='p')
-		#~ plt.legend(loc='best')
-		#~ plt.title('LDA - variable ' + str(i))
-		#~ plt.savefig(outdir+'/var'+str(i))
+	fig1 = plt.figure()
+	plt.hist(electrons[:,0],50,histtype='step',label='e')
+	plt.hist(protons[:,0],50,histtype='step',label='p')
+	plt.legend(loc='best')
+	plt.title('LDA - variable ' + str(i))
+	plt.savefig(outdir+'/var'+str(i))
 	
 		
 		
