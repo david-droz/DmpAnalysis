@@ -57,8 +57,8 @@ if __name__ == '__main__':
 		plt.ylabel('Acceptance')
 		plt.legend(loc='best')
 		
-		figname = 'acceptance_' + str(bin_edges[i]) + '-' + str(bin_edges[i+1])
-		figtitle = 'Acceptance: ' + str(int(bin_edges[i]/1000)) + ' GeV - ' + str(int(bin_edges[i+1]/1000)) + ' GeV'
+		figname = 'acceptance_' + str(int(bin_edges[i])/1000.) + '-' + str(int(bin_edges[i+1])/1000) + '.png'
+		figtitle = 'Acceptance: ' + str(int(bin_edges[i])/1000.) + ' GeV - ' + str(int(bin_edges[i+1])/1000) + ' GeV'
 		
 		plt.title(figtitle)
 		plt.savefig(figname)
