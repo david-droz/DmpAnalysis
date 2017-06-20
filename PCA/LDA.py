@@ -1,8 +1,8 @@
 '''
 
-LDA.py
+QDA.py
 
-Linear Discriminant Analysis
+Quadratic Discriminant Analysis
 
 ~ sort of PCA that tries to maximise separation between classes
 
@@ -24,7 +24,9 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+from sklearn.preprocessing import StandardScaler
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.metrics import roc_curve, roc_auc_score, precision_score, average_precision_score, precision_recall_curve, recall_score
 from sklearn.metrics import f1_score
 from sklearn.model_selection import RandomizedSearchCV
@@ -49,7 +51,11 @@ def _run():
 	X_train, Y_train = load_training()
 	X_val,Y_val = load_validation('/home/drozd/analysis/fraction1/dataset_validate_1.npy')
 	
-	p = LinearDiscriminantAnalysis()
+	X_train = StandardScaler().fit_transform(X_train)
+	X_val = StandardScaler().fit_transform(X_val)
+
+	#p = LinearDiscriminantAnalysis()
+	p = QuadraticDiscriminantAnalysis()
 	p.fit(X_train,Y_train)
 	
 	predictions_binary = p.predict(X_val)			# Array of 0 and 1
@@ -98,14 +104,37 @@ def _run():
 	
 	#~ electrons = p.transform( np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')[:,0:-2]  )
 	#~ protons = p.transform( np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')[:,0:-2]  )
-	electrons = p.transform( np.load('/home/drozd/analysis/data_test_elecs.npy')[:,0:-2]  )
-	protons = p.transform( np.load('/home/drozd/analysis/data_test_prots.npy')[:,0:-2]  )
+	electrons = np.load('/home/drozd/analysis/data_test_elecs.npy')[:,0:-2]
+	protons = np.load('/home/drozd/analysis/data_test_prots.npy')[:,0:-2]
+
+	electrons = StandardScaler().fit_transform(electrons)
+	protons = StandardScaler().fit_transform(protons)
 		
 	fig1 = plt.figure()
-	plt.hist(electrons[:,0],50,histtype='step',label='e')
-	plt.hist(protons[:,0],50,histtype='step',label='p')
+	plt.hist(p.predict_proba(electrons)[:,1],50,histtype='step',label='e')
+	plt.hist(p.predict_proba(protons)[:,1],50,histtype='step',label='p')
 	plt.legend(loc='best')
-	plt.savefig(outdir+'/LDA')
+	plt.yscale('log')
+	plt.savefig(outdir+'/QDA')
+	
+	fig2 = plt.figure()
+	
+	l_e = []
+	l_p = []
+	for i in range(Y_val.shape[0]):
+		if Y_val[i] == 0:
+			l_p.append(predictions_proba[i])
+		else:
+			l_e.append(predictions_proba[i])
+	plt.hist(l_e,50,label='e',alpha=0.5,histtype='step',color='green')
+	plt.hist(l_p,50,label='p',alpha=0.5,histtype='step',color='red')
+	plt.yscale('log')
+	plt.legend(loc='best')
+	plt.savefig(outdir+'/QDA_hist')
+	
+	#plt.hist(p.predict_proba(protons),50,histtype='step',label='p')
+	#plt.yscale('log')
+	#plt.savefig(outdir+'/QDA_p')
 	
 		
 		

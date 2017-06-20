@@ -26,6 +26,7 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import roc_curve, roc_auc_score, precision_score, average_precision_score, precision_recall_curve, recall_score
 from sklearn.metrics import f1_score
 from sklearn.model_selection import RandomizedSearchCV
+from sklearn.preprocessing import StandardScaler
 
 def XY_split(fname):
 	arr = np.load(fname)
@@ -45,12 +46,13 @@ def _run(n):
 	if not os.path.isdir(outdir): os.mkdir(outdir)
 
 	X_train, Y_train = load_training()
-	
+	X_train = StandardScaler().fit_transform(X_train)
+
 	p = PCA(n_components=n)
 	p.fit(X_train)
 	
-	electrons = p.transform( np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')[:,0:-2]  )
-	protons = p.transform( np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')[:,0:-2]  )
+	electrons = p.transform( StandardScaler().fit_transform(np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')[:,0:-2])  )
+	protons = p.transform( StandardScaler().fit_transform(np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')[:,0:-2])  )
 	
 	for i in range(n):
 		fig1 = plt.figure()
