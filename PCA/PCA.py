@@ -37,33 +37,39 @@ def load_validation(fname='../dataset_validate.npy'): return XY_split(fname)
 def load_test(fname='../dataset_test.npy'): return XY_split(fname)
 
 
-def _run():
+def _run(n):
 	
+	if not os.path.isdir('pics'): os.mkdir('pics')
+	
+	outdir = 'pics/'+str(n)
+	if not os.path.isdir(outdir): os.mkdir(outdir)
 
-	t0 = time.time()
-	
 	X_train, Y_train = load_training()
 	
-	p = PCA(n_components=5)
+	p = PCA(n_components=n)
 	p.fit(X_train)
 	
 	electrons = p.transform( np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')[:,0:-2]  )
 	protons = p.transform( np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')[:,0:-2]  )
 	
-	for i in range(5):
+	for i in range(n):
 		fig1 = plt.figure()
 		plt.hist(electrons[:,i],50,histtype='step',label='e')
 		plt.hist(protons[:,i],50,histtype='step',label='p')
 		plt.legend(loc='best')
 		plt.title('PCA - PC component ' + str(i))
-		plt.savefig('pc'+str(i))
+		plt.savefig(outdir+'pc'+str(i))
+		
+	print(p.explained_variance_ratio_)
 	
 		
 		
 	
 if __name__ == '__main__' :
 	
-	_run()
+	for i in range(6):
+		print('-------',i,'--------')
+		_run(i)
 
 
 	
