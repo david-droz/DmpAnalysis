@@ -39,7 +39,7 @@ def load_validation(fname='../dataset_validate.npy'): return XY_split(fname)
 def load_test(fname='../dataset_test.npy'): return XY_split(fname)
 
 
-def _run(n):
+def _run():
 	
 	if not os.path.isdir('pics'): os.mkdir('pics')
 	
