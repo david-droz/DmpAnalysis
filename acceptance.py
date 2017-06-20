@@ -46,18 +46,16 @@ if __name__ == '__main__':
 		l_precision, l_recall, l_thresholds = precision_recall_curve(bintruth,binpred)
 
 		generation_area_radius = 1.38
-		generation_area = np.pi * generation_area_radius * generation_area_radius * 100 * 100 	# in cm^2
+		generation_area = np.pi * generation_area_radius * generation_area_radius 	# in m^2
 		acceptance = [ 2 * np.pi * generation_area * x for x in l_recall  ]
 		bkg_fraction = [ 1 - x for x in l_precision ] 
 		
 		fig = plt.figure()
 		plt.plot(bkg_fraction,acceptance)
-		plt.xscale('log')
 		plt.xlabel('Background fraction')
-		plt.ylabel('Acceptance')
-		plt.legend(loc='best')
+		plt.ylabel('Acceptance [m$^2$ sr]')
 		
-		figname = 'acceptance_' + str(int(bin_edges[i])/1000.) + '-' + str(int(bin_edges[i+1])/1000) + '.png'
+		figname = 'acceptance_' + str(int(bin_edges[i]/1000.)) + '-' + str(int(bin_edges[i+1]/1000)) + '.png'
 		figtitle = 'Acceptance: ' + str(int(bin_edges[i])/1000.) + ' GeV - ' + str(int(bin_edges[i+1])/1000) + ' GeV'
 		
 		plt.title(figtitle)
