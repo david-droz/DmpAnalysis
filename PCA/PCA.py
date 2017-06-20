@@ -41,7 +41,7 @@ def _run(n):
 	
 	if not os.path.isdir('pics'): os.mkdir('pics')
 	
-	outdir = 'pics/'+str(n)
+	outdir = 'pics/'+str(n)+'/'
 	if not os.path.isdir(outdir): os.mkdir(outdir)
 
 	X_train, Y_train = load_training()
@@ -69,7 +69,7 @@ if __name__ == '__main__' :
 	
 	for i in range(6):
 		print('-------',i,'--------')
-		_run(i)
+		_run(i+1)
 
 
 	
