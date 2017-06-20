@@ -52,17 +52,6 @@ def _run():
 	p = LinearDiscriminantAnalysis()
 	p.fit(X_train,Y_train)
 	
-	electrons = p.transform( np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')[:,0:-2]  )
-	protons = p.transform( np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')[:,0:-2]  )
-	
-	for i in range(5):
-		fig1 = plt.figure()
-		plt.hist(electrons[:,i],50,histtype='step',label='e')
-		plt.hist(protons[:,i],50,histtype='step',label='p')
-		plt.legend(loc='best')
-		plt.title('LDA - variable ' + str(i))
-		plt.savefig(outdir+'/var'+str(i))
-	
 	predictions_binary = p.predict(X_val)			# Array of 0 and 1
 	predictions_proba = p.predict_proba(X_val)[:,1]		# Array of numbers [0,1]
 	
@@ -105,7 +94,21 @@ def _run():
 	
 	print("Precision: ", prec_95)
 	print("Recall: ", recall_95)
-	print("Iteration run time: ", time.strftime('%H:%M:%S', time.gmtime(time.time() - t0))	)
+	
+	
+	electrons = p.transform( np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')[:,0:-2]  )
+	protons = p.transform( np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')[:,0:-2]  )
+	
+	print(electrons.shape)
+	print(protons.shape)
+	
+	#~ for i in range(5):
+		#~ fig1 = plt.figure()
+		#~ plt.hist(electrons[:,i],50,histtype='step',label='e')
+		#~ plt.hist(protons[:,i],50,histtype='step',label='p')
+		#~ plt.legend(loc='best')
+		#~ plt.title('LDA - variable ' + str(i))
+		#~ plt.savefig(outdir+'/var'+str(i))
 	
 		
 		
