@@ -62,6 +62,26 @@ def _run(n):
 		plt.title('PCA - PC component ' + str(i))
 		plt.savefig(outdir+'pc'+str(i))
 		
+	X_train_new = p.transform(X_train)
+	
+	new_out = outdir + 'train_'
+	for i in range(n):
+		l_e = []
+		l_p = []
+		for j in range(len(Y_train)):
+			if Y_train[j] == 1:
+				l_e.append(X_train[j,i])
+			else:
+				l_p.append(X_train[j,i])
+		
+		fig2 = plt.figure()
+		plt.hist(l_e,50,histtype='step',label='e')
+		plt.hist(l_p,50,histtype='step',label='p')
+		plt.legend(loc='best')
+		plt.title('PCA - PC component ' + str(i))
+		plt.savefig(new_out+'pc'+str(i))
+		
+		
 	print(p.explained_variance_ratio_)
 	
 		
@@ -69,9 +89,7 @@ def _run(n):
 	
 if __name__ == '__main__' :
 	
-	for i in range(6):
-		print('-------',i,'--------')
-		_run(i+1)
+	_run(9)
 
 
 	
