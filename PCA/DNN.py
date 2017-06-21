@@ -130,5 +130,7 @@ def run(applyPCA,balanced):
 	
 if __name__ == '__main__' :
 	
-	run(True)
-	run(False)
+	run(True,True)
+	run(True,False)
+	run(False,True)
+	run(False,False)
