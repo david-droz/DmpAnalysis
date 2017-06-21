@@ -64,17 +64,16 @@ def getNrEvents(filelist):
 	return a
 
 
-def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixture,testMixture):
+def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixture,testMixture,oversampling):
 	'''
 	Returns list of event indexes for training, validating, testing and for elctrons, protons
 	
 	i.e. if the list returned is [4,9,15], it means I use events number 4,9, and 15.
 	'''
 	
-	# Let's go for 1M events for training, 25k electrons for validation and 25k for testing
 	# https://stackoverflow.com/questions/10048069/what-is-the-most-pythonic-way-to-pop-a-random-element-from-a-list
 	
-	pickFile = 'indices_'+str(nrofe)+str(nrofp)+str(trainingFraction)+str(validationFraction)+str(validationMixture)+str(testMixture)+'.pick'
+	pickFile = 'indices_'+str(nrofe)+str(nrofp)+str(trainingFraction)+str(validationFraction)+str(validationMixture)+str(testMixture)+str(oversampling)+'.pick'
 	
 	if os.path.isfile(pickFile):
 		with open(pickFile,'rb') as f:
@@ -91,7 +90,7 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 	random.shuffle(available_E)							# Pick randomly
 	random.shuffle(available_P)
 	
-	for i in xrange(int(1.2e+6)):							# 1M events
+	for i in xrange(int(1e+6)):								# 1M events
 		selectedE_train.append( available_E.pop() )			# Use "pop" : don't want to reuse events
 		selectedP_train.append( available_P.pop() )			# Same number of events for training
 
@@ -100,33 +99,47 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 	
 	selectedE_validate = []
 	selectedP_validate = []		
-	for i in xrange(60000):								# 60k electrons because otherwise it will be too long
-		selectedE_validate.append( available_E.pop() )
 	
-	if (validationMixture * len(selectedE_validate) ) > ( 0.7*len(available_P)) :		# Not enough protons, sampling with replacement
-		# Oversampling with replacement
-		for i in xrange(validationMixture * len(selectedE_validate)):
-			j = random.randint(0,len(available_P)-1)
-			selectedP_validate.append( available_P[j] )
+	if oversampling:
+		for i in xrange(60000):								# 60k electrons because otherwise it will be too long
+			selectedE_validate.append( available_E.pop() )
+		
+		if (validationMixture * len(selectedE_validate) ) > ( 0.7*len(available_P)) :		# Not enough protons, sampling with replacement
+			# Oversampling with replacement
+			for i in xrange(validationMixture * len(selectedE_validate)):
+				j = random.randint(0,len(available_P)-1)
+				selectedP_validate.append( available_P[j] )
+		else:
+			for i in xrange(validationMixture * len(selectedE_validate)):
+				selectedP_validate.append( available_P.pop() )	
 	else:
-		for i in xrange(validationMixture * len(selectedE_validate)):
-			selectedP_validate.append( available_P.pop() )	
+		n_elecs = int((len(available_P)/2.)/validationMixture)
+		for i in xrange(n_elecs):
+			selectedE_validate.append( available_E.pop() )
+		for i in xrange(len(available_P)/2):
+			selectedP_validate.append( available_P.pop() )
 				
 	# ---- Testing ----
 	
 	selectedE_test = []
 	selectedP_test = []
 	
-	for i in xrange(60000):											# 60k electrons
-		selectedE_test.append( available_E.pop() )
-		
-	if (testMixture * len(selectedE_test)) > len(available_P) :		# Not enough protons
-		for i in xrange(testMixture * len(selectedE_test)):
-			j = random.randint(0,len(available_P)-1)
-			selectedP_test.append( available_P[j] )
-	else:			
-		for i in xrange(testMixture * len(selectedE_test)):
-			selectedP_test.append( available_P.pop() )
+	if oversampling:
+		for i in xrange(60000):											# 60k electrons
+			selectedE_test.append( available_E.pop() )
+			
+		if (testMixture * len(selectedE_test)) > len(available_P) :		# Not enough protons
+			for i in xrange(testMixture * len(selectedE_test)):
+				j = random.randint(0,len(available_P)-1)
+				selectedP_test.append( available_P[j] )
+		else:			
+			for i in xrange(testMixture * len(selectedE_test)):
+				selectedP_test.append( available_P.pop() )
+	else:
+		n_elecs = (len(available_P))/testMixture
+		for i in xrange(n_elecs):
+			selectedE_test.append( available_E.pop() )
+		selectedP_test = available_P.pop() 
 	
 	with open(pickFile,'wb') as f:
 		pickle.dump([selectedE_train, selectedP_train, selectedE_validate, selectedP_validate, selectedE_test, selectedP_test],f)
@@ -196,6 +209,7 @@ if __name__ == '__main__':
 	parser.add_argument("--onlyprotons",help="Run only for protons",action='store_true',default=False)
 	parser.add_argument("--onlyelectrons",help="Run only for electrons",action='store_true',default=False)
 	parser.add_argument("--onlymerge",help="Only merge e/p runs",action='store_true',default=False)
+	parser.add_argument("--oversampling",help="If not enough protons, sample with replacement",action='store_true',default=True)
 		
 	args = parser.parse_args()
 	
@@ -209,7 +223,7 @@ if __name__ == '__main__':
 	testMixture = args.test_mixture				#  Ratio protons/electrons for testing
 	
 	if not args.onlymerge:
-		selectedE_train, selectedP_train, selectedE_validate, selectedP_validate, selectedE_test, selectedP_test = getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixture,testMixture)
+		selectedE_train, selectedP_train, selectedE_validate, selectedP_validate, selectedE_test, selectedP_test = getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixture,testMixture,args.oversampling)
 		
 		print "Got indices (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
 		
