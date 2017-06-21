@@ -32,11 +32,11 @@ def XY_split(fname):
 	Y = arr[:,-1]
 	return X,Y
 
-def run(applyPCA):
+def run(applyPCA,balanced):
 	
 	t0 = time.time()
 	
-	balanced = True
+	#~ balanced = True
 	
 	if balanced:	
 		X_train, Y_train = XY_split('/home/drozd/analysis/fraction1/dataset_train.npy')
@@ -49,13 +49,20 @@ def run(applyPCA):
 	X_val = StandardScaler().fit_transform(X_val)
 	
 	if applyPCA:
-		p = PCA(n_components=40)		# 40 components explain ~97.8% of variance
+		n = 45
+		p = PCA(n_components=n)		# 40 components explain ~97.8% of variance
 		p.fit(X_train)
-		X_train = p.transform(X_train)
-		X_val = p.transform(X_val)
-		print('----- PCA -----')
+		X_train = p.transform(X_train)[:,0:n]
+		X_val = p.transform(X_val)[:,0:n]
+		
+	if applyPCA and balanced:
+		print('----- PCA, balanced -----')
+	elif applyPCA and not balanced:
+		print('----- PCA, not balanced -----')
+	elif balanced and not applyPCA:
+		print('----- no PCA, balanced -----')
 	else:
-		print('----- no PCA -----')
+		print('----- no PCA, not balanced -----')
 	
 	model = Sequential()
 	model.add(Dense(40,
