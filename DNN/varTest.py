@@ -133,7 +133,5 @@ def run(fullVar):
 	
 if __name__ == '__main__' :
 	
-	run(True,True)
-	run(True,False)
-	run(False,True)
-	run(False,False)
+	run(True)
+	run(False)
