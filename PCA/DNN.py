@@ -69,7 +69,7 @@ def run(applyPCA):
 
 	callbacks = []
 	
-	history = model.fit(X_train,Y_train,batch_size=100,epochs=50,verbose=2,callbacks=callbacks,validation_data=(X_val,Y_val))
+	history = model.fit(X_train,Y_train,batch_size=100,epochs=50,verbose=0,callbacks=callbacks,validation_data=(X_val,Y_val))
 	
 	predictions_binary = np.around(model.predict(X_val))		# Array of 0 and 1
 	predictions_proba = model.predict_proba(X_val)				# Array of numbers [0,1]
