@@ -1,3 +1,9 @@
+'''
+
+Test DNN performances in the case of a full-variable run or in the case of only a couple of variables
+
+'''
+
 from __future__ import print_function, division, absolute_import
 
 import numpy as np
