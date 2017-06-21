@@ -1,11 +1,11 @@
 '''
 
-makeDataSets.py  v0.3
+makeDataSets.py  v0.4
 
 Merges together the output of selection.py and creates training/validation/testing sets. Takes a lot of memory!
 
 Usage:
-	> python makeDataSets.py --train_split 0.6 --validation_split 0.2 --validation_mixture 100 --test_mixture 100
+	> python makeDataSets.py --train_split 0.6 --validation_split 0.2 --validation_mixture 100 --test_mixture 100 (--oversampling)
 
 
 '''
@@ -73,7 +73,12 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 	
 	# https://stackoverflow.com/questions/10048069/what-is-the-most-pythonic-way-to-pop-a-random-element-from-a-list
 	
-	pickFile = 'indices_'+str(nrofe)+str(nrofp)+str(trainingFraction)+str(validationFraction)+str(validationMixture)+str(testMixture)+str(oversampling)+'.pick'
+	pickFile = 'indices_'+str(nrofe)+str(nrofp)+str(trainingFraction)+str(validationFraction)+str(validationMixture)+str(testMixture)+'.pick'
+	if oversampling:
+		pickFile = pickFile.replace('.pick','over.pick')
+	else:
+		pickFile = pickFile.replace('.pick','under.pick')
+	
 	
 	if os.path.isfile(pickFile):
 		with open(pickFile,'rb') as f:
