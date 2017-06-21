@@ -90,10 +90,31 @@ def run(applyPCA):
 		if l_f1[i] == mf1:
 			prec_95 = l_precision[i]
 			recall_95 = l_recall[i]
-					
+			
+	AUC = average_precision_score(Y_val,predictions_proba)
+	
+	print("-- On best F1:")				
 	print("Precision:", prec_95)
 	print("Recall:", recall_95)
 	print("Max F1:", mf1)
+	print("AUC:", AUC)
+	
+	prec_95 = 0
+	rc_95 = 0
+	f1_95 = 0
+	
+	for i in range(len(l_precision)):
+		if l_precision[i] > 0.95:
+			temp_f1 = 2*(l_precision[i]*l_recall[i])/(l_precision[i]+l_recall[i])
+			if temp_f1 > f1_95:
+				prec_95 = l_precision[i]
+				rc_95 = l_recall[i]
+				f1_95 = temp_f1
+	
+	print('-- On 95%')
+	print('F1:',f1_95)
+	print('Precision',prec_95)
+	print('Recall',rc_95)
 	
 	del X_train, X_val, Y_train, Y_val, history, predictions_binary, predictions_proba
 	
