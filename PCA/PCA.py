@@ -28,6 +28,8 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.preprocessing import StandardScaler
 
+from mpl_toolkits.mplot3d import Axes3D
+
 def XY_split(fname):
 	arr = np.load(fname)
 	X = arr[:,0:-2]				# Last two columns are timestamp and particle ID
@@ -61,6 +63,7 @@ def _run(n):
 		plt.legend(loc='best')
 		plt.title('PCA - PC component ' + str(i))
 		plt.savefig(outdir+'pc'+str(i))
+		plt.close(fig1)
 		
 	X_train_new = p.transform(X_train)
 	
@@ -80,16 +83,125 @@ def _run(n):
 		plt.legend(loc='best')
 		plt.title('PCA - PC component ' + str(i))
 		plt.savefig(new_out+'pc'+str(i))
+		plt.close(fig2)
 		
+		
+	X_validate_all = p.transform( StandardScaler().fit_transform(np.load('/home/drozd/analysis/fraction1/dataset_validate_1.npy')[:,0:-2])  )
+	Y_val = np.load('/home/drozd/analysis/fraction1/dataset_validate_1.npy')[:,-1]
+		
+	new_out = outdir + 'validate_'
+	for i in range(n):
+		l_e = []
+		l_p = []
+		for j in range(len(Y_val)):
+			if Y_val[j] == 1:
+				l_e.append(X_validate_all[j,i])
+			else:
+				l_p.append(X_validate_all[j,i])
+		
+		fig3 = plt.figure()
+		plt.hist(l_e,50,histtype='step',label='e')
+		plt.hist(l_p,50,histtype='step',label='p')
+		plt.legend(loc='best')
+		plt.title('PCA - PC component ' + str(i))
+		plt.savefig(new_out+'pc'+str(i))
+		plt.close(fig3)
+	
+	l_e_1 = []
+	l_e_2 = []
+	l_e_3 = []
+	l_p_1 = []
+	l_p_2 = []
+	l_p_3 = []
+	for j in range(len(Y_val)):
+		if Y_val[j] == 1:
+			l_e_1.append(X_validate_all[j,0])
+			l_e_2.append(X_validate_all[j,1])
+			l_e_3.append(X_validate_all[j,2])
+		else:
+			l_p_1.append(X_validate_all[j,0])
+			l_p_2.append(X_validate_all[j,1])
+			l_p_3.append(X_validate_all[j,2])
+	fig4 = plt.figure()
+	plt.scatter(l_e_1,l_e_2,label='e',alpha=0.3)
+	plt.scatter(l_p_1,l_p_2,label='p',alpha=0.3)
+	plt.xlabel("1st eigenvector")
+	plt.ylabel("2nd eigenvector")
+	plt.legend(loc='best')
+	plt.savefig(outdir+'val2D')
+	plt.close(fig4)
+	
+	
+	
+	fig5 = plt.figure()
+	ax = Axes3D(fig5)
+	ax.scatter(l_e_1,l_e_2,l_e_3,label='e')
+	ax.scatter(l_p_1,l_p_2,l_p_3,label='p')
+	ax.set_title("First three PCA directions")
+	ax.set_xlabel("1st eigenvector")
+	ax.w_xaxis.set_ticklabels([])
+	ax.set_ylabel("2nd eigenvector")
+	ax.w_yaxis.set_ticklabels([])
+	ax.set_zlabel("3rd eigenvector")
+	ax.w_zaxis.set_ticklabels([])
+	plt.legend(loc='best')
+	plt.savefig(outdir+'val3D')
+	plt.close(fig5)
+
+	del X_validate_all, Y_val
+	del electrons, protons
+		
+	X_test_all = p.transform( StandardScaler().fit_transform(np.load('/home/drozd/analysis/fraction1/dataset_test_1.npy')[:,0:-2])  )
+	Y_test = np.load('/home/drozd/analysis/fraction1/dataset_test_1.npy')[:,-1]
+	new_out = outdir + 'test_'
+	for i in range(n):
+		l_e = []
+		l_p = []
+		for j in range(len(Y_test)):
+			if Y_test[j] == 1:
+				l_e.append(X_test_all[j,i])
+			else:
+				l_p.append(X_test_all[j,i])
+		
+		fig3 = plt.figure()
+		plt.hist(l_e,50,histtype='step',label='e')
+		plt.hist(l_p,50,histtype='step',label='p')
+		plt.legend(loc='best')
+		plt.title('PCA - PC component ' + str(i))
+		plt.savefig(new_out+'pc'+str(i))
+		plt.close(fig3)
+	
+	l_e_1 = []
+	l_e_3 = []
+	l_p_1 = []
+	l_p_3 = []
+	for j in range(len(Y_test)):
+		if Y_test[j] == 1:
+			l_e_1.append(X_test_all[j,1])
+			l_e_3.append(X_test_all[j,3])
+		else:
+			l_p_1.append(X_test_all[j,1])
+			l_p_3.append(X_test_all[j,3])
+	fig4 = plt.figure()
+	plt.scatter(l_e_1,l_e_3,label='e',alpha=0.3)
+	plt.scatter(l_p_1,l_p_3,label='p',alpha=0.3)
+	plt.xlabel("2nd eigenvector")
+	plt.ylabel("4th eigenvector")
+	plt.legend(loc='best')
+	plt.savefig(outdir+'test2D')
+	plt.close(fig4)
 		
 	print(p.explained_variance_ratio_)
+	
+	print(sum(p.explained_variance_ratio_))
+	
 	
 		
 		
 	
 if __name__ == '__main__' :
 	
-	_run(9)
+	_run(8)
 
 
 	
