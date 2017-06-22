@@ -48,17 +48,25 @@ def _run(n):
 	if not os.path.isdir(outdir): os.mkdir(outdir)
 
 	X_train, Y_train = load_training()
+	
+	for i in range(14):
+		X_train[:,i] = X_train[:,i]/X_train[:,30]
+	X_train = X_train[:,0:28]
+	
 	X_train = StandardScaler().fit_transform(X_train)
 	
-	# Only keep E_layer_bgo and E_RMS_layer_bgo
-	
-	X_train = X_train[:,0:28]
-
 	p = PCA(n_components=n)
 	p.fit(X_train)
 	
-	electrons = p.transform( StandardScaler().fit_transform(np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')[:,0:28])  )
-	protons = p.transform( StandardScaler().fit_transform(np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')[:,0:28])  )
+	
+	electrons = np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')
+	protons = np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')
+	
+	for d in [electrons,protons]:
+		for i in range(14):
+			d[:,i] = d[:,i]/d[:,30]
+		d = d[:,0:28]
+		d = p.transform( StandardScaler().fit_transform(d) )
 	
 	for i in range(n):
 		fig1 = plt.figure()
@@ -66,7 +74,7 @@ def _run(n):
 		plt.hist(protons[:,i],50,histtype='step',label='p')
 		plt.legend(loc='best')
 		plt.title('PCA - PC component ' + str(i))
-		plt.savefig(outdir+'pc'+str(i))
+		plt.savefig(outdir+'test_split_pc'+str(i))
 		plt.close(fig1)
 		
 	X_train_new = p.transform(X_train)
@@ -89,8 +97,13 @@ def _run(n):
 		plt.savefig(new_out+'pc'+str(i))
 		plt.close(fig2)
 		
-		
-	X_validate_all = p.transform( StandardScaler().fit_transform(np.load('/home/drozd/analysis/fraction1/dataset_validate_1.npy')[:,0:28])  )
+	
+	X_validate_all = np.load('/home/drozd/analysis/fraction1/dataset_validate_1.npy')
+	for i in range(14):
+		X_validate_all[:,i] = X_validate_all[:,i]/X_validate_all[:,30]
+	X_validate_all = X_validate_all[:,0:28]
+	X_validate_all = p.transform( StandardScaler().fit_transform(X_validate_all) )
+	
 	Y_val = np.load('/home/drozd/analysis/fraction1/dataset_validate_1.npy')[:,-1]
 		
 	new_out = outdir + 'validate_'
@@ -154,8 +167,13 @@ def _run(n):
 
 	del X_validate_all, Y_val
 	del electrons, protons
+	
+	X_test_all = np.load('/home/drozd/analysis/fraction1/dataset_test_1.npy')
+	for i in range(14):
+		X_test_all[:,i] = X_test_all[:,i]/X_test_all[:,30]
+	X_test_all = X_test_all[:,0:28]
+	X_test_all = p.transform( StandardScaler().fit_transform(X_test_all) )
 		
-	X_test_all = p.transform( StandardScaler().fit_transform(np.load('/home/drozd/analysis/fraction1/dataset_test_1.npy')[:,0:-2])  )
 	Y_test = np.load('/home/drozd/analysis/fraction1/dataset_test_1.npy')[:,-1]
 	new_out = outdir + 'test_'
 	for i in range(n):
