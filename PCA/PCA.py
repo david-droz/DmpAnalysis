@@ -49,12 +49,16 @@ def _run(n):
 
 	X_train, Y_train = load_training()
 	X_train = StandardScaler().fit_transform(X_train)
+	
+	# Only keep E_layer_bgo and E_RMS_layer_bgo
+	
+	X_train = X_train[:,0:28]
 
 	p = PCA(n_components=n)
 	p.fit(X_train)
 	
-	electrons = p.transform( StandardScaler().fit_transform(np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')[:,0:-2])  )
-	protons = p.transform( StandardScaler().fit_transform(np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')[:,0:-2])  )
+	electrons = p.transform( StandardScaler().fit_transform(np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')[:,0:28])  )
+	protons = p.transform( StandardScaler().fit_transform(np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')[:,0:28])  )
 	
 	for i in range(n):
 		fig1 = plt.figure()
@@ -86,7 +90,7 @@ def _run(n):
 		plt.close(fig2)
 		
 		
-	X_validate_all = p.transform( StandardScaler().fit_transform(np.load('/home/drozd/analysis/fraction1/dataset_validate_1.npy')[:,0:-2])  )
+	X_validate_all = p.transform( StandardScaler().fit_transform(np.load('/home/drozd/analysis/fraction1/dataset_validate_1.npy')[:,0:28])  )
 	Y_val = np.load('/home/drozd/analysis/fraction1/dataset_validate_1.npy')[:,-1]
 		
 	new_out = outdir + 'validate_'
