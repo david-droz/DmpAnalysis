@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 from matplotlib.backends.backend_pdf import PdfPages
+from scipy import stats
 
 def getLabels():
 	
@@ -67,13 +68,17 @@ if __name__ == '__main__':
 	
 	for i in xrange(arr_elecs.shape[1]):
 		
+		KS_statistic, p-value = stats.ks_2samp(arr_elecs[:,i],arr_prots[:,i])	# Kolmogorov-Smirnov test
+																				# If p-value is high, then the two distributions are likely the same
+																				# If K-S statistic is high, then the two distributions are likely different.
+		
 		f1 = plt.figure()
 		plt.hist(arr_elecs[:,i], 50, normed=1,histtype='step', label='e')
 		plt.hist(arr_prots[:,i], 50, normed=1,histtype='step', label='p')
 		plt.legend(loc='best')
 		#~ plt.xscale("log")
 		plt.yscale('log')
-		plt.title(lab[i])
+		plt.title(lab[i] + '\n K-S : ' + str(KS_statistic))
 		plt.savefig(pp, format='pdf')
 		plt.close(f1)
 	pp.close()
