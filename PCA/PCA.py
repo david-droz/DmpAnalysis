@@ -58,7 +58,8 @@ def _run(n):
 	
 	X_t_elecs = np.load('../data_train_elecs.npy')
 	for i in range(14): X_t_elecs[:,i] = X_t_elecs[:,i]/X_t_elecs[:,30]
-	X_t_elecs = X_t_elecs[0:28]
+	X_t_elecs = X_t_elecs[:,0:28]
+	X_t_elecs = StandardScaler().fit_transform(X_t_elecs)
 	
 	p = PCA(n_components=n)
 	#~ p.fit(X_train)
@@ -68,11 +69,13 @@ def _run(n):
 	electrons = np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')
 	protons = np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')
 	
-	for d in [electrons,protons]:
-		for i in range(14):
-			d[:,i] = d[:,i]/d[:,30]
-		d = d[:,0:28]
-		d = p.transform( StandardScaler().fit_transform(d) )
+	for i in range(14):
+		electrons[:,i] = electrons[:,i]/electrons[:,30]
+		protons[:,i] = protons[:,i]/protons[:,30]
+	electrons = StandardScaler().fit_transform(electrons[:,0:28])
+	electrons = p.transform( electrons )
+	protons = StandardScaler().fit_transform(protons[:,0:28])
+	protons = p.transform( protons )
 	
 	for i in range(n):
 		fig1 = plt.figure()
