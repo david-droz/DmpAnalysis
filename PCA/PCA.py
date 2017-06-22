@@ -55,8 +55,14 @@ def _run(n):
 	
 	X_train = StandardScaler().fit_transform(X_train)
 	
+	
+	X_t_elecs = np.load('../data_train_elecs.npy')
+	for i in range(14): X_t_elecs[:,i] = X_t_elecs[:,i]/X_t_elecs[:,30]
+	X_t_elecs = X_t_elecs[0:28]
+	
 	p = PCA(n_components=n)
-	p.fit(X_train)
+	#~ p.fit(X_train)
+	p.fit(X_t_elecs)
 	
 	
 	electrons = np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')
