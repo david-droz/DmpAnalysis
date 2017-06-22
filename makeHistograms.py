@@ -68,7 +68,7 @@ if __name__ == '__main__':
 	
 	for i in xrange(arr_elecs.shape[1]):
 		
-		KS_statistic, p-value = stats.ks_2samp(arr_elecs[:,i],arr_prots[:,i])	# Kolmogorov-Smirnov test
+		KS_statistic, p_value = stats.ks_2samp(arr_elecs[:,i],arr_prots[:,i])	# Kolmogorov-Smirnov test
 																				# If p-value is high, then the two distributions are likely the same
 																				# If K-S statistic is high, then the two distributions are likely different.
 		
