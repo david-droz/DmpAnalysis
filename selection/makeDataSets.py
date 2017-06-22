@@ -214,7 +214,7 @@ if __name__ == '__main__':
 	parser.add_argument("--onlyprotons",help="Run only for protons",action='store_true',default=False)
 	parser.add_argument("--onlyelectrons",help="Run only for electrons",action='store_true',default=False)
 	parser.add_argument("--onlymerge",help="Only merge e/p runs",action='store_true',default=False)
-	parser.add_argument("--oversampling",help="If not enough protons, sample with replacement",action='store_true',default=True)
+	parser.add_argument("--oversampling",help="If not enough protons, sample with replacement",action='store_true',default=False)
 		
 	args = parser.parse_args()
 	
