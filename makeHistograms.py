@@ -50,7 +50,7 @@ def getLabels():
 	return lab
 
 def _normalise(arr):
-	for i in xrange(arr.shape[1]):
+	for i in range(arr.shape[1]):
 		if np.all(arr[:,i] > 0) :
 			arr[:,i] = (arr[:,i] - np.mean(arr[:,i]) + 1.) / np.std(arr[:,i])		# Mean = 1 if all values are strictly positive (from paper)
 		else:
@@ -66,7 +66,7 @@ if __name__ == '__main__':
 	
 	pp = PdfPages('multipage.pdf')
 	
-	for i in xrange(arr_elecs.shape[1]):
+	for i in range(arr_elecs.shape[1]):
 		
 		KS_statistic, p_value = stats.ks_2samp(arr_elecs[:,i],arr_prots[:,i])	# Kolmogorov-Smirnov test
 																				# If p-value is high, then the two distributions are likely the same
