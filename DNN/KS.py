@@ -38,7 +38,7 @@ def XY_split(fname):
 	Y = arr[:,-1]
 	return X,Y
 	
-def model(X_train):
+def getModel(X_train):
 	model = Sequential()
 	model.add(Dense(40,
 					input_shape=(X_train.shape[1],),
@@ -72,10 +72,8 @@ def run(balanced):
 	for i in range(X_train.shape[1]):
 		KS_statistic, p_value = stats.ks_2samp(arr_elecs[:,i],arr_prots[:,i])	# Kolmogorov-Smirnov test
 		l_pvalue.append(p_value)												# If p-value is high, then the two distributions are likely the same
-		l_KS.append(KS)															# If K-S statistic is high, then the two distributions are likely different.
-	del arr_elecs, del arr_prots
-		
-	model = model(X_train)
+		l_KS.append(KS_statistic)												# If K-S statistic is high, then the two distributions are likely different.
+	del arr_elecs, arr_prots
 	
 	if not os.path.isdir('results'):os.mkdir('results')
 	if balanced: 
@@ -89,7 +87,7 @@ def run(balanced):
 	############################################################################################################
 	############################################################################################################
 		
-	for n in range(X_train.shape[1]):
+	for n in range(1,X_train.shape[1]):
 		
 		outfile = outdir + str(n) + '.pick'
 		
@@ -106,6 +104,8 @@ def run(balanced):
 			
 			X_train_new = X_train[:,bestP_indices]
 			X_val_new = X_val[:,bestP_indices]
+			
+			model = getModel(X_train_new)
 			
 			history = model.fit(X_train_new,Y_train,batch_size=100,epochs=40,verbose=0,callbacks=[],validation_data=(X_val_new,Y_val))
 		
