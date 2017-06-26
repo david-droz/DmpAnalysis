@@ -11,6 +11,7 @@ import time
 import pickle
 import sys
 import os
+import glob
 
 import matplotlib
 matplotlib.use('Agg')
@@ -94,34 +95,64 @@ def run(balanced):
 		
 		if os.path.isfile(outfile): continue
 		
-		bestP_values = heapq.nlargest(n,l_pvalue)
-		bestP_indices = [ l_pvalue.index(x) for x in bestP_values]		# Those are the n variables we keep in step number n
+		if os.path.isfile("touch_"+str(n)): continue
 		
-		X_train_new = X_train[:,bestP_indices]
-		X_val_new = X_val[:,bestP_indices]
+		with open("touch_"+str(n),'w') as fg:
+			fg.write('a')
 		
-		history = model.fit(X_train_new,Y_train,batch_size=100,epochs=40,verbose=0,callbacks=[],validation_data=(X_val_new,Y_val))
-	
-		predictions_proba = model.predict(X_val_new)
-		predictions_binary = np.around(predictions_proba)
-		del X_train_new, X_val_new
+		try:
+			bestP_values = heapq.nlargest(n,l_pvalue)
+			bestP_indices = [ l_pvalue.index(x) for x in bestP_values]		# Those are the n variables we keep in step number n
+			
+			X_train_new = X_train[:,bestP_indices]
+			X_val_new = X_val[:,bestP_indices]
+			
+			history = model.fit(X_train_new,Y_train,batch_size=100,epochs=40,verbose=0,callbacks=[],validation_data=(X_val_new,Y_val))
 		
-		l_precision, l_recall, l_thresholds = precision_recall_curve(Y_val,predictions_proba)
+			predictions_proba = model.predict(X_val_new)
+			predictions_binary = np.around(predictions_proba)
+			del X_train_new, X_val_new
+			
+			l_precision, l_recall, l_thresholds = precision_recall_curve(Y_val,predictions_proba)
+			
+			l_f1 = []
+			for i in range(len(l_precision)):
+				l_f1.append( 2*(l_precision[i] * l_recall[i])/(l_precision[i] + l_recall[i])    )
+			mf1 = max(l_f1)
+					
+			AUC = average_precision_score(Y_val,predictions_proba)
+			
+			with open(outfile,'wb') as f:
+				pickle.dump([n,AUC,mf1],f,protocol=2)
+		except:
+			os.remove("touch_"+str(n))
+			raise
 		
-		l_f1 = []
-		for i in range(len(l_precision)):
-			l_f1.append( 2*(l_precision[i] * l_recall[i])/(l_precision[i] + l_recall[i])    )
-		mf1 = max(l_f1)
-				
-		AUC = average_precision_score(Y_val,predictions_proba)
-		
-		with open(outfile,'wb') as f:
-			pickle.dump([AUC,mf1],f,protocol=2)
-		
+		os.remove("touch_"+str(n))
 		del history, predictions_binary, predictions_proba, l_precision, l_recall, l_thresholds
 	# end for
 	
+	listofPicks = glob.glob(outdir+'*.pick')
+	
+	if len(listofPicks) < X_train.shape[1]: 
+		del X_train, X_val, Y_train, Y_val
+		return
 	del X_train, X_val, Y_train, Y_val
+	
+	nrofvariables = []
+	l_AUC = []
+	for f in listofPicks:
+		a,b,c = pickle.load(open(f,'rb'))
+		nrofvariables.append(a)
+		l_AUC.append(b)
+	
+	fig1 = plt.figure()
+	plt.plot(nrofvariables,l_AUC,'-.')
+	plt.xlabel('Nr of variables')
+	plt.ylabel('Precision-Recall AUC')
+	plt.savefig('EndResult')
+	
+	
 	
 		
 		
