@@ -171,8 +171,7 @@ if __name__ == '__main__' :
 		run(True)
 	else:
 		if 'alse' in sys.argv[1]:
-			run(True)
-		else:
 			run(False)
+		else:
+			run(True)
 	
-	run(True)
