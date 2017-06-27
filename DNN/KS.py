@@ -87,7 +87,7 @@ def run(balanced):
 	############################################################################################################
 	############################################################################################################
 		
-	for n in range(1,X_train.shape[1]):
+	for n in range(1,X_train.shape[1]+1):
 		
 		outfile = outdir + str(n) + '.pick'
 		
@@ -124,6 +124,9 @@ def run(balanced):
 			
 			with open(outfile,'wb') as f:
 				pickle.dump([n,AUC,mf1],f,protocol=2)
+		except IndexError:
+			os.remove("touch_"+str(n))
+			continue
 		except:
 			os.remove("touch_"+str(n))
 			raise
@@ -134,9 +137,6 @@ def run(balanced):
 	
 	listofPicks = glob.glob(outdir+'*.pick')
 	
-	if len(listofPicks) < X_train.shape[1]: 
-		del X_train, X_val, Y_train, Y_val
-		return
 	del X_train, X_val, Y_train, Y_val
 	
 	nrofvariables = []
@@ -150,7 +150,11 @@ def run(balanced):
 	plt.plot(nrofvariables,l_AUC,'-.')
 	plt.xlabel('Nr of variables')
 	plt.ylabel('Precision-Recall AUC')
-	plt.savefig('EndResult')
+	
+	if balanced:
+		plt.savefig('EndResult_balanced')
+	else:
+		plt.savefig('EndResult_imbalanced')
 	
 	
 	
@@ -158,5 +162,13 @@ def run(balanced):
 		
 	
 if __name__ == '__main__' :
+	
+	if len(sys.argv) == 1:
+		run(True)
+	else:
+		if 'alse' in sys.argv[1]:
+			run(True)
+		else:
+			run(False)
 	
 	run(True)
