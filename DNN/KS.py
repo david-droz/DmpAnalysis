@@ -89,13 +89,16 @@ def run(balanced):
 		
 	for n in range(1,X_train.shape[1]+1):
 		
-		outfile = outdir + str(n) + '.pick'
+		touched='touch_ba_'+str(n)
+		if not balanced: touched = touched.replace('ba','imba')
+		
+		outfile = outdir + "%02d" % (n,) + '.pick'
 		
 		if os.path.isfile(outfile): continue
 		
-		if os.path.isfile("touch_"+str(n)): continue
+		if os.path.isfile(touched): continue
 		
-		with open("touch_"+str(n),'w') as fg:
+		with open(touched,'w') as fg:
 			fg.write('a')
 		
 		try:
@@ -125,17 +128,18 @@ def run(balanced):
 			with open(outfile,'wb') as f:
 				pickle.dump([n,AUC,mf1],f,protocol=2)
 		except IndexError:
-			os.remove("touch_"+str(n))
+			os.remove(touched)
 			continue
 		except:
-			os.remove("touch_"+str(n))
+			os.remove(touched)
 			raise
 		
-		os.remove("touch_"+str(n))
+		os.remove(touched)
 		del history, predictions_binary, predictions_proba, l_precision, l_recall, l_thresholds
 	# end for
 	
 	listofPicks = glob.glob(outdir+'*.pick')
+	listofPicks.sort()
 	
 	del X_train, X_val, Y_train, Y_val
 	
