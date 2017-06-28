@@ -40,17 +40,31 @@ def XY_split(fname):
 	
 def getModel(X_train):
 	model = Sequential()
-	model.add(Dense(40,
-					input_shape=(X_train.shape[1],),
-					kernel_initializer='uniform',
-					activation='relu'))
-	model.add(Dense(20,kernel_initializer='uniform',activation='relu'))
-	model.add(Dense(10,kernel_initializer='uniform',activation='relu'))
+	#~ model.add(Dense(40,
+					#~ input_shape=(X_train.shape[1],),
+					#~ kernel_initializer='uniform',
+					#~ activation='relu'))
+	#~ model.add(Dense(20,kernel_initializer='uniform',activation='relu'))
+	#~ model.add(Dense(10,kernel_initializer='uniform',activation='relu'))
+	#~ model.add(Dense(1,kernel_initializer='uniform',activation='sigmoid'))
+	
+	model.add(Dense(200,input_shape=(X_train.shape[1],),kernel_initializer='he-uniform',activation='relu')
+	model.add(Dropout(0.1))
+	model.add(Dense(100,kernel_initializer='uniform',activation='relu'))
+	model.add(Dropout(0.1))
+	model.add(Dense(50,kernel_initializer='uniform',activation='relu'))
 	model.add(Dense(1,kernel_initializer='uniform',activation='sigmoid'))
+	
 	model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy'])
 	return model
+	
+	# Best imba: {u'loss': u'binary_crossentropy', u'optimizer': u'sgd', u'dropout': 0.10000000000000001, u'metrics': [u'binary_accuracy'], u'init': u'glorot_uniform', u'acti_out': u'sigmoid', u'architecture': [300, 200, 100, 50, 1], u'batchnorm': False, u'activation': u'softplus'}
+	# Best balanced: {u'loss': u'binary_crossentropy', u'optimizer': u'adam', u'dropout': 0.10000000000000001, u'metrics': [u'binary_accuracy'], u'init': u'he_uniform', u'acti_out': u'sigmoid', u'architecture': [200, 100, 50, 1], u'batchnorm': False, u'activation': u'relu'}
+
 
 def run(balanced):
+	
+	np.random.seed(5)
 	
 	if balanced:	
 		X_train, Y_train = XY_split('/home/drozd/analysis/fraction1/dataset_train.npy')
@@ -86,6 +100,8 @@ def run(balanced):
 	############################################################################################################
 	############################################################################################################
 	############################################################################################################
+	
+	
 		
 	for n in range(1,X_train.shape[1]+1):
 		
@@ -151,7 +167,7 @@ def run(balanced):
 		l_AUC.append(b)
 	
 	fig1 = plt.figure()
-	plt.plot(nrofvariables,l_AUC,'-.')
+	plt.plot(nrofvariables,l_AUC,'o-')
 	plt.xlabel('Nr of variables')
 	plt.ylabel('Precision-Recall AUC')
 	
