@@ -48,7 +48,7 @@ def getModel(X_train):
 	#~ model.add(Dense(10,kernel_initializer='uniform',activation='relu'))
 	#~ model.add(Dense(1,kernel_initializer='uniform',activation='sigmoid'))
 	
-	model.add(Dense(200,input_shape=(X_train.shape[1],),kernel_initializer='he-uniform',activation='relu')
+	model.add(Dense(200,input_shape=(X_train.shape[1],),kernel_initializer='he-uniform',activation='relu'))
 	model.add(Dropout(0.1))
 	model.add(Dense(100,kernel_initializer='uniform',activation='relu'))
 	model.add(Dropout(0.1))
