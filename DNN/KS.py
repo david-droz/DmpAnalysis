@@ -61,6 +61,13 @@ def getModel(X_train):
 	# Best imba: {u'loss': u'binary_crossentropy', u'optimizer': u'sgd', u'dropout': 0.10000000000000001, u'metrics': [u'binary_accuracy'], u'init': u'glorot_uniform', u'acti_out': u'sigmoid', u'architecture': [300, 200, 100, 50, 1], u'batchnorm': False, u'activation': u'softplus'}
 	# Best balanced: {u'loss': u'binary_crossentropy', u'optimizer': u'adam', u'dropout': 0.10000000000000001, u'metrics': [u'binary_accuracy'], u'init': u'he_uniform', u'acti_out': u'sigmoid', u'architecture': [200, 100, 50, 1], u'batchnorm': False, u'activation': u'relu'}
 
+def _normalise(arr):
+	for i in range(arr.shape[1]):
+		if np.all(arr[:,i] > 0) :
+			arr[:,i] = (arr[:,i] - np.mean(arr[:,i]) + 1.) / np.std(arr[:,i])		# Mean = 1 if all values are strictly positive (from paper)
+		else:
+			arr[:,i] = (arr[:,i] - np.mean(arr[:,i])) / np.std(arr[:,i])	
+	return arr
 
 def run(balanced):
 	
@@ -77,8 +84,12 @@ def run(balanced):
 		arr_elecs = np.load('/home/drozd/analysis/data_train_elecs.npy')[:,0:-2]
 		arr_prots = np.load('/home/drozd/analysis/data_train_prots.npy')[:,0:-2]	
 	
-	X_train = StandardScaler().fit_transform(X_train)
-	X_val = StandardScaler().fit_transform(X_val)
+	#~ X_train = StandardScaler().fit_transform(X_train)
+	#~ X_val = StandardScaler().fit_transform(X_val)
+	X_train = _normalise(X_train)
+	X_val = _normalise(X_val)
+	arr_elecs = _normalise(arr_elecs)
+	arr_prots = _normalise(arr_prots)
 	
 	
 	l_pvalue = []
@@ -126,7 +137,7 @@ def run(balanced):
 			
 			model = getModel(X_train_new)
 			
-			history = model.fit(X_train_new,Y_train,batch_size=100,epochs=40,verbose=0,callbacks=[],validation_data=(X_val_new,Y_val))
+			history = model.fit(X_train_new,Y_train,batch_size=150,epochs=40,verbose=0,callbacks=[],validation_data=(X_val_new,Y_val))
 		
 			predictions_proba = model.predict(X_val_new)
 			predictions_binary = np.around(predictions_proba)
