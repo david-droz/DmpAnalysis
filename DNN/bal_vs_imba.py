@@ -55,11 +55,12 @@ def run():
 	X_val_imba = _normalise(X_val_imba)
 	
 	model = Sequential()
-	model.add(Dense(200,input_shape=(X_train.shape[1],),kernel_initializer='he_uniform',activation='relu'))
+	model.add(Dense(300,input_shape=(X_train.shape[1],),kernel_initializer='he_uniform',activation='relu'))
 	model.add(Dropout(0.1))
-	model.add(Dense(100,kernel_initializer='he_uniform',activation='relu'))
+	model.add(Dense(150,kernel_initializer='he_uniform',activation='relu'))
 	model.add(Dropout(0.1))
-	model.add(Dense(50,kernel_initializer='he_uniform',activation='relu'))
+	model.add(Dense(70,kernel_initializer='he_uniform',activation='relu'))
+	model.add(Dropout(0.1))
 	model.add(Dense(1,kernel_initializer='he_uniform',activation='sigmoid'))
 	model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy'])
 
