@@ -87,7 +87,7 @@ def run():
 	
 	fig2 = plt.figure()
 	plt.plot(l_fpr_b, l_tpr_b,label='balanced')
-	plt.plot(l_fpr_i, l_tpr_i, l_recall_i,label='imbalanced')
+	plt.plot(l_fpr_i, l_tpr_i,label='imbalanced')
 	plt.xlabel('False Positive')
 	plt.ylabel('True Positive')
 	plt.legend(loc='best')
