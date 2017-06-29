@@ -144,7 +144,7 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 		n_elecs = (len(available_P))/testMixture
 		for i in xrange(n_elecs):
 			selectedE_test.append( available_E.pop() )
-		selectedP_test = available_P.pop() 
+		selectedP_test = available_P
 	
 	with open(pickFile,'wb') as f:
 		pickle.dump([selectedE_train, selectedP_train, selectedE_validate, selectedP_validate, selectedE_test, selectedP_test],f)
