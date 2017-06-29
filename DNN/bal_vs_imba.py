@@ -4,7 +4,6 @@ For the same trained model, compare results in balanced vs imbalanced
 
 '''
 
-
 from __future__ import division, print_function, absolute_import
 
 import numpy as np
@@ -43,12 +42,126 @@ def _normalise(arr):
 		else:
 			arr[:,i] = (arr[:,i] - np.mean(arr[:,i])) / np.std(arr[:,i])	
 	return arr
+
+def getCounts(truth,pred,threshold):
+	'''
+	Returns true positive, false positive, true negative, false negative
+	'''
+	tp, fp, tn, fn = [0,0,0,0]
+	
+	for i in range(truth.shape[0]):
+		if truth[i] == 1. :
+			if pred[i] >= threshold:
+				tp += 1
+			else:
+				fn += 1
+		elif truth[i] == 0. :
+			if pred[i] >= threshold:
+				fp += 1
+			else:
+				tn += 1
+		else:
+			raise Exception("Bad true labels")
+	return tp,fp,tn,fn
+		
+def getROC(truth,pred,npoints=20):
+	
+	l_fpr = []
+	l_tpr = []
+	l_thresholds = []
+	
+	for i in range(npoints):	
+		thr = i * (1./npoints)
+		tp,fp,tn,fn = getCounts(truth,pred,thr)
+		l_fpr.append( fp/(fp + tn) )
+		l_tpr.append( tp/(tp + fn) )
+		l_thresholds.append( thr )
+	
+	thr = 1.
+	tp,fp,tn,fn = getCounts(truth,pred,thr)
+	l_fpr.append( fp/(fp + tn) )
+	l_tpr.append( tp/(tp + fn) )
+	l_thresholds.append( thr )
+	
+	return l_fpr,l_tpr,l_thresholds
+
+def getPR(truth,pred,npoints=20):
+
+	l_pre = []
+	l_rec = []
+	l_thresholds = []
+	
+	for i in range(npoints):	
+		thr = i * (1./npoints)
+		tp,fp,tn,fn = getCounts(truth,pred,thr)
+		l_pre.append( tp / (tp + fp) )
+		l_rec.append( tp / (tp + fn) )
+		l_thresholds.append( thr )
+	
+	thr = 1.
+	tp,fp,tn,fn = getCounts(truth,pred,thr)
+	l_pre.append( tp / (tp + fp) )
+	l_rec.append( tp / (tp + fn) )
+	l_thresholds.append( thr )
+	
+	return l_pre,l_rec,l_thresholds
+	
+	
+def getSets():
+	
+	
+	bigarr = np.concatenate(( np.load('/home/drozd/analysis/fraction1/dataset_validate_1.npy'), np.load('/home/drozd/analysis/fraction1/dataset_test_1.npy') ))
+	
+	nrofevents = bigarr.shape[0]
+	fraction = 100
+	nrofprotons = int(nrofevents/2.)
+	nrofelectrons = int(nrofprotons/fraction)
+	
+	imba_e = np.zeros((nrofelectrons,bigarr.shape[1]))
+	imba_p = np.zeros((nrofprotons,bigarr.shape[1]))
+	
+	nse = 0
+	nsp = 0
+	
+	for i in range(bigarr.shape[0]):
+		
+		if bigarr[i,-1] == 1. and nse < nrofelectrons:
+			imba_e[nse] = bigarr[i]
+			nse += 1
+		elif bigarr[i,-1] == 0. and nsp < nrofprotons:
+			imba_p[nsp] = bigarr[i]
+			nsp += 1
+			
+	imbaArr = np.concatenate(( imba_e , imba_p ))
+	np.random.shuffle(imbaArr)
+	
+	print('Electron array:', imba_e.shape)
+	print('Proton array:', imba_p.shape)
+	print('Full array:', imbaArr.shape)
+	print(nse, ' - ',nsp)
+	
+	return bigarr[:,0:-2], bigarr[:,-1], imbaArr[:,0:-2], imbaArr[:,-1]
+	
+	
+def getClassifierScore(truth,pred):
+	elecs = []
+	prots = []
+	
+	for i in range(truth.shape[0]):
+		if truth[i] == 1:
+			elecs.append(pred[i])
+		else:
+			prots.append(pred[i])
+			
+	return elecs, prots
+
 	
 def run():
 	
 	X_train, Y_train = XY_split('/home/drozd/analysis/dataset_train.npy')
-	X_val, Y_val = XY_split('/home/drozd/analysis/fraction1/dataset_validate_1.npy')
-	X_val_imba, Y_val_imba = XY_split('/home/drozd/analysis/dataset_validate.npy')
+	#~ X_val, Y_val = XY_split('/home/drozd/analysis/fraction1/dataset_validate_1.npy')
+	#~ X_val_imba, Y_val_imba = XY_split('/home/drozd/analysis/dataset_validate.npy')
+	X_val, Y_val, X_val_imba, Y_val_imba = getSets()
 	
 	X_train = _normalise(X_train)
 	X_val = _normalise(X_val)
@@ -64,35 +177,86 @@ def run():
 	model.add(Dense(1,kernel_initializer='he_uniform',activation='sigmoid'))
 	model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy'])
 
-	callbacks = []
+	rdlronplt = ReduceLROnPlateau(monitor='loss',patience=3,min_lr=0.001)
+	callbacks = [rdlronplt]
 	
-	history = model.fit(X_train,Y_train,batch_size=100,epochs=25,verbose=2,callbacks=callbacks,validation_data=(X_val,Y_val))
+	history = model.fit(X_train,Y_train,batch_size=150,epochs=100,verbose=0,callbacks=callbacks,validation_data=(X_val,Y_val))
 	
+	# --------------------------------
 	
 	predictions_balanced = model.predict(X_val)
 	predictions_imba = model.predict(X_val_imba)
+	predictions_train = model.predict(X_train)
 	
-	l_precision_b, l_recall_b, l_thresholds_b = precision_recall_curve(Y_val,predictions_balanced)
-	l_precision_i, l_recall_i, l_thresholds_i = precision_recall_curve(Y_val_imba,predictions_imba)
+	sk_l_precision_b, sk_l_recall_b, sk_l_thresholds_b = precision_recall_curve(Y_val,predictions_balanced)
+	sk_l_precision_i, sk_l_recall_i, sk_l_thresholds_i = precision_recall_curve(Y_val_imba,predictions_imba)
+	sk_l_precision_t, sk_l_recall_t, sk_l_thresholds_t = precision_recall_curve(Y_train,predictions_train)
 	
-	l_fpr_b, l_tpr_b, l_roc_thresholds_b = roc_curve(Y_val,predictions_balanced)
-	l_fpr_i, l_tpr_i, l_roc_thresholds_i = roc_curve(Y_val_imba,predictions_imba)
+	sk_l_fpr_b, sk_l_tpr_b, sk_l_roc_thresholds_b = roc_curve(Y_val,predictions_balanced)
+	sk_l_fpr_i, sk_l_tpr_i, sk_l_roc_thresholds_i = roc_curve(Y_val_imba,predictions_imba)
+	
+	man_l_precision_b, man_l_recall_b, man_l_thresholds_b = getPR(Y_val,predictions_balanced)
+	man_l_precision_i, man_l_recall_i, man_l_thresholds_i = getPR(Y_val_imba,predictions_imba)
+	
+	man_l_fpr_b, man_l_tpr_b, man_l_roc_thresholds_b = getROC(Y_val,predictions_balanced)
+	man_l_fpr_i, man_l_tpr_i, man_l_roc_thresholds_i = getROC(Y_val_imba,predictions_imba)
 	
 	fig1 = plt.figure()
-	plt.plot(l_precision_b, l_recall_b,label='balanced')
-	plt.plot(l_precision_i, l_recall_i,label='imbalanced')
+	plt.plot(sk_l_precision_b, sk_l_recall_b,label='balanced, sk')
+	plt.plot(sk_l_precision_i, sk_l_recall_i,label='imbalanced, sk')
+	plt.plot(sk_l_precision_t, sk_l_recall_t,label='training set')
+	plt.plot(man_l_precision_b, man_l_recall_b,'o',label='balanced, hand')
+	plt.plot(man_l_precision_i, man_l_recall_i,'o',label='imbalanced, hand')
 	plt.xlabel('Precision')
 	plt.ylabel('Recall')
 	plt.legend(loc='best')
 	plt.savefig('PR')
 	
 	fig2 = plt.figure()
-	plt.plot(l_fpr_b, l_tpr_b,label='balanced')
-	plt.plot(l_fpr_i, l_tpr_i,label='imbalanced')
+	plt.plot(sk_l_fpr_b, sk_l_tpr_b,label='balanced, sk')
+	plt.plot(sk_l_fpr_i, sk_l_tpr_i,label='imbalanced, sk')
+	plt.plot(man_l_fpr_b, man_l_tpr_b,'o',label='balanced, hand')
+	plt.plot(man_l_fpr_i, man_l_tpr_i,'o',label='imbalanced, hand')
 	plt.xlabel('False Positive')
 	plt.ylabel('True Positive')
 	plt.legend(loc='best')
 	plt.savefig('ROC')
+	
+	
+	elecs_t, prots_t = getClassifierScore(Y_train,predictions_train)
+	elecs_b, prots_b = getClassifierScore(Y_val,predictions_balanced)
+	elecs_i, prots_i = getClassifierScore(Y_val_imba,predictions_imba)
+	
+	
+	fig3 = plt.figure()
+	plt.hist(elecs_t,50,label='e',alpha=0.5,histtype='step',color='green')
+	plt.hist(prots_t,50,label='p',alpha=0.5,histtype='step',color='red')
+	plt.xlabel('Classifier score')
+	plt.ylabel('Number of events')
+	plt.title('Training set')
+	plt.legend(loc='best')
+	plt.yscale('log')
+	plt.savefig('predHisto_train')
+	
+	fig4 = plt.figure()
+	plt.hist(elecs_b,50,label='e',alpha=0.5,histtype='step',color='green')
+	plt.hist(prots_b,50,label='p',alpha=0.5,histtype='step',color='red')
+	plt.xlabel('Classifier score')
+	plt.ylabel('Number of events')
+	plt.title('Balanced validation set')
+	plt.legend(loc='best')
+	plt.yscale('log')
+	plt.savefig('predHisto_bal')
+	
+	fig5 = plt.figure()
+	plt.hist(elecs_i,50,label='e',alpha=0.5,histtype='step',color='green')
+	plt.hist(prots_i,50,label='p',alpha=0.5,histtype='step',color='red')
+	plt.xlabel('Classifier score')
+	plt.ylabel('Number of events')
+	plt.legend(loc='best')
+	plt.title('Imbalanced validation set')
+	plt.yscale('log')
+	plt.savefig('predHisto_imba')
 	
 
 
