@@ -184,7 +184,8 @@ def run():
 	model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy'])
 
 	rdlronplt = ReduceLROnPlateau(monitor='loss',patience=3,min_lr=0.001)
-	callbacks = [rdlronplt]
+	earl = EarlyStopping(monitor='loss',min_delta=0.0001,patience=5)
+	callbacks = [rdlronplt,earl]
 	
 	history = model.fit(X_train,Y_train,batch_size=150,epochs=80,verbose=0,callbacks=callbacks,validation_data=(X_val,Y_val))
 	
@@ -202,12 +203,23 @@ def run():
 	
 	sk_l_fpr_b, sk_l_tpr_b, sk_l_roc_thresholds_b = roc_curve(Y_val,predictions_balanced)
 	sk_l_fpr_i, sk_l_tpr_i, sk_l_roc_thresholds_i = roc_curve(Y_val_imba,predictions_imba)
+	sk_l_fpr_t, sk_l_tpr_t, sk_l_roc_thresholds_t = roc_curve(Y_train,predictions_train)
 	
 	man_l_precision_b, man_l_recall_b, man_l_thresholds_b = getPR(Y_val,predictions_balanced)
 	man_l_precision_i, man_l_recall_i, man_l_thresholds_i = getPR(Y_val_imba,predictions_imba)
 	
 	man_l_fpr_b, man_l_tpr_b, man_l_roc_thresholds_b = getROC(Y_val,predictions_balanced)
 	man_l_fpr_i, man_l_tpr_i, man_l_roc_thresholds_i = getROC(Y_val_imba,predictions_imba)
+	
+	print("----- AUC -----")
+	print("Train:", average_precision_score(Y_train,predictions_train))
+	print("Validate:", average_precision_score(Y_val,predictions_balanced))
+	print("----- F1 -----")
+	print("Train:", f1_score(Y_train,predictions_train))
+	print("Validate:", f1_score(Y_val,predictions_balanced))
+	print("----- Precision/Recall -----")
+	print("Train:", precision_score(Y_train,predictions_train), " / ", recall_score(Y_train,predictions_train))
+	print("Validate:", precision_score(Y_val,predictions_balanced), " / ", recall_score(Y_val,predictions_balanced))
 	
 	fig1 = plt.figure()
 	plt.plot(sk_l_precision_b, sk_l_recall_b,label='balanced, sk')
@@ -220,6 +232,14 @@ def run():
 	plt.legend(loc='best')
 	plt.savefig('PR')
 	
+	fig1b = plt.figure()
+	plt.plot(sk_l_precision_b, sk_l_recall_b,label='validation set')
+	plt.plot(sk_l_precision_t, sk_l_recall_t,label='training set')
+	plt.xlabel('Precision')
+	plt.ylabel('Recall')
+	plt.legend(loc='best')
+	plt.savefig('PRb')
+	
 	fig2 = plt.figure()
 	plt.plot(sk_l_fpr_b, sk_l_tpr_b,label='balanced, sk')
 	plt.plot(sk_l_fpr_i, sk_l_tpr_i,label='imbalanced, sk')
@@ -230,6 +250,13 @@ def run():
 	plt.legend(loc='best')
 	plt.savefig('ROC')
 	
+	fig2b = plt.figure()
+	plt.plot(sk_l_fpr_b, sk_l_tpr_b,label='balanced, sk')
+	plt.plot(sk_l_fpr_t, sk_l_tpr_t,label='balanced, sk')
+	plt.xlabel('False Positive')
+	plt.ylabel('True Positive')
+	plt.legend(loc='best')
+	plt.savefig('ROCb')
 	
 	
 	elecs_t, prots_t = getClassifierScore(Y_train,predictions_train)
@@ -248,7 +275,7 @@ def run():
 	plt.hist(prots_t,50,label='p',alpha=0.5,histtype='step',color='red',normed=True)
 	plt.xlabel('Classifier score')
 	plt.ylabel('Fraction of events')
-	plt.title('Training set')
+	plt.title('Training set - normalised')
 	plt.legend(loc='best')
 	plt.yscale('log')
 	plt.savefig('predHisto_train_n')	
@@ -270,7 +297,7 @@ def run():
 	plt.hist(prots_b,50,label='p',alpha=0.5,histtype='step',color='red',normed=True)
 	plt.xlabel('Classifier score')
 	plt.ylabel('Fraction of events')
-	plt.title('Training set')
+	plt.title('Balanced validation set - normalised')
 	plt.legend(loc='best')
 	plt.yscale('log')
 	plt.savefig('predHisto_bal_n')	
@@ -292,7 +319,7 @@ def run():
 	plt.hist(prots_i,50,label='p',alpha=0.5,histtype='step',color='red',normed=True)
 	plt.xlabel('Classifier score')
 	plt.ylabel('Fraction of events')
-	plt.title('Training set')
+	plt.title('Imbalanced validation set - normalised')
 	plt.legend(loc='best')
 	plt.yscale('log')
 	plt.savefig('predHisto_imba_n')	
