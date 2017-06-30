@@ -143,15 +143,21 @@ def getSets():
 	return bigarr[:,0:-2], bigarr[:,-1], imbaArr[:,0:-2], imbaArr[:,-1]
 	
 	
-def getClassifierScore(truth,pred):
-	elecs = []
-	prots = []
+#~ def getClassifierScore(truth,pred):
+	#~ elecs = []
+	#~ prots = []
+	#~ 
+	#~ for i in range(truth.shape[0]):
+		#~ if truth[i] == 1:
+			#~ elecs.append(pred[i])
+		#~ else:
+			#~ prots.append(pred[i])
+			#~ 
+	#~ return elecs, prots
 	
-	for i in range(truth.shape[0]):
-		if truth[i] == 1:
-			elecs.append(pred[i])
-		else:
-			prots.append(pred[i])
+def getClassifierScore(truth,pred):
+	elecs = pred[truth.astype(bool)]
+	prots = pred[~truth.astype(bool)]
 			
 	return elecs, prots
 
@@ -180,13 +186,15 @@ def run():
 	rdlronplt = ReduceLROnPlateau(monitor='loss',patience=3,min_lr=0.001)
 	callbacks = [rdlronplt]
 	
-	history = model.fit(X_train,Y_train,batch_size=150,epochs=100,verbose=0,callbacks=callbacks,validation_data=(X_val,Y_val))
+	history = model.fit(X_train,Y_train,batch_size=150,epochs=80,verbose=0,callbacks=callbacks,validation_data=(X_val,Y_val))
 	
 	# --------------------------------
 	
 	predictions_balanced = model.predict(X_val)
 	predictions_imba = model.predict(X_val_imba)
 	predictions_train = model.predict(X_train)
+	
+	del X_val, X_val_imba, X_train
 	
 	sk_l_precision_b, sk_l_recall_b, sk_l_thresholds_b = precision_recall_curve(Y_val,predictions_balanced)
 	sk_l_precision_i, sk_l_recall_i, sk_l_thresholds_i = precision_recall_curve(Y_val_imba,predictions_imba)
@@ -223,11 +231,8 @@ def run():
 	plt.savefig('ROC')
 	
 	
+	
 	elecs_t, prots_t = getClassifierScore(Y_train,predictions_train)
-	elecs_b, prots_b = getClassifierScore(Y_val,predictions_balanced)
-	elecs_i, prots_i = getClassifierScore(Y_val_imba,predictions_imba)
-	
-	
 	fig3 = plt.figure()
 	plt.hist(elecs_t,50,label='e',alpha=0.5,histtype='step',color='green')
 	plt.hist(prots_t,50,label='p',alpha=0.5,histtype='step',color='red')
@@ -238,6 +243,18 @@ def run():
 	plt.yscale('log')
 	plt.savefig('predHisto_train')
 	
+	fig3b = plt.figure()
+	plt.hist(elecs_t,50,label='e',alpha=0.5,histtype='step',color='green',normed=True)
+	plt.hist(prots_t,50,label='p',alpha=0.5,histtype='step',color='red',normed=True)
+	plt.xlabel('Classifier score')
+	plt.ylabel('Fraction of events')
+	plt.title('Training set')
+	plt.legend(loc='best')
+	plt.yscale('log')
+	plt.savefig('predHisto_train_n')	
+	del elecs_t, prots_t, Y_train, predictions_train
+	
+	elecs_b, prots_b = getClassifierScore(Y_val,predictions_balanced)
 	fig4 = plt.figure()
 	plt.hist(elecs_b,50,label='e',alpha=0.5,histtype='step',color='green')
 	plt.hist(prots_b,50,label='p',alpha=0.5,histtype='step',color='red')
@@ -248,6 +265,18 @@ def run():
 	plt.yscale('log')
 	plt.savefig('predHisto_bal')
 	
+	fig4b = plt.figure()
+	plt.hist(elecs_b,50,label='e',alpha=0.5,histtype='step',color='green',normed=True)
+	plt.hist(prots_b,50,label='p',alpha=0.5,histtype='step',color='red',normed=True)
+	plt.xlabel('Classifier score')
+	plt.ylabel('Fraction of events')
+	plt.title('Training set')
+	plt.legend(loc='best')
+	plt.yscale('log')
+	plt.savefig('predHisto_bal_n')	
+	del elecs_b, prots_b, Y_val, predictions_balanced
+	
+	elecs_i, prots_i = getClassifierScore(Y_val_imba,predictions_imba)
 	fig5 = plt.figure()
 	plt.hist(elecs_i,50,label='e',alpha=0.5,histtype='step',color='green')
 	plt.hist(prots_i,50,label='p',alpha=0.5,histtype='step',color='red')
@@ -258,6 +287,15 @@ def run():
 	plt.yscale('log')
 	plt.savefig('predHisto_imba')
 	
+	fig5b = plt.figure()
+	plt.hist(elecs_i,50,label='e',alpha=0.5,histtype='step',color='green',normed=True)
+	plt.hist(prots_i,50,label='p',alpha=0.5,histtype='step',color='red',normed=True)
+	plt.xlabel('Classifier score')
+	plt.ylabel('Fraction of events')
+	plt.title('Training set')
+	plt.legend(loc='best')
+	plt.yscale('log')
+	plt.savefig('predHisto_imba_n')	
 
 
 
