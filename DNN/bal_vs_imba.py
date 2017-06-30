@@ -251,8 +251,8 @@ def run():
 	plt.savefig('ROC')
 	
 	fig2b = plt.figure()
-	plt.plot(sk_l_fpr_b, sk_l_tpr_b,label='balanced, sk')
-	plt.plot(sk_l_fpr_t, sk_l_tpr_t,label='balanced, sk')
+	plt.plot(sk_l_fpr_b, sk_l_tpr_b,label='validation set')
+	plt.plot(sk_l_fpr_t, sk_l_tpr_t,label='training set')
 	plt.xlabel('False Positive')
 	plt.ylabel('True Positive')
 	plt.legend(loc='best')
