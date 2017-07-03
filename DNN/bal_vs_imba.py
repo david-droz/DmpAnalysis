@@ -29,18 +29,10 @@ from sklearn.metrics import f1_score
 
 ##############################################
 
-def XY_split(fname):
-	arr = np.load(fname)
-	X = arr[:,0:-2]				### Last two columns are timestamp and particle id
-	Y = arr[:,-1]
-	return X,Y
 
 def _normalise(arr):
 	for i in range(arr.shape[1]):
-		if np.all(arr[:,i] > 0) :
-			arr[:,i] = (arr[:,i] - np.mean(arr[:,i]) + 1.) / np.std(arr[:,i])		# Mean = 1 if all values are strictly positive (from paper)
-		else:
-			arr[:,i] = (arr[:,i] - np.mean(arr[:,i])) / np.std(arr[:,i])	
+		arr[:,i] = (arr[:,i] - np.mean(arr[:,i])) / np.std(arr[:,i])	
 	return arr
 
 def getCounts(truth,pred,threshold):
@@ -76,13 +68,7 @@ def getROC(truth,pred,npoints=20):
 		l_fpr.append( fp/(fp + tn) )
 		l_tpr.append( tp/(tp + fn) )
 		l_thresholds.append( thr )
-	
-	thr = 1.
-	tp,fp,tn,fn = getCounts(truth,pred,thr)
-	l_fpr.append( fp/(fp + tn) )
-	l_tpr.append( tp/(tp + fn) )
-	l_thresholds.append( thr )
-	
+		
 	return l_fpr,l_tpr,l_thresholds
 
 def getPR(truth,pred,npoints=20):
@@ -98,46 +84,57 @@ def getPR(truth,pred,npoints=20):
 		l_rec.append( tp / (tp + fn) )
 		l_thresholds.append( thr )
 	
-	thr = 1.
-	tp,fp,tn,fn = getCounts(truth,pred,thr)
-	l_pre.append( tp / (tp + fp) )
-	l_rec.append( tp / (tp + fn) )
-	l_thresholds.append( thr )
+	#~ thr = 1.
+	#~ tp,fp,tn,fn = getCounts(truth,pred,thr)
+	#~ l_pre.append( tp / (tp + fp) )
+	#~ l_rec.append( tp / (tp + fn) )
+	#~ l_thresholds.append( thr )
 	
 	return l_pre,l_rec,l_thresholds
-	
-def getSets():
-	
-	electrons_all = np.concatenate(( np.load('/home/drozd/analysis/fraction1/data_validate_elecs_1.npy') , np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')))
-	protons_all = np.concatenate(( np.load('/home/drozd/analysis/fraction1/data_validate_prots_1.npy') , np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')))
-	
-	bigarr = np.concatenate(( electrons_all , protons_all ))
-	np.random.shuffle(bigarr)
-	
-	imbaArr = np.concatenate(( protons_all , electrons_all[ 0:int(protons_all.shape[0]/100) ] ))
-	np.random.shuffle(imbaArr)
-	
-	return bigarr[:,0:-2], bigarr[:,-1], imbaArr[:,0:-2], imbaArr[:,-1]
-	
-
-	
+		
 def getClassifierScore(truth,pred):
 	elecs = pred[truth.astype(bool)]
 	prots = pred[~truth.astype(bool)]
 			
 	return elecs, prots
 
+
+def getParticleSet(fname):
+	arr = np.load(fname)
+	X = arr[:,0:-2]				### Last two columns are timestamp and particle id
+	Y = arr[:,-1]
+	X = _normalise(X)
+	r = np.concatenate(( X, Y.reshape(( Y.shape[0], 1 )) ) , axis=1)
+	del arr, X, Y
+	return r
+
 	
 def run():
 	
-	X_train, Y_train = XY_split('/home/drozd/analysis/dataset_train.npy')
-	#~ X_val, Y_val = XY_split('/home/drozd/analysis/fraction1/dataset_validate_1.npy')
-	#~ X_val_imba, Y_val_imba = XY_split('/home/drozd/analysis/dataset_validate.npy')
-	X_val, Y_val, X_val_imba, Y_val_imba = getSets()
+	train_e = getParticleSet('/home/drozd/analysis/data_train_elecs.npy')
+	train_p = getParticleSet('/home/drozd/analysis/data_train_prots.npy')
+	train = np.concatenate(( train_e, train_p ))
+	np.random.shuffle(train)
 	
-	X_train = _normalise(X_train)
-	X_val = _normalise(X_val)
-	X_val_imba = _normalise(X_val_imba)
+	X_train = train[:,0:-1]
+	Y_train = train[:,-1]
+	del train_e,train_p, train
+
+	val_e = getParticleSet('/home/drozd/analysis/fraction1/data_validate_elecs_1.npy')
+	val_p = getParticleSet('/home/drozd/analysis/fraction1/data_validate_prots_1.npy')
+	
+	val = np.concatenate(( val_e, val_p ))
+	np.random.shuffle(val)
+	
+	X_val = val[:,0:-1]
+	Y_val = val[:,-1]
+	
+	val_imba = np.concatenate(( val_e[0:int(val_p.shape[0]/100)], val_p ))
+	np.random.shuffle(val_imba)
+	X_val_imba = val_imba[:,0:-1]
+	Y_val_imba = val_imba[:,-1]
+	
+	del val_e, val_p, val, val_imba
 	
 	model = Sequential()
 	model.add(Dense(300,input_shape=(X_train.shape[1],),kernel_initializer='he_uniform',activation='relu'))
@@ -153,7 +150,7 @@ def run():
 	earl = EarlyStopping(monitor='loss',min_delta=0.0001,patience=5)
 	callbacks = [rdlronplt,earl]
 	
-	history = model.fit(X_train,Y_train,batch_size=150,epochs=3,verbose=0,callbacks=callbacks,validation_data=(X_val,Y_val))
+	history = model.fit(X_train,Y_train,batch_size=150,epochs=10,verbose=0,callbacks=callbacks,validation_data=(X_val,Y_val))
 	
 	# --------------------------------
 	
@@ -291,35 +288,6 @@ def run():
 	plt.savefig('predHisto_imba_n')	
 	
 	
-	
-	electrons_all = np.concatenate(( np.load('/home/drozd/analysis/fraction1/data_validate_elecs_1.npy') , np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')))
-	protons_all = np.concatenate(( np.load('/home/drozd/analysis/fraction1/data_validate_prots_1.npy') , np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')))
-	e_score, e_garbage = getClassifierScore( electrons_all[:,-1] ,  model.predict(_normalise(electrons_all[:,0:-2])) )
-	p_garbage, p_score = getClassifierScore( protons_all[:,-1] ,  model.predict(_normalise(protons_all[:,0:-2])) )
-		
-	fig6 = plt.figure()
-	plt.hist( e_score, 50, label='e',alpha=0.5,histtype='step',color='green',normed=False)
-	plt.hist( p_score, 50, label='p',alpha=0.5,histtype='step',color='red',normed=False)
-	plt.xlabel('Classifier score')
-	plt.ylabel('Fraction of events')
-	plt.title('Balanced set - loaded separately')
-	plt.legend(loc='best')
-	plt.yscale('log')
-	plt.savefig('predHisto_ba_loadSeparate')	
-	
-	fig6b = plt.figure()
-	plt.hist( e_score, 50, label='e',alpha=0.5,histtype='step',color='green',normed=True)
-	plt.hist( p_score, 50, label='p',alpha=0.5,histtype='step',color='red',normed=True)
-	plt.xlabel('Classifier score')
-	plt.ylabel('Fraction of events')
-	plt.title('Balanced set - loaded separately - normed')
-	plt.legend(loc='best')
-	plt.yscale('log')
-	plt.savefig('predHisto_ba_loadSeparate_n')	
-
-
-
-
 if __name__ == '__main__' :
 	
 	run()
