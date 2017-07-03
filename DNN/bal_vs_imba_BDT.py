@@ -300,8 +300,8 @@ def run():
 	
 	electrons_all = np.concatenate(( np.load('/home/drozd/analysis/fraction1/data_validate_elecs_1.npy') , np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')))
 	protons_all = np.concatenate(( np.load('/home/drozd/analysis/fraction1/data_validate_prots_1.npy') , np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')))
-	e_score, e_garbage = getClassifierScore( electrons_all[:,-1] ,  model.predict(_normalise(electrons_all[:,0:-2]))[:,1] )
-	p_garbage, p_score = getClassifierScore( protons_all[:,-1] ,  model.predict(_normalise(protons_all[:,0:-2]))[:,1] )
+	e_score, e_garbage = getClassifierScore( electrons_all[:,-1] ,  model.predict_proba(_normalise(electrons_all[:,0:-2]))[:,1] )
+	p_garbage, p_score = getClassifierScore( protons_all[:,-1] ,  model.predict_proba(_normalise(protons_all[:,0:-2]))[:,1] )
 		
 	fig6 = plt.figure()
 	plt.hist( e_score, 50, label='e',alpha=0.5,histtype='step',color='green',normed=False)
