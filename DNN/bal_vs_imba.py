@@ -106,54 +106,20 @@ def getPR(truth,pred,npoints=20):
 	
 	return l_pre,l_rec,l_thresholds
 	
-	
 def getSets():
 	
+	electrons_all = np.concatenate(( np.load('/home/drozd/analysis/fraction1/data_validate_elecs_1.npy') , np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')))
+	protons_all = np.concatenate(( np.load('/home/drozd/analysis/fraction1/data_validate_prots_1.npy') , np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')))
 	
-	bigarr = np.concatenate(( np.load('/home/drozd/analysis/fraction1/dataset_validate_1.npy'), np.load('/home/drozd/analysis/fraction1/dataset_test_1.npy') ))
+	bigarr = np.concatenate(( electrons_all , protons_all ))
+	np.random.shuffle(bigarr)
 	
-	nrofevents = bigarr.shape[0]
-	fraction = 100
-	nrofprotons = int(nrofevents/2.)
-	nrofelectrons = int(nrofprotons/fraction)
-	
-	imba_e = np.zeros((nrofelectrons,bigarr.shape[1]))
-	imba_p = np.zeros((nrofprotons,bigarr.shape[1]))
-	
-	nse = 0
-	nsp = 0
-	
-	for i in range(bigarr.shape[0]):
-		
-		if bigarr[i,-1] == 1. and nse < nrofelectrons:
-			imba_e[nse] = bigarr[i]
-			nse += 1
-		elif bigarr[i,-1] == 0. and nsp < nrofprotons:
-			imba_p[nsp] = bigarr[i]
-			nsp += 1
-			
-	imbaArr = np.concatenate(( imba_e , imba_p ))
+	imbaArr = np.concatenate(( protons_all , electrons_all[ 0:int(protons_all.shape[0]/100) ] ))
 	np.random.shuffle(imbaArr)
-	
-	print('Electron array:', imba_e.shape)
-	print('Proton array:', imba_p.shape)
-	print('Full array:', imbaArr.shape)
-	print(nse, ' - ',nsp)
 	
 	return bigarr[:,0:-2], bigarr[:,-1], imbaArr[:,0:-2], imbaArr[:,-1]
 	
-	
-#~ def getClassifierScore(truth,pred):
-	#~ elecs = []
-	#~ prots = []
-	#~ 
-	#~ for i in range(truth.shape[0]):
-		#~ if truth[i] == 1:
-			#~ elecs.append(pred[i])
-		#~ else:
-			#~ prots.append(pred[i])
-			#~ 
-	#~ return elecs, prots
+
 	
 def getClassifierScore(truth,pred):
 	elecs = pred[truth.astype(bool)]
@@ -187,7 +153,7 @@ def run():
 	earl = EarlyStopping(monitor='loss',min_delta=0.0001,patience=5)
 	callbacks = [rdlronplt,earl]
 	
-	history = model.fit(X_train,Y_train,batch_size=150,epochs=80,verbose=0,callbacks=callbacks,validation_data=(X_val,Y_val))
+	history = model.fit(X_train,Y_train,batch_size=150,epochs=3,verbose=0,callbacks=callbacks,validation_data=(X_val,Y_val))
 	
 	# --------------------------------
 	
@@ -323,6 +289,34 @@ def run():
 	plt.legend(loc='best')
 	plt.yscale('log')
 	plt.savefig('predHisto_imba_n')	
+	
+	
+	
+	electrons_all = np.concatenate(( np.load('/home/drozd/analysis/fraction1/data_validate_elecs_1.npy') , np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')))
+	protons_all = np.concatenate(( np.load('/home/drozd/analysis/fraction1/data_validate_prots_1.npy') , np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')))
+	e_score, e_garbage = getClassifierScore( electrons_all[:,-1] ,  model.predict(_normalise(electrons_all[:,0:-2])) )
+	p_garbage, p_score = getClassifierScore( protons_all[:,-1] ,  model.predict(_normalise(protons_all[:,0:-2])) )
+		
+	fig6 = plt.figure()
+	plt.hist( e_score, 50, label='e',alpha=0.5,histtype='step',color='green',normed=False)
+	plt.hist( p_score, 50, label='p',alpha=0.5,histtype='step',color='red',normed=False)
+	plt.xlabel('Classifier score')
+	plt.ylabel('Fraction of events')
+	plt.title('Balanced set - loaded separately')
+	plt.legend(loc='best')
+	plt.yscale('log')
+	plt.savefig('predHisto_ba_loadSeparate')	
+	
+	fig6b = plt.figure()
+	plt.hist( e_score, 50, label='e',alpha=0.5,histtype='step',color='green',normed=True)
+	plt.hist( p_score, 50, label='p',alpha=0.5,histtype='step',color='red',normed=True)
+	plt.xlabel('Classifier score')
+	plt.ylabel('Fraction of events')
+	plt.title('Balanced set - loaded separately - normed')
+	plt.legend(loc='best')
+	plt.yscale('log')
+	plt.savefig('predHisto_ba_loadSeparate_n')	
+
 
 
 
