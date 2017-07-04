@@ -120,8 +120,8 @@ def run():
 	Y_train = train[:,-1]
 	del train_e,train_p, train
 
-	val_e = getParticleSet('/home/drozd/analysis/fraction1/data_validate_elecs_1.npy')
-	val_p = getParticleSet('/home/drozd/analysis/fraction1/data_validate_prots_1.npy')
+	val_e = np.concatenate((getParticleSet('/home/drozd/analysis/fraction1/data_validate_elecs_1.npy') , getParticleSet('/home/drozd/analysis/fraction1/data_test_elecs_1.npy') ))
+	val_p = np.concatenate((getParticleSet('/home/drozd/analysis/fraction1/data_validate_prots_1.npy') , getParticleSet('/home/drozd/analysis/fraction1/data_test_prots_1.npy') ))
 	
 	val = np.concatenate(( val_e, val_p ))
 	np.random.shuffle(val)
@@ -150,7 +150,7 @@ def run():
 	earl = EarlyStopping(monitor='loss',min_delta=0.0001,patience=5)
 	callbacks = [rdlronplt,earl]
 	
-	history = model.fit(X_train,Y_train,batch_size=150,epochs=10,verbose=0,callbacks=callbacks,validation_data=(X_val,Y_val))
+	history = model.fit(X_train,Y_train,batch_size=150,epochs=40,verbose=0,callbacks=callbacks,validation_data=(X_val,Y_val))
 	
 	# --------------------------------
 	
@@ -185,11 +185,11 @@ def run():
 	print("Validate:", precision_score(Y_val,np.around(predictions_balanced)), " / ", recall_score(Y_val,np.around(predictions_balanced)))
 	
 	fig1 = plt.figure()
-	plt.plot(sk_l_precision_b, sk_l_recall_b,label='balanced, sk')
-	plt.plot(sk_l_precision_i, sk_l_recall_i,label='imbalanced, sk')
-	plt.plot(sk_l_precision_t, sk_l_recall_t,label='training set')
-	plt.plot(man_l_precision_b, man_l_recall_b,'o',label='balanced, hand')
-	plt.plot(man_l_precision_i, man_l_recall_i,'o',label='imbalanced, hand')
+	plt.plot(sk_l_precision_b, sk_l_recall_b,label='balanced')
+	plt.plot(sk_l_precision_i, sk_l_recall_i,label='imbalanced')
+	#~ plt.plot(sk_l_precision_t, sk_l_recall_t,label='training set')
+	#~ plt.plot(man_l_precision_b, man_l_recall_b,'o',label='balanced, hand')
+	#~ plt.plot(man_l_precision_i, man_l_recall_i,'o',label='imbalanced, hand')
 	plt.xlabel('Precision')
 	plt.ylabel('Recall')
 	plt.legend(loc='best')
@@ -204,10 +204,10 @@ def run():
 	plt.savefig('PRb')
 	
 	fig2 = plt.figure()
-	plt.plot(sk_l_fpr_b, sk_l_tpr_b,label='balanced, sk')
-	plt.plot(sk_l_fpr_i, sk_l_tpr_i,label='imbalanced, sk')
-	plt.plot(man_l_fpr_b, man_l_tpr_b,'o',label='balanced, hand')
-	plt.plot(man_l_fpr_i, man_l_tpr_i,'o',label='imbalanced, hand')
+	plt.plot(sk_l_fpr_b, sk_l_tpr_b,label='balanced')
+	plt.plot(sk_l_fpr_i, sk_l_tpr_i,label='imbalanced')
+	#~ plt.plot(man_l_fpr_b, man_l_tpr_b,'o',label='balanced, hand')
+	#~ plt.plot(man_l_fpr_i, man_l_tpr_i,'o',label='imbalanced, hand')
 	plt.xlabel('False Positive')
 	plt.ylabel('True Positive')
 	plt.legend(loc='best')
@@ -221,11 +221,13 @@ def run():
 	plt.legend(loc='best')
 	plt.savefig('ROCb')
 	
+	Nbins = 50
+	binList = [x/Nbins for x in range(0,Nbins+1)]
 	
 	elecs_t, prots_t = getClassifierScore(Y_train,predictions_train)
 	fig3 = plt.figure()
-	plt.hist(elecs_t,50,label='e',alpha=0.5,histtype='step',color='green')
-	plt.hist(prots_t,50,label='p',alpha=0.5,histtype='step',color='red')
+	plt.hist(elecs_t,bins=binList,label='e',alpha=0.7,histtype='step',color='green')
+	plt.hist(prots_t,bins=binList,label='p',alpha=0.7,histtype='step',color='red')
 	plt.xlabel('Classifier score')
 	plt.ylabel('Number of events')
 	plt.title('Training set')
@@ -234,8 +236,8 @@ def run():
 	plt.savefig('predHisto_train')
 	
 	fig3b = plt.figure()
-	plt.hist(elecs_t,50,label='e',alpha=0.5,histtype='step',color='green',normed=True)
-	plt.hist(prots_t,50,label='p',alpha=0.5,histtype='step',color='red',normed=True)
+	plt.hist(elecs_t,bins=binList,label='e',alpha=0.7,histtype='step',color='green',normed=True)
+	plt.hist(prots_t,bins=binList,label='p',alpha=0.7,histtype='step',color='red',normed=True)
 	plt.xlabel('Classifier score')
 	plt.ylabel('Fraction of events')
 	plt.title('Training set - normalised')
@@ -246,8 +248,8 @@ def run():
 	
 	elecs_b, prots_b = getClassifierScore(Y_val,predictions_balanced)
 	fig4 = plt.figure()
-	plt.hist(elecs_b,50,label='e',alpha=0.5,histtype='step',color='green')
-	plt.hist(prots_b,50,label='p',alpha=0.5,histtype='step',color='red')
+	plt.hist(elecs_b,bins=binList,label='e',alpha=0.7,histtype='step',color='green')
+	plt.hist(prots_b,bins=binList,label='p',alpha=0.7,histtype='step',color='red')
 	plt.xlabel('Classifier score')
 	plt.ylabel('Number of events')
 	plt.title('Balanced validation set')
@@ -256,8 +258,8 @@ def run():
 	plt.savefig('predHisto_bal')
 	
 	fig4b = plt.figure()
-	plt.hist(elecs_b,50,label='e',alpha=0.5,histtype='step',color='green',normed=True)
-	plt.hist(prots_b,50,label='p',alpha=0.5,histtype='step',color='red',normed=True)
+	plt.hist(elecs_b,bins=binList,label='e',alpha=0.7,histtype='step',color='green',normed=True)
+	plt.hist(prots_b,bins=binList,label='p',alpha=0.7,histtype='step',color='red',normed=True)
 	plt.xlabel('Classifier score')
 	plt.ylabel('Fraction of events')
 	plt.title('Balanced validation set - normalised')
@@ -268,8 +270,8 @@ def run():
 	
 	elecs_i, prots_i = getClassifierScore(Y_val_imba,predictions_imba)
 	fig5 = plt.figure()
-	plt.hist(elecs_i,50,label='e',alpha=0.5,histtype='step',color='green')
-	plt.hist(prots_i,50,label='p',alpha=0.5,histtype='step',color='red')
+	plt.hist(elecs_i,bins=binList,label='e',alpha=0.7,histtype='step',color='green')
+	plt.hist(prots_i,bins=binList,label='p',alpha=0.7,histtype='step',color='red')
 	plt.xlabel('Classifier score')
 	plt.ylabel('Number of events')
 	plt.legend(loc='best')
@@ -278,8 +280,8 @@ def run():
 	plt.savefig('predHisto_imba')
 	
 	fig5b = plt.figure()
-	plt.hist(elecs_i,50,label='e',alpha=0.5,histtype='step',color='green',normed=True)
-	plt.hist(prots_i,50,label='p',alpha=0.5,histtype='step',color='red',normed=True)
+	plt.hist(elecs_i,bins=binList,label='e',alpha=0.7,histtype='step',color='green',normed=True)
+	plt.hist(prots_i,bins=binList,label='p',alpha=0.7,histtype='step',color='red',normed=True)
 	plt.xlabel('Classifier score')
 	plt.ylabel('Fraction of events')
 	plt.title('Imbalanced validation set - normalised')
