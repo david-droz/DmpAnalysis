@@ -26,11 +26,14 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping, Callback, LearningRa
 from keras.constraints import maxnorm
 from keras.layers.advanced_activations import PReLU, ELU, LeakyReLU
 
-def XY_split(fname):
+def getParticleSet(fname):
 	arr = np.load(fname)
-	X = arr[:,0:-2]				# Last two columns are timestamp and particle ID
+	X = arr[:,0:-2]				### Last two columns are timestamp and particle id
 	Y = arr[:,-1]
-	return X,Y
+	X = StandardScaler().fit_transform(X)
+	r = np.concatenate(( X, Y.reshape(( Y.shape[0], 1 )) ) , axis=1)
+	del arr, X, Y
+	return r
 
 def run(applyPCA,balanced):
 	
@@ -38,15 +41,28 @@ def run(applyPCA,balanced):
 	
 	#~ balanced = True
 	
-	if balanced:	
-		X_train, Y_train = XY_split('/home/drozd/analysis/fraction1/dataset_train.npy')
-		X_val, Y_val = XY_split('/home/drozd/analysis/fraction1/dataset_validate_1.npy')	
+	if balanced:
+		train_e = getParticleSet('/home/drozd/analysis/fraction1/data_train_elecs.npy')
+		train_p = getParticleSet('/home/drozd/analysis/fraction1/data_train_prots.npy')
+		val_e = getParticleSet('/home/drozd/analysis/fraction1/data_validate_elecs.npy') 
+		val_p = getParticleSet('/home/drozd/analysis/fraction1/data_validate_prots.npy') 
 	else:
-		X_train, Y_train = XY_split('/home/drozd/analysis/dataset_train.npy')
-		X_val, Y_val = XY_split('/home/drozd/analysis/dataset_validate.npy')		
+		train_e = getParticleSet('/home/drozd/analysis/data_train_elecs.npy')
+		train_p = getParticleSet('/home/drozd/analysis/data_train_prots.npy')
+		val_e = getParticleSet('/home/drozd/analysis/data_validate_elecs.npy') 
+		val_p = getParticleSet('/home/drozd/analysis/data_validate_prots.npy') 
 	
-	X_train = StandardScaler().fit_transform(X_train)
-	X_val = StandardScaler().fit_transform(X_val)
+	train = np.concatenate(( train_e, train_p ))
+	np.random.shuffle(train)
+	X_train = train[:,0:-1]
+	Y_train = train[:,-1]
+	del train_e,train_p, train
+	
+	val = np.concatenate(( val_e, val_p ))
+	np.random.shuffle(val)
+	X_val = val[:,0:-1]
+	Y_val = val[:,-1]
+	del val_e, val_p, val
 	
 	if applyPCA:
 		n = 45
