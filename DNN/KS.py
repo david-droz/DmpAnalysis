@@ -32,11 +32,14 @@ from keras.layers.advanced_activations import PReLU, ELU, LeakyReLU
 from scipy import stats
 
 
-def XY_split(fname):
+def getParticleSet(fname):
 	arr = np.load(fname)
-	X = arr[:,0:-2]				# Last two columns are timestamp and particle ID
+	X = arr[:,0:-2]				### Last two columns are timestamp and particle id
 	Y = arr[:,-1]
-	return X,Y
+	X = _normalise(X)
+	r = np.concatenate(( X, Y.reshape(( Y.shape[0], 1 )) ) , axis=1)
+	del arr, X, Y
+	return r
 	
 def getModel(X_train):
 	model = Sequential()
@@ -58,39 +61,41 @@ def getModel(X_train):
 	model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy'])
 	return model
 	
-	# Best imba: {u'loss': u'binary_crossentropy', u'optimizer': u'sgd', u'dropout': 0.10000000000000001, u'metrics': [u'binary_accuracy'], u'init': u'glorot_uniform', u'acti_out': u'sigmoid', u'architecture': [300, 200, 100, 50, 1], u'batchnorm': False, u'activation': u'softplus'}
-	# Best balanced: {u'loss': u'binary_crossentropy', u'optimizer': u'adam', u'dropout': 0.10000000000000001, u'metrics': [u'binary_accuracy'], u'init': u'he_uniform', u'acti_out': u'sigmoid', u'architecture': [200, 100, 50, 1], u'batchnorm': False, u'activation': u'relu'}
 
 def _normalise(arr):
 	for i in range(arr.shape[1]):
-		if np.all(arr[:,i] > 0) :
-			arr[:,i] = (arr[:,i] - np.mean(arr[:,i]) + 1.) / np.std(arr[:,i])		# Mean = 1 if all values are strictly positive (from paper)
-		else:
-			arr[:,i] = (arr[:,i] - np.mean(arr[:,i])) / np.std(arr[:,i])	
+		arr[:,i] = (arr[:,i] - np.mean(arr[:,i])) / np.std(arr[:,i])	
 	return arr
 
 def run(balanced):
 	
 	np.random.seed(5)
 	
-	if balanced:	
-		X_train, Y_train = XY_split('/home/drozd/analysis/fraction1/dataset_train.npy')
-		X_val, Y_val = XY_split('/home/drozd/analysis/fraction1/dataset_validate_1.npy')	
-		arr_elecs = np.load('/home/drozd/analysis/fraction1/data_train_elecs.npy')[:,0:-2]
-		arr_prots = np.load('/home/drozd/analysis/fraction1/data_train_prots.npy')[:,0:-2]
+	if balanced:
+		train_e = getParticleSet('/home/drozd/analysis/fraction1/data_train_elecs.npy')
+		train_p = getParticleSet('/home/drozd/analysis/fraction1/data_train_prots.npy')
+		val_e = getParticleSet('/home/drozd/analysis/fraction1/data_validate_elecs.npy') 
+		val_p = getParticleSet('/home/drozd/analysis/fraction1/data_validate_prots.npy') 
 	else:
-		X_train, Y_train = XY_split('/home/drozd/analysis/dataset_train.npy')
-		X_val, Y_val = XY_split('/home/drozd/analysis/dataset_validate.npy')	
-		arr_elecs = np.load('/home/drozd/analysis/data_train_elecs.npy')[:,0:-2]
-		arr_prots = np.load('/home/drozd/analysis/data_train_prots.npy')[:,0:-2]	
+		train_e = getParticleSet('/home/drozd/analysis/data_train_elecs.npy')
+		train_p = getParticleSet('/home/drozd/analysis/data_train_prots.npy')
+		val_e = getParticleSet('/home/drozd/analysis/data_validate_elecs.npy') 
+		val_p = getParticleSet('/home/drozd/analysis/data_validate_prots.npy') 
 	
-	#~ X_train = StandardScaler().fit_transform(X_train)
-	#~ X_val = StandardScaler().fit_transform(X_val)
-	X_train = _normalise(X_train)
-	X_val = _normalise(X_val)
-	arr_elecs = _normalise(arr_elecs)
-	arr_prots = _normalise(arr_prots)
+	arr_elecs = train_e[:,0:-1]
+	arr_prots = train_p[:,0:-1]
+		
+	train = np.concatenate(( train_e, train_p ))
+	np.random.shuffle(train)
+	X_train = train[:,0:-1]
+	Y_train = train[:,-1]
+	del train_e,train_p, train
 	
+	val = np.concatenate(( val_e, val_p ))
+	np.random.shuffle(val)
+	X_val = val[:,0:-1]
+	Y_val = val[:,-1]
+	del val_e, val_p, val
 	
 	l_pvalue = []
 	l_KS = []

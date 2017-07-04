@@ -86,21 +86,18 @@ def getRandomParams():
 	
 	return mydic
 
-def XY_split(fname):
+def getParticleSet(fname):
 	arr = np.load(fname)
 	X = arr[:,0:-2]				### Last two columns are timestamp and particle id
 	Y = arr[:,-1]
-	return X,Y
-def load_training(fname='../dataset_train.npy'): return XY_split(fname)
-def load_validation(fname='../dataset_validate.npy'): return XY_split(fname)
-def load_test(fname='../dataset_test.npy'): return XY_split(fname)
+	X = _normalise(X)
+	r = np.concatenate(( X, Y.reshape(( Y.shape[0], 1 )) ) , axis=1)
+	del arr, X, Y
+	return r
 
 def _normalise(arr):
 	for i in range(arr.shape[1]):
-		if np.all(arr[:,i] > 0) :
-			arr[:,i] = (arr[:,i] - np.mean(arr[:,i]) + 1.) / np.std(arr[:,i])		# Mean = 1 if all values are strictly positive (from paper)
-		else:
-			arr[:,i] = (arr[:,i] - np.mean(arr[:,i])) / np.std(arr[:,i])	
+		arr[:,i] = (arr[:,i] - np.mean(arr[:,i])) / np.std(arr[:,i])	
 	return arr
 
 def save_history(hist, hist_filename):
@@ -121,22 +118,28 @@ def run():
 	if len(sys.argv) > 1:
 		if sys.argv[1] in ['0','unbalanced']: balanced=False 
 		
-	if balanced:	
-		full = np.load('../dataset_train.npy')
-		np.random.shuffle(full)
-		train = full[0:int(0.75*full.shape[0]),:]
-		test = full[int(0.75*full.shape[0]):,:]
-		X_train = train[:,0:-2]
-		Y_train = train[:,-1]
-		X_val = test[:,0:-2]
-		Y_val = test[:,-1]
-		del full, train, test
+	if balanced:
+		train_e = getParticleSet('/home/drozd/analysis/fraction1/data_train_elecs.npy')
+		train_p = getParticleSet('/home/drozd/analysis/fraction1/data_train_prots.npy')
+		val_e = getParticleSet('/home/drozd/analysis/fraction1/data_validate_elecs.npy') 
+		val_p = getParticleSet('/home/drozd/analysis/fraction1/data_validate_prots.npy') 
 	else:
-		X_train, Y_train = load_training()
-		X_val, Y_val = load_validation()		
+		train_e = getParticleSet('/home/drozd/analysis/data_train_elecs.npy')
+		train_p = getParticleSet('/home/drozd/analysis/data_train_prots.npy')
+		val_e = getParticleSet('/home/drozd/analysis/data_validate_elecs.npy') 
+		val_p = getParticleSet('/home/drozd/analysis/data_validate_prots.npy') 
 	
-	X_train = _normalise(X_train)
-	X_val = _normalise(X_val)
+	train = np.concatenate(( train_e, train_p ))
+	np.random.shuffle(train)
+	X_train = train[:,0:-1]
+	Y_train = train[:,-1]
+	del train_e,train_p, train
+	
+	val = np.concatenate(( val_e, val_p ))
+	np.random.shuffle(val)
+	X_val = val[:,0:-1]
+	Y_val = val[:,-1]
+	del val_e, val_p, val
 	
 	model = Sequential()
 	model.add(Dense(50,
