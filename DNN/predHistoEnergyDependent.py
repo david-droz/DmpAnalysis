@@ -101,7 +101,7 @@ def run():
 	
 	for i in range(bin_edges.shape[0]-1):
 		
-		graphName = 'predHisto_'+str(int(bin_edges[i]))'-'+str(int(bin_edges[i+1]))
+		graphName = 'predHisto_'+str(int(bin_edges[i]))+'-'+str(int(bin_edges[i+1]))
 		if os.path.isfile(graphName+'.png'):
 			continue
 		
@@ -140,7 +140,7 @@ def run():
 		plt.hist(prots_p,bins=binList,label='p',alpha=0.7,histtype='step',color='red')
 		plt.xlabel('Classifier score')
 		plt.ylabel('Number of events')
-		plt.title(str(int(bin_edges[i]))' - '+str(int(bin_edges[i+1])))
+		plt.title(str(int(bin_edges[i]))+' - '+str(int(bin_edges[i+1])))
 		plt.legend(loc='upper center')
 		plt.yscale('log')
 		plt.savefig(graphName)
