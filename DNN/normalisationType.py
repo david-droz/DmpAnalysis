@@ -1,6 +1,10 @@
 '''
 
-For the same trained model, compare results in balanced vs imbalanced
+Compare performances between two kind of normalisation. On paper, they normalise to a mean of 1 if the
+	variable is strictly positive, otherwise they normalise at zero.
+	Tested this method, versus the method of actually normalising everything to zero
+	
+Result: Both methods are equivalent
 
 '''
 
