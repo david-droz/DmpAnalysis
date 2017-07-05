@@ -95,9 +95,13 @@ def run():
 	else:
 		model = load_model(modelName)
 	
+	
+	
 	# --------------------------------
 	
-	bin_edges = np.unique( np.concatenate(( np.logspace(5,6,7) , np.logspace(6,6.7,3) )) )
+	
+	
+	
 	
 	for i in range(bin_edges.shape[0]-1):
 		
@@ -149,6 +153,8 @@ def run():
 	
 	
 if __name__ == '__main__' :
+	
+	Nlogbins = np.logspace(4,7,4) 
 	
 	run()
 
