@@ -106,19 +106,20 @@ def run():
 			continue
 		
 		arr_e = np.concatenate((np.load('/home/drozd/analysis/fraction1/data_validate_elecs_1.npy'),np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy') ))
-		X = arr[:,0:-2]
-		X = X[ X[:,30] > bin_edges[i] ] 
-		X = X[ X[:,30] < bin_edges[i+1] ]
-		Y = arr[:,-1]
+		
+		arr_e = arr_e[ arr_e[:,30] > bin_edges[i] ] 
+		arr_e = arr_e[ arr_e[:,30] < bin_edges[i+1] ]
+		X = arr_e[:,0:-2]
+		Y = arr_e[:,-1]
 		X = _normalise(X)
 		arr_e = np.concatenate(( X, Y.reshape(( Y.shape[0], 1 )) ) , axis=1)
 		del X, Y
 		
 		arr_p = np.concatenate((np.load('/home/drozd/analysis/fraction1/data_validate_prots_1.npy'),np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy') ))
-		X = arr[:,0:-2]
-		X = X[ X[:,30] > bin_edges[i] ] 
-		X = X[ X[:,30] < bin_edges[i+1] ]
-		Y = arr[:,-1]
+		arr_p = arr_p[ arr_p[:,30] > bin_edges[i] ] 
+		arr_p = arr_p[ arr_p[:,30] < bin_edges[i+1] ]
+		X = arr_p[:,0:-2]
+		Y = arr_p[:,-1]
 		X = _normalise(X)
 		arr_p = np.concatenate(( X, Y.reshape(( Y.shape[0], 1 )) ) , axis=1)
 		del X, Y

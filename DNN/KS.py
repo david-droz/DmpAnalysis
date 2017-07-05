@@ -74,8 +74,8 @@ def run(balanced):
 	if balanced:
 		train_e = getParticleSet('/home/drozd/analysis/fraction1/data_train_elecs.npy')
 		train_p = getParticleSet('/home/drozd/analysis/fraction1/data_train_prots.npy')
-		val_e = getParticleSet('/home/drozd/analysis/fraction1/data_validate_elecs.npy') 
-		val_p = getParticleSet('/home/drozd/analysis/fraction1/data_validate_prots.npy') 
+		val_e = getParticleSet('/home/drozd/analysis/fraction1/data_validate_elecs_1.npy') 
+		val_p = getParticleSet('/home/drozd/analysis/fraction1/data_validate_prots_1.npy') 
 	else:
 		train_e = getParticleSet('/home/drozd/analysis/data_train_elecs.npy')
 		train_p = getParticleSet('/home/drozd/analysis/data_train_prots.npy')
