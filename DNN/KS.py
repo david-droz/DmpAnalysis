@@ -43,21 +43,13 @@ def getParticleSet(fname):
 	
 def getModel(X_train):
 	model = Sequential()
-	#~ model.add(Dense(40,
-					#~ input_shape=(X_train.shape[1],),
-					#~ kernel_initializer='uniform',
-					#~ activation='relu'))
-	#~ model.add(Dense(20,kernel_initializer='uniform',activation='relu'))
-	#~ model.add(Dense(10,kernel_initializer='uniform',activation='relu'))
-	#~ model.add(Dense(1,kernel_initializer='uniform',activation='sigmoid'))
-	
-	model.add(Dense(200,input_shape=(X_train.shape[1],),kernel_initializer='he_uniform',activation='relu'))
+	model.add(Dense(300,input_shape=(X_train.shape[1],),kernel_initializer='he_uniform',activation='relu'))
 	model.add(Dropout(0.1))
-	model.add(Dense(100,kernel_initializer='he_uniform',activation='relu'))
+	model.add(Dense(150,kernel_initializer='he_uniform',activation='relu'))
 	model.add(Dropout(0.1))
-	model.add(Dense(50,kernel_initializer='he_uniform',activation='relu'))
+	model.add(Dense(70,kernel_initializer='he_uniform',activation='relu'))
+	model.add(Dropout(0.1))
 	model.add(Dense(1,kernel_initializer='he_uniform',activation='sigmoid'))
-	
 	model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy'])
 	return model
 	
@@ -69,7 +61,7 @@ def _normalise(arr):
 
 def run(balanced):
 	
-	np.random.seed(5)
+	#~ np.random.seed(5)
 	
 	if balanced:
 		train_e = getParticleSet('/home/drozd/analysis/fraction1/data_train_elecs.npy')
