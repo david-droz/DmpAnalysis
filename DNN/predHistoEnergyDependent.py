@@ -18,6 +18,7 @@ from keras.models import Sequential, load_model
 from keras.layers.core import Dense, Dropout
 from keras.callbacks import ModelCheckpoint, EarlyStopping, Callback, LearningRateScheduler, ReduceLROnPlateau
 
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import roc_curve, roc_auc_score, precision_score, average_precision_score, precision_recall_curve, recall_score
 from sklearn.metrics import f1_score
 
@@ -118,7 +119,7 @@ if __name__ == '__main__' :
 	Nbins = 4
 	logbins = np.logspace(5,7,Nbins+1)
 	
-	if len(sys.argv[1]) > 1: BDT = True
+	if len(sys.argv) > 1: BDT = True
 	else: BDT = False
 	
 	for i in range(Nbins):
