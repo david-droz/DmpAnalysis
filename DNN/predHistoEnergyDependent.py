@@ -52,7 +52,11 @@ def getParticleSet(fname, Emin, Emax):
 	
 def run(Emin, Emax, BDT=False):
 	
-	figureName = 'pred_'+str(int(Emin/1000))+'-'+str(int(Emax/1000))
+	if BDT:
+		figureName = 'pred_BDT_'+str(int(Emin/1000))+'-'+str(int(Emax/1000))
+	else:
+		figureName = 'pred_DNN_'+str(int(Emin/1000))+'-'+str(int(Emax/1000))
+		
 	if os.path.isfile(figureName+'.png'): return
 	
 	train_e = getParticleSet('/home/drozd/analysis/data_train_elecs.npy', Emin, Emax)
