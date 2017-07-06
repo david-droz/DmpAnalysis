@@ -2,6 +2,8 @@
 
 For the same trained model, compare results in imbalanced bootstrap versus imbalanced no bootstrap
 
+Result : background contamination increases by 3 percentage points (from 0.6% to 3.9%) when using bootstrap
+
 '''
 
 from __future__ import division, print_function, absolute_import
