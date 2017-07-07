@@ -112,8 +112,7 @@ def run():
 		
 	for n in range(1,X_train.shape[1]+1):
 		
-		touched='touch_ba_'+str(n)
-		if not balanced: touched = touched.replace('ba','imba')
+		touched='touch_'+str(n)
 		
 		outfile = "results/" + "%02d" % (n,) + '.pick'
 		
