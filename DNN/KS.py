@@ -115,7 +115,7 @@ def run():
 		touched='touch_ba_'+str(n)
 		if not balanced: touched = touched.replace('ba','imba')
 		
-		outfile = outdir + "%02d" % (n,) + '.pick'
+		outfile = "results/" + "%02d" % (n,) + '.pick'
 		
 		if os.path.isfile(outfile): continue
 		
