@@ -203,7 +203,7 @@ def run():
 	l_pr = []
 	l_rc = []
 	l_contamination = []
-	l_con_95
+	l_con_95 = []
 	for f in listofPicks:
 		a,b,c,d,e,f,g = pickle.load(open(f,'rb'))
 		nrofvariables.append(a)
