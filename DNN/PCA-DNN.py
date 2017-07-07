@@ -205,7 +205,7 @@ if __name__ == '__main__' :
 	
 	for n in range(1,59):
 		
-		touched = "touch_"+str(int(preNorm)) + runOn
+		touched = "touch_"+str(int(preNorm)) + runOn + "%02d" % (n,)
 		
 		if os.path.isfile(touched): continue
 		
