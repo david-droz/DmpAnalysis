@@ -149,7 +149,7 @@ def run():
 			plt.title('Balanced validation set')
 			plt.legend(loc='best')
 			plt.yscale('log')
-			plt.savefig('predHisto_'+str(n))
+			plt.savefig('images/predHisto_'+str(n))
 			plt.close(fig4)
 			
 			n_elecs_top = elecs_p[ elecs_p > 0.9 ].shape[0]
