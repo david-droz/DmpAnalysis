@@ -41,6 +41,12 @@ def getParticleSet(fname):
 	del arr, X, Y
 	return r
 	
+def getClassifierScore(truth,pred):
+	elecs = pred[truth.astype(bool)]
+	prots = pred[~truth.astype(bool)]
+			
+	return elecs, prots
+	
 def getModel(X_train):
 	model = Sequential()
 	model.add(Dense(300,input_shape=(X_train.shape[1],),kernel_initializer='he_uniform',activation='relu'))
@@ -59,20 +65,16 @@ def _normalise(arr):
 		arr[:,i] = (arr[:,i] - np.mean(arr[:,i])) / np.std(arr[:,i])	
 	return arr
 
-def run(balanced):
+def run():
 	
-	#~ np.random.seed(5)
+	np.random.seed(5)
 	
-	if balanced:
-		train_e = getParticleSet('/home/drozd/analysis/fraction1/data_train_elecs.npy')
-		train_p = getParticleSet('/home/drozd/analysis/fraction1/data_train_prots.npy')
-		val_e = getParticleSet('/home/drozd/analysis/fraction1/data_validate_elecs_1.npy') 
-		val_p = getParticleSet('/home/drozd/analysis/fraction1/data_validate_prots_1.npy') 
-	else:
-		train_e = getParticleSet('/home/drozd/analysis/data_train_elecs.npy')
-		train_p = getParticleSet('/home/drozd/analysis/data_train_prots.npy')
-		val_e = getParticleSet('/home/drozd/analysis/data_validate_elecs.npy') 
-		val_p = getParticleSet('/home/drozd/analysis/data_validate_prots.npy') 
+
+	train_e = getParticleSet('/home/drozd/analysis/fraction1/data_train_elecs.npy')
+	train_p = getParticleSet('/home/drozd/analysis/fraction1/data_train_prots.npy')
+	val_e = getParticleSet('/home/drozd/analysis/fraction1/data_validate_elecs_1.npy') 
+	val_p = getParticleSet('/home/drozd/analysis/fraction1/data_validate_prots_1.npy') 
+
 	
 	arr_elecs = train_e[:,0:-1]
 	arr_prots = train_p[:,0:-1]
@@ -98,12 +100,9 @@ def run(balanced):
 	del arr_elecs, arr_prots
 	
 	if not os.path.isdir('results'):os.mkdir('results')
-	if balanced: 
-		if not os.path.isdir('results/balanced'): os.mkdir('results/balanced')
-		outdir = './results/balanced/'
-	else:
-		if not os.path.isdir('results/imbalanced'): os.mkdir('results/imbalanced')
-		outdir = './results/imbalanced/'
+	
+	if not os.path.isdir('images'): os.mkdir('images')
+
 		
 	############################################################################################################
 	############################################################################################################
@@ -140,6 +139,30 @@ def run(balanced):
 			predictions_binary = np.around(predictions_proba)
 			del X_train_new, X_val_new
 			
+			# Prediction histogram
+			elecs_p, prots_p = getClassifierScore(Y_val,predictions_proba)
+			binList = [x/50 for x in range(0,51)]
+			fig4 = plt.figure()
+			plt.hist(elecs_p,bins=binList,label='e',alpha=0.7,histtype='step',color='green')
+			plt.hist(prots_p,bins=binList,label='p',alpha=0.7,histtype='step',color='red')
+			plt.xlabel('Classifier score')
+			plt.ylabel('Number of events')
+			plt.title('Balanced validation set')
+			plt.legend(loc='best')
+			plt.yscale('log')
+			plt.savefig('predHisto_'+str(n))
+			plt.close(fig4)
+			
+			n_elecs_top = elecs_p[ elecs_p > 0.9 ].shape[0]
+			n_prots_top = prots_p[ prots_p > 0.9 ].shape[0]
+			contamination = n_prots_top / (n_elecs_top + n_prots_top)
+			
+			n_elecs_top_95 = elecs_p[ elecs_p > 0.95 ].shape[0]
+			n_prots_top_95 = prots_p[ prots_p > 0.95 ].shape[0]
+			contamination_95 = n_prots_top_95 / (n_elecs_top_95 + n_prots_top_95)
+			
+			
+			
 			l_precision, l_recall, l_thresholds = precision_recall_curve(Y_val,predictions_proba)
 			
 			l_f1 = []
@@ -149,8 +172,16 @@ def run(balanced):
 					
 			AUC = average_precision_score(Y_val,predictions_proba)
 			
+			try:
+				pr = precision_score(Y_val,predictions_proba)
+				rc = recall_score(Y_val,predictions_proba)			
+			except:
+				pr = precision_score(Y_val,predictions_binary)
+				rc = recall_score(Y_val,predictions_binary)			
+			
+			
 			with open(outfile,'wb') as f:
-				pickle.dump([n,AUC,mf1],f,protocol=2)
+				pickle.dump([n,AUC,mf1,pr,rc,contamination,contamination_95],f,protocol=2)
 		except IndexError:
 			os.remove(touched)
 			continue
@@ -159,7 +190,7 @@ def run(balanced):
 			raise
 		
 		os.remove(touched)
-		del history, predictions_binary, predictions_proba, l_precision, l_recall, l_thresholds
+		del history, predictions_binary, predictions_proba, l_precision, l_recall, l_thresholds, elecs_p, prots_p
 	# end for
 	
 	listofPicks = glob.glob(outdir+'*.pick')
@@ -169,20 +200,47 @@ def run(balanced):
 	
 	nrofvariables = []
 	l_AUC = []
+	l_f1 = []
+	l_pr = []
+	l_rc = []
+	l_contamination = []
+	l_con_95
 	for f in listofPicks:
-		a,b,c = pickle.load(open(f,'rb'))
+		a,b,c,d,e,f,g = pickle.load(open(f,'rb'))
 		nrofvariables.append(a)
 		l_AUC.append(b)
+		l_f1.append(c)
+		l_pr.append(d)
+		l_rc.append(e)
+		l_contamination.append(f)
+		l_con95.append(g)
 	
 	fig1 = plt.figure()
-	plt.plot(nrofvariables,l_AUC,'o-')
+	plt.plot(nrofvariables,l_AUC,'o-',label='AUC')
+	plt.plot(nrofvariables,l_f1,'o-',label='F1')
 	plt.xlabel('Nr of variables')
-	plt.ylabel('Precision-Recall AUC')
+	plt.ylabel('Score')
+	plt.legend(loc='best')
+	plt.savefig('AUC_F1')
 	
-	if balanced:
-		plt.savefig('EndResult_balanced')
-	else:
-		plt.savefig('EndResult_imbalanced')
+	fig2 = plt.figure()
+	plt.plot(nrofvariables,l_pr,'o-',label='Purity')
+	plt.plot(nrofvariables,l_rc,'o-',label='Efficiency')
+	plt.xlabel('Nr of variables')
+	plt.ylabel('Score')
+	plt.legend(loc='best')
+	plt.savefig('PR-RC')
+	
+	fig3 = plt.figure()
+	plt.plot(nrofvariables,l_contamination,'o-',label='cut at 0.9')
+	plt.plot(nrofvariables,l_con_95,'o-',label='cut at 0.95')
+	plt.xlabel('Nr of variables')
+	plt.ylabel('p/(e+p) ratio')
+	plt.title('Background fraction')
+	plt.savefig('Bkg')
+	
+	
+	
 	
 	
 	
@@ -191,11 +249,5 @@ def run(balanced):
 	
 if __name__ == '__main__' :
 	
-	if len(sys.argv) == 1:
-		run(True)
-	else:
-		if 'alse' in sys.argv[1]:
-			run(False)
-		else:
-			run(True)
+	run()
 	
