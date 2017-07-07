@@ -143,13 +143,17 @@ def run(preNorm,runOn,n):
 	else: plt.savefig('images/post_'+runOn+'_predHisto_'+ "%02d" % (n,))
 	plt.close(fig4)
 	
-	n_elecs_top = elecs_p[ elecs_p > 0.9 ].shape[0]
-	n_prots_top = prots_p[ prots_p > 0.9 ].shape[0]
-	contamination = n_prots_top / (n_elecs_top + n_prots_top)
-	
-	n_elecs_top_95 = elecs_p[ elecs_p > 0.95 ].shape[0]
-	n_prots_top_95 = prots_p[ prots_p > 0.95 ].shape[0]
-	contamination_95 = n_prots_top_95 / (n_elecs_top_95 + n_prots_top_95)
+	try:
+		n_elecs_top = elecs_p[ elecs_p > 0.9 ].shape[0]
+		n_prots_top = prots_p[ prots_p > 0.9 ].shape[0]
+		contamination = n_prots_top / (n_elecs_top + n_prots_top)
+		
+		n_elecs_top_95 = elecs_p[ elecs_p > 0.95 ].shape[0]
+		n_prots_top_95 = prots_p[ prots_p > 0.95 ].shape[0]
+		contamination_95 = n_prots_top_95 / (n_elecs_top_95 + n_prots_top_95)
+	except ZeroDivisionError:
+		contamination = 1.
+		contamination_95 = 1.
 		
 	l_precision, l_recall, l_thresholds = precision_recall_curve(Y_val,predictions_proba)
 	

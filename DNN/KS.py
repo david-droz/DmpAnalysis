@@ -192,7 +192,7 @@ def run():
 		del history, predictions_binary, predictions_proba, l_precision, l_recall, l_thresholds, elecs_p, prots_p
 	# end for
 	
-	listofPicks = glob.glob(outdir+'*.pick')
+	listofPicks = glob.glob('results/*.pick')
 	listofPicks.sort()
 	
 	del X_train, X_val, Y_train, Y_val
