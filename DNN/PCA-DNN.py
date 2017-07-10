@@ -238,7 +238,7 @@ if __name__ == '__main__' :
 	l_pr = []
 	l_rc = []
 	l_contamination = []
-	l_con_95
+	l_con_95 = []
 	for f in listofPicks:
 		a,b,c,d,e,f,g = pickle.load(open(f,'rb'))
 		nrofvariables.append(a)
@@ -247,7 +247,7 @@ if __name__ == '__main__' :
 		l_pr.append(d)
 		l_rc.append(e)
 		l_contamination.append(f)
-		l_con95.append(g)
+		l_con_95.append(g)
 	
 	fig1 = plt.figure()
 	plt.plot(nrofvariables,l_AUC,'o-',label='AUC')
