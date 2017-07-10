@@ -212,7 +212,7 @@ def run():
 		l_pr.append(d)
 		l_rc.append(e)
 		l_contamination.append(f)
-		l_con95.append(g)
+		l_con_95.append(g)
 	
 	fig1 = plt.figure()
 	plt.plot(nrofvariables,l_AUC,'o-',label='AUC')
