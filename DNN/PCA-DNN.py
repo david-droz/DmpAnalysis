@@ -1,6 +1,6 @@
 '''
 
-Sorts variables by KS statistics, then performs training on a gradually decreasing set of variables
+Looks at DNN performances with varying number of Principal Components, using PCA
 
 '''
 
@@ -18,6 +18,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import heapq
 
+from sklearn.decomposition import PCA
 from sklearn.metrics import roc_curve, roc_auc_score, precision_score, average_precision_score, precision_recall_curve, recall_score
 from sklearn.metrics import f1_score
 from sklearn.model_selection import RandomizedSearchCV
@@ -65,137 +66,171 @@ def _normalise(arr):
 		arr[:,i] = (arr[:,i] - np.mean(arr[:,i])) / np.std(arr[:,i])	
 	return arr
 
-def run():
+def run(preNorm,runOn,n):
+	
+	if preNorm: outfile = "results/pre_" + runOn + '_' + "%02d" % (n,) + '.pick'
+	else: outfile = "results/post_" + runOn + '_' + "%02d" % (n,) + '.pick'
+	
+	if os.path.isfile(outfile): return
 	
 	np.random.seed(5)
+	p = PCA(n_components=n)
 	
-
+	if preNorm:
+		
+		elecsSet = np.load('/home/drozd/analysis/fraction1/data_train_elecs.npy')
+		protsSet = np.load('/home/drozd/analysis/fraction1/data_train_prots.npy')
+		
+		if runOn == 'e':
+			p.fit(elecsSet[:,0:-2])
+		elif runOn == 'p':
+			p.fit(protsSet[:,0:-2])
+		else:
+			p.fit( np.concatenate(( elecsSet[:,0:-2] , protsSet[:,0:-2]  )) )
+		
+		del elecsSet, protsSet		
+	
+	
 	train_e = getParticleSet('/home/drozd/analysis/fraction1/data_train_elecs.npy')
 	train_p = getParticleSet('/home/drozd/analysis/fraction1/data_train_prots.npy')
 	val_e = getParticleSet('/home/drozd/analysis/fraction1/data_validate_elecs_1.npy') 
 	val_p = getParticleSet('/home/drozd/analysis/fraction1/data_validate_prots_1.npy') 
 
-	
-	arr_elecs = train_e[:,0:-1]
-	arr_prots = train_p[:,0:-1]
-		
 	train = np.concatenate(( train_e, train_p ))
 	np.random.shuffle(train)
 	X_train = train[:,0:-1]
 	Y_train = train[:,-1]
-	del train_e,train_p, train
-	
+
 	val = np.concatenate(( val_e, val_p ))
 	np.random.shuffle(val)
 	X_val = val[:,0:-1]
 	Y_val = val[:,-1]
-	del val_e, val_p, val
+		
+	if not preNorm:
+		if runOn == 'e':
+			p.fit(train_e[:,0:-1])
+		elif runOn == 'p':
+			p.fit(train_p[:,0:-1])
+		else:
+			p.fit(X_train)
+		
 	
-	l_pvalue = []
-	l_KS = []
-	for i in range(X_train.shape[1]):
-		KS_statistic, p_value = stats.ks_2samp(arr_elecs[:,i],arr_prots[:,i])	# Kolmogorov-Smirnov test
-		l_pvalue.append(p_value)												# If p-value is high, then the two distributions are likely the same
-		l_KS.append(KS_statistic)												# If K-S statistic is high, then the two distributions are likely different.
-	del arr_elecs, arr_prots
+	del train_e,train_p, train, val_e, val_p, val
 	
+	
+	X_train = p.transform(X_train)[:,0:n]
+	X_val = p.transform(X_val)[:,0:n]
+	
+	model = getModel(X_train)
+	history = model.fit(X_train,Y_train,batch_size=150,epochs=40,verbose=0,callbacks=[],validation_data=(X_val,Y_val))
+
+	predictions_proba = model.predict(X_val)
+	predictions_binary = np.around(predictions_proba)
+	del X_train, X_val
+	
+	# Prediction histogram
+	elecs_p, prots_p = getClassifierScore(Y_val,predictions_proba)
+	binList = [x/50 for x in range(0,51)]
+	fig4 = plt.figure()
+	plt.hist(elecs_p,bins=binList,label='e',alpha=0.7,histtype='step',color='green')
+	plt.hist(prots_p,bins=binList,label='p',alpha=0.7,histtype='step',color='red')
+	plt.xlabel('Classifier score')
+	plt.ylabel('Number of events')
+	plt.title('Balanced validation set')
+	plt.legend(loc='best')
+	plt.yscale('log')
+	if preNorm : plt.savefig('images/pre_'+runOn+'_predHisto_'+ "%02d" % (n,))
+	else: plt.savefig('images/post_'+runOn+'_predHisto_'+ "%02d" % (n,))
+	plt.close(fig4)
+	
+	try:
+		n_elecs_top = elecs_p[ elecs_p > 0.9 ].shape[0]
+		n_prots_top = prots_p[ prots_p > 0.9 ].shape[0]
+		contamination = n_prots_top / (n_elecs_top + n_prots_top)
+		
+		n_elecs_top_95 = elecs_p[ elecs_p > 0.95 ].shape[0]
+		n_prots_top_95 = prots_p[ prots_p > 0.95 ].shape[0]
+		contamination_95 = n_prots_top_95 / (n_elecs_top_95 + n_prots_top_95)
+	except ZeroDivisionError:
+		contamination = 1.
+		contamination_95 = 1.
+		
+	l_precision, l_recall, l_thresholds = precision_recall_curve(Y_val,predictions_proba)
+	
+	l_f1 = []
+	for i in range(len(l_precision)):
+		l_f1.append( 2*(l_precision[i] * l_recall[i])/(l_precision[i] + l_recall[i])    )
+	mf1 = max(l_f1)
+			
+	AUC = average_precision_score(Y_val,predictions_proba)
+	
+	try:
+		pr = precision_score(Y_val,predictions_proba)
+		rc = recall_score(Y_val,predictions_proba)			
+	except:
+		pr = precision_score(Y_val,predictions_binary)
+		rc = recall_score(Y_val,predictions_binary)			
+	
+	
+	with open(outfile,'wb') as f:
+		pickle.dump([n,AUC,mf1,pr,rc,contamination,contamination_95],f,protocol=2)
+		
+	############################################################################################################
+	############################################################################################################
+	############################################################################################################
+	
+	
+	
+	
+	
+	
+	
+	
+		
+		
+	
+if __name__ == '__main__' :
+	
+	if "alse" in sys.argv[1]:			# Apply PCA before normalisation
+		preNorm = False
+	else: preNorm = True
+	
+	if "lec" in sys.argv[2]:			# Compute PCA basis on electrons, on protons, or on both
+		runOn = "e"
+	elif "rot" in sys.argv[2]:
+		runOn = "p"
+	else:
+		runOn = "all"
+		
 	if not os.path.isdir('results'):os.mkdir('results')
 	
 	if not os.path.isdir('images'): os.mkdir('images')
-
 		
-	############################################################################################################
-	############################################################################################################
-	############################################################################################################
 	
-	
+	for n in range(1,59):
 		
-	for n in range(1,X_train.shape[1]+1):
-		
-		touched='touch_'+str(n)
-		
-		outfile = "results/" + "%02d" % (n,) + '.pick'
-		
-		if os.path.isfile(outfile): continue
+		touched = "touch_"+str(int(preNorm)) + runOn + "%02d" % (n,)
 		
 		if os.path.isfile(touched): continue
 		
-		with open(touched,'w') as fg:
-			fg.write('a')
-		
+		with open(touched,'w') as f:
+			f.write('a')
 		try:
-			bestP_values = heapq.nlargest(n,l_pvalue)
-			bestP_indices = [ l_pvalue.index(x) for x in bestP_values]		# Those are the n variables we keep in step number n
-			
-			X_train_new = X_train[:,bestP_indices]
-			X_val_new = X_val[:,bestP_indices]
-			
-			model = getModel(X_train_new)
-			
-			history = model.fit(X_train_new,Y_train,batch_size=150,epochs=40,verbose=0,callbacks=[],validation_data=(X_val_new,Y_val))
-		
-			predictions_proba = model.predict(X_val_new)
-			predictions_binary = np.around(predictions_proba)
-			del X_train_new, X_val_new
-			
-			# Prediction histogram
-			elecs_p, prots_p = getClassifierScore(Y_val,predictions_proba)
-			binList = [x/50 for x in range(0,51)]
-			fig4 = plt.figure()
-			plt.hist(elecs_p,bins=binList,label='e',alpha=0.7,histtype='step',color='green')
-			plt.hist(prots_p,bins=binList,label='p',alpha=0.7,histtype='step',color='red')
-			plt.xlabel('Classifier score')
-			plt.ylabel('Number of events')
-			plt.title('Balanced validation set')
-			plt.legend(loc='best')
-			plt.yscale('log')
-			plt.savefig('images/predHisto_'+str(n))
-			plt.close(fig4)
-			
-			n_elecs_top = elecs_p[ elecs_p > 0.9 ].shape[0]
-			n_prots_top = prots_p[ prots_p > 0.9 ].shape[0]
-			contamination = n_prots_top / (n_elecs_top + n_prots_top)
-			
-			n_elecs_top_95 = elecs_p[ elecs_p > 0.95 ].shape[0]
-			n_prots_top_95 = prots_p[ prots_p > 0.95 ].shape[0]
-			contamination_95 = n_prots_top_95 / (n_elecs_top_95 + n_prots_top_95)
-			
-			
-			
-			l_precision, l_recall, l_thresholds = precision_recall_curve(Y_val,predictions_proba)
-			
-			l_f1 = []
-			for i in range(len(l_precision)):
-				l_f1.append( 2*(l_precision[i] * l_recall[i])/(l_precision[i] + l_recall[i])    )
-			mf1 = max(l_f1)
-					
-			AUC = average_precision_score(Y_val,predictions_proba)
-			
-			try:
-				pr = precision_score(Y_val,predictions_proba)
-				rc = recall_score(Y_val,predictions_proba)			
-			except:
-				pr = precision_score(Y_val,predictions_binary)
-				rc = recall_score(Y_val,predictions_binary)			
-			
-			
-			with open(outfile,'wb') as f:
-				pickle.dump([n,AUC,mf1,pr,rc,contamination,contamination_95],f,protocol=2)
-		except IndexError:
-			os.remove(touched)
-			continue
+			run(preNorm,runOn,n)
 		except:
 			os.remove(touched)
 			raise
-		
 		os.remove(touched)
-		del history, predictions_binary, predictions_proba, l_precision, l_recall, l_thresholds, elecs_p, prots_p
-	# end for
+	#end for
 	
-	listofPicks = glob.glob('results/*.pick')
+	if preNorm: 
+		listofPicks = glob.glob('results/pre_'+runOn+'*.pick')
+		figBaseName = "pre_runOn_"
+	else: 
+		listofPicks = glob.glob('results/post_'+runOn+'*.pick')
+		figBaseName = "post_runOn_"
+	
 	listofPicks.sort()
-	
-	del X_train, X_val, Y_train, Y_val
 	
 	nrofvariables = []
 	l_AUC = []
@@ -203,7 +238,7 @@ def run():
 	l_pr = []
 	l_rc = []
 	l_contamination = []
-	l_con_95 = []
+	l_con_95
 	for f in listofPicks:
 		a,b,c,d,e,f,g = pickle.load(open(f,'rb'))
 		nrofvariables.append(a)
@@ -220,7 +255,7 @@ def run():
 	plt.xlabel('Nr of variables')
 	plt.ylabel('Score')
 	plt.legend(loc='best')
-	plt.savefig('AUC_F1')
+	plt.savefig(figBaseName+'AUC_F1')
 	
 	fig2 = plt.figure()
 	plt.plot(nrofvariables,l_pr,'o-',label='Purity')
@@ -228,7 +263,7 @@ def run():
 	plt.xlabel('Nr of variables')
 	plt.ylabel('Score')
 	plt.legend(loc='best')
-	plt.savefig('PR-RC')
+	plt.savefig(figBaseName+'PR-RC')
 	
 	fig3 = plt.figure()
 	plt.plot(nrofvariables,l_contamination,'o-',label='cut at 0.9')
@@ -236,17 +271,4 @@ def run():
 	plt.xlabel('Nr of variables')
 	plt.ylabel('p/(e+p) ratio')
 	plt.title('Background fraction')
-	plt.savefig('Bkg')
-	
-	
-	
-	
-	
-	
-		
-		
-	
-if __name__ == '__main__' :
-	
-	run()
-	
+	plt.savefig(figBaseName+'Bkg')
