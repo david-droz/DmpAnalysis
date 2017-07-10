@@ -96,9 +96,9 @@ def run(Emin, Emax, BDT=False):
 		model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy'])
 	
 		rdlronplt = ReduceLROnPlateau(monitor='loss',patience=3,min_lr=0.001)
-		earl = EarlyStopping(monitor='loss',min_delta=0.0001,patience=5)
-		callbacks = [rdlronplt,earl]
-		history = model.fit(X_train,Y_train,batch_size=150,epochs=50,verbose=0,callbacks=callbacks,validation_data=(X_val,Y_val))
+		#~ earl = EarlyStopping(monitor='loss',min_delta=0.0001,patience=5)
+		callbacks = [rdlronplt]
+		history = model.fit(X_train,Y_train,batch_size=150,epochs=75,verbose=0,callbacks=callbacks,validation_data=(X_val,Y_val))
 		
 		predictions = model.predict(X_val)
 
@@ -123,7 +123,7 @@ def run(Emin, Emax, BDT=False):
 if __name__ == '__main__' :
 	
 	Nbins = 4
-	logbins = np.logspace(5,6.7,Nbins+1)
+	logbins = np.logspace(5,6.5,Nbins+1)
 	
 	if len(sys.argv) > 1: BDT = True
 	else: BDT = False
