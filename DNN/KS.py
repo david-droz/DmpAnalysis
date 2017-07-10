@@ -140,7 +140,11 @@ def run():
 			
 			model = getModel(X_train_new)
 			
-			history = model.fit(X_train_new,Y_train,batch_size=150,epochs=40,verbose=0,callbacks=[],validation_data=(X_val_new,Y_val))
+			rdlronplt = ReduceLROnPlateau(monitor='loss',patience=3,min_lr=0.001)
+			earl = EarlyStopping(monitor='loss',min_delta=0.0001,patience=5)
+			callbacks = [rdlronplt,earl]
+			
+			history = model.fit(X_train_new,Y_train,batch_size=150,epochs=100,verbose=0,callbacks=callbacks,validation_data=(X_val_new,Y_val))
 		
 			predictions_proba = model.predict(X_val_new)
 			predictions_binary = np.around(predictions_proba)
@@ -243,6 +247,7 @@ def run():
 	plt.plot(nrofvariables,l_con_95,'o-',label='cut at 0.95')
 	plt.xlabel('Nr of variables')
 	plt.ylabel('p/(e+p) ratio')
+	plt.legend(loc='best')
 	plt.title('Background fraction')
 	plt.savefig('Bkg')
 	
