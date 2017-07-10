@@ -270,5 +270,7 @@ if __name__ == '__main__' :
 	plt.plot(nrofvariables,l_con_95,'o-',label='cut at 0.95')
 	plt.xlabel('Nr of variables')
 	plt.ylabel('p/(e+p) ratio')
+	plt.yscale('log')
+	plt.legend(loc='best')
 	plt.title('Background fraction')
 	plt.savefig(figBaseName+'Bkg')
