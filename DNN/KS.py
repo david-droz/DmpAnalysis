@@ -99,6 +99,14 @@ def run():
 		l_KS.append(KS_statistic)												# If K-S statistic is high, then the two distributions are likely different.
 	del arr_elecs, arr_prots
 	
+	KS_sorted = l_KS
+	KS_sorted.sort()
+	KS_sorted_indices = [ l_KS.index(x) for x in KS_sorted]
+	with open("KSvalues.txt",'w') as f:
+		f.write('VarIndex    KSvalue\n')
+		for i in range(len(KS_sorted)):
+			f.write(str(KS_sorted_indices[i])+'    '+str(KS_sorted[i])+'\n')
+	
 	if not os.path.isdir('results'):os.mkdir('results')
 	
 	if not os.path.isdir('images'): os.mkdir('images')
