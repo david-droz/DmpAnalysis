@@ -59,16 +59,16 @@ def run(Emin, Emax, BDT=False):
 		
 	if os.path.isfile(figureName+'.png'): return
 	
-	train_e = getParticleSet('/home/drozd/analysis/data_train_elecs.npy', Emin, Emax)
-	train_p = getParticleSet('/home/drozd/analysis/data_train_prots.npy', Emin, Emax)
+	train_e = getParticleSet('/home/drozd/analysis/fraction1/data_train_elecs.npy', Emin, Emax)
+	train_p = getParticleSet('/home/drozd/analysis/fraction1/data_train_prots.npy', Emin, Emax)
 	train = np.concatenate(( train_e, train_p ))
 	np.random.shuffle(train)
 	X_train = train[:,0:-1]
 	Y_train = train[:,-1]
 	del train_e,train_p, train
 
-	val_e = getParticleSet('/home/drozd/analysis/NoBootStrap/data_validate_elecs_under_100.npy', Emin, Emax)
-	val_p = getParticleSet('/home/drozd/analysis/NoBootStrap/data_validate_prots_under_100.npy', Emin, Emax)
+	val_e = getParticleSet('/home/drozd/analysis/fraction1/data_validate_elecs_1.npy', Emin, Emax)
+	val_p = getParticleSet('/home/drozd/analysis/fraction1/data_validate_prots_1.npy', Emin, Emax)
 	val = np.concatenate(( val_e, val_p ))
 	np.random.shuffle(val)
 	
@@ -76,6 +76,8 @@ def run(Emin, Emax, BDT=False):
 	Y_val = val[:,-1]
 	
 	del val_e, val_p, val
+	
+	print(str(int(Emin/1000))+'-'+str(int(Emax/1000))+ ': Training on ', X_train.shape[0], ' events')
 	
 	if BDT:
 		model = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1,max_depth=3, min_samples_leaf=0.0001)
@@ -103,8 +105,8 @@ def run(Emin, Emax, BDT=False):
 	
 	elecs_p, prots_p = getClassifierScore(Y_val,predictions)	
 	
-	Nbins = 50
-	binList = [x/Nbins for x in range(0,Nbins+1)]		
+	Nbins_plt = 50
+	binList = [x/Nbins_plt for x in range(0,Nbins_plt+1)]		
 	fig = plt.figure()
 	plt.hist(elecs_p,bins=binList,label='e',alpha=0.7,histtype='step',color='green')
 	plt.hist(prots_p,bins=binList,label='p',alpha=0.7,histtype='step',color='red')
@@ -121,7 +123,7 @@ def run(Emin, Emax, BDT=False):
 if __name__ == '__main__' :
 	
 	Nbins = 4
-	logbins = np.logspace(5,7,Nbins+1)
+	logbins = np.logspace(5,6.7,Nbins+1)
 	
 	if len(sys.argv) > 1: BDT = True
 	else: BDT = False
