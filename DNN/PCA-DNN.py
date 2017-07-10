@@ -228,7 +228,7 @@ if __name__ == '__main__' :
 		figBaseName = "pre_runOn_"
 	else: 
 		listofPicks = glob.glob('results/post_'+runOn+'*.pick')
-		figBaseName = "post_runOn_"
+		figBaseName = "post_runOn_" + runOn + '_'
 	
 	listofPicks.sort()
 	
