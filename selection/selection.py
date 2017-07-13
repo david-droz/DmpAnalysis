@@ -37,6 +37,7 @@ def openRootFile(efilelist):
 	for f in efilelist:
 		chain.Add(f)
 	if not chain.GetEntries():
+		print efilelist
 		raise IOError("0 events in DmpChain - something went wrong")
 	return chain
 
