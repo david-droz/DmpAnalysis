@@ -119,18 +119,11 @@ def selection(pev,particle):
 		if im in [0,21]:
 			SIDE[i] = True
 			
-	if len([r for r in BHER if r]) < 14: 
-		return False
 	if [SIDE[s] for s in [1,2,3] if SIDE[s] ]: 		# "First layers not side" ... ?
 		return False
 	if bhm > 0.35: 				# "Max layer cut" ... ?
 		return False
 	# End Andrii's electron cut
-	templist = []				
-	for layer in [1,2,12,13]:	# Numbers of BGO layers, minus one  (starting from 0 to 13)
-		templist.append(  pev.pEvtBgoRec().GetELayer(layer)  )
-	if not any(templist):	# Making sure that there was at least one hit in one of the BGO layers
-		return False
 	
 	return True	
 
@@ -398,13 +391,14 @@ def analysis(files,pid,nr):
 	
 	a = []
 	for i in xrange(nvts):
-		pev = dmpch.GetDmpEvent(i)
+		#~ pev = dmpch.GetDmpEvent(i)
 		
-		if selection(pev,pid):
-			templist = getValues(pev)
-			a.append(templist)
-		else :
-			continue
+		#~ if selection(pev,pid):
+			#~ templist = getValues(pev)
+			#~ a.append(templist)
+		#~ else :
+			#~ continue
+		a.append(getValues(dmpch.GetDmpEvent(i)))
 		
 	arr = np.array(a)
 	
