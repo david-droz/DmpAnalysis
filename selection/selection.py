@@ -466,7 +466,6 @@ if __name__ == "__main__" :
 	
 	for i in xrange(nrofchunks):
 		print "--- Chunk ", i
-		if i < istart: continue
 		
 		if len(filelist) < chunksize: break
 		
@@ -474,7 +473,8 @@ if __name__ == "__main__" :
 		for k in xrange(chunksize):
 			chunk.append( filelist.pop(0) )
 		
-		analysis(chunk,particle,i)
+		if i >= istart:
+			analysis(chunk,particle,i)
 		
 	analysis(filelist,particle,nrofchunks)
 	
