@@ -4,15 +4,15 @@ Skimmer v0.1
 
 How to run:
 > python skim.py files.txt -p ParticleType -o Outputdir
-        files.txt is an ASCII list of files
-        ParticleType (optional) : specify kind of particle to select. Default: Proton, Photon and Electrons are selected
-        Outputdir (optional) : specify output directory
-        
+		files.txt is an ASCII list of files
+		ParticleType (optional) : specify kind of particle to select. Default: Proton, Photon and Electrons are selected
+		Outputdir (optional) : specify output directory
+		
 Terminal output:
-    A lot of output caused by the DmpSoftware. At the end, run time and nr of events selected/skipped
+	A lot of output caused by the DmpSoftware. At the end, run time and nr of events selected/skipped
 
 Files output:
-    Creates one directory, user defined. Contains skimmed files
+	Creates one directory, user defined. Contains skimmed files
 
 Other features:
 	Skips files that have already been skimmed
@@ -128,11 +128,79 @@ class Skim(object):
 		else:
 			if event.pEvtSimuPrimaries().pvpart_pdg != self.particle :
 				return False
+			
+		# High energy trigger
 		if not event.pEvtHeader().GeneratedTrigger(3):
 			return False
 		
-		# No PMO cuts - those are in the selection step, not in the skim step
+		# Here: Russlan skimmer
+		BGO_TopZ = 46
+		BGO_BottomZ = 448
 		
+		# "BGO tack containment cut" -Russlan
+		bgoRec_slope = [  event.pEvtBgoRec().GetSlopeYZ() , event.pEvtBgoRec().GetSlopeXZ() ]
+		bgoRec_intercept = [ event.pEvtBgoRec().GetInterceptXZ() , event.pEvtBgoRec().GetInterceptYZ() ]
+		if (bgoRec_slope[1]==0 amd bgoRec_intercept[1]==0) or (bgoRec_slope[0]==0 and bgoRec_intercept[0]==0): 
+			return False
+		
+		# "BGO containment cut"
+		topX = bgoRec_slope[1]*BGO_TopZ + bgoRec_intercept[1]
+		topY = bgoRec_slope[0]*BGO_TopZ + bgoRec_intercept[0]
+		bottomX = bgoRec_slope[1]*BGO_BottomZ + bgoRec_intercept[1]
+		bgoRec_slope[0]*BGO_BottomZ + bgoRec_intercept[0]
+		if not all( [ abs(x) < 280 for x in [topX,topY,bottomX,bottomY] ] ):
+			return False
+			
+		ELayer_max_XZ = 0
+		ELayer_max_YZ = 0
+		for i in range(1,14,2):
+			e = event.pEvtBgoRec().GetELayer(i)
+			if e > ELayer_max_XZ: ELayer_max_XZ = e
+		for i in range(0,14,2):
+			e = event.pEvtBgoRec().GetELayer(i)
+			if e > ELayer_max_YZ: ELayer_max_YZ = e
+		if 
+
+############################################################################
+############################################################################
+        double ELayer_max_XZ = 0;
+    double ELayer_max_YZ = 0;
+    for (int i=1; i<14; i=i+2) { double e=bgorec->GetELayer(i); if (e > ELayer_max_XZ) {ELayer_max_XZ = e; }}
+    for (int i=0; i<14; i=i+2) { double e=bgorec->GetELayer(i); if (e > ELayer_max_YZ) {ELayer_max_YZ = e; }}
+        
+    
+    double MaxELayer;
+    if (ELayer_max_XZ > ELayer_max_YZ) MaxELayer = ELayer_max_XZ;
+    else MaxELayer = ELayer_max_YZ;
+    bool passed_maxELayerTotalE_cut = true;
+    double rMaxELayerTotalE = MaxELayer/bgoTotalE;
+    if(rMaxELayerTotalE>0.35) passed_maxELayerTotalE_cut = false;
+
+    // cut maxBarLayer
+    bool  passed_maxBarLayer_cut = true;
+    short  barNumberMaxEBarLay1_2_3[3] = {-1}; //bar number of maxE bar in layer 1, 2, 3
+    double MaxEBarLay1_2_3[3] = {0};           //E of maxE bar in layer 1, 2, 3
+    for (int ihit = 0; ihit <nBgoHits; ihit++){
+      double hitE = (bgohits->fEnergy)[ihit];
+      short   lay = bgohits->GetLayerID(ihit);
+      if(lay==1 || lay==2 || lay==3) {
+	if(hitE>MaxEBarLay1_2_3[lay-1]) {
+	  int iBar = ((bgohits->fGlobalBarID)[ihit]>>6) & 0x1f;
+	  MaxEBarLay1_2_3[lay-1] = hitE;
+	  barNumberMaxEBarLay1_2_3[lay-1] = iBar; }}}
+    for (int j = 0; j <3; j++){
+      if(barNumberMaxEBarLay1_2_3[j] <=0 || barNumberMaxEBarLay1_2_3[j] == 21) passed_maxBarLayer_cut = false; }
+
+
+
+    if (apply_cut>1) {
+      if (!passed_maxELayerTotalE_cut) continue;
+      if (!passed_maxBarLayer_cut) continue;
+    }		
+		
+		
+		############################################################################
+		############################################################################		
 		return True
 		
 	def analysis(self):
