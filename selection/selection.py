@@ -37,7 +37,7 @@ def openRootFile(efilelist):
 	for f in efilelist:
 		chain.Add(f)
 	if not chain.GetEntries():
-		print efilelist
+		#~ print efilelist
 		raise IOError("0 events in DmpChain - something went wrong")
 	return chain
 
@@ -442,6 +442,7 @@ if __name__ == "__main__" :
 	filelist = []
 	with open(sys.argv[1],'r') as f:
 		for lines in f:
+			print lines
 			filelist.append(lines.replace('\n',''))
 
 	if len(sys.argv) > 2:
