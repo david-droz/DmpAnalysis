@@ -456,12 +456,17 @@ if __name__ == "__main__" :
 	nrofchunks = len(filelist)
 	chunksize = len(filelist)/nrofchunks
 	
+	try:
+		istart = int(sys.argv[2])
+	except:
+		istart = 0
 	
 	if not os.path.isdir('tmp'):
 		os.mkdir('tmp')
 	
 	for i in xrange(nrofchunks):
 		print "--- Chunk ", i
+		if i < istart: continue
 		
 		if len(filelist) < chunksize: break
 		
