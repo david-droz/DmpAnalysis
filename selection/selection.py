@@ -37,7 +37,6 @@ def openRootFile(efilelist):
 	for f in efilelist:
 		chain.Add(f)
 	if not chain.GetEntries():
-		#~ print efilelist
 		raise IOError("0 events in DmpChain - something went wrong")
 	return chain
 
@@ -442,18 +441,19 @@ if __name__ == "__main__" :
 	filelist = []
 	with open(sys.argv[1],'r') as f:
 		for lines in f:
-			print lines
-			filelist.append(lines.replace('\n',''))
-
+			if ".root" in lines:
+				filelist.append(lines.replace('\n',''))
+	
 	if len(sys.argv) > 2:
 		particle = identifyParticle(sys.argv[2])
 	else:
 		particle = identifyParticle(sys.argv[1])
 	
-	if particle == 2212:
-		nrofchunks = 1000
-	elif particle == 11:
-		nrofchunks = 350
+	#~ if particle == 2212:
+		#~ nrofchunks = 1000
+	#~ elif particle == 11:
+		#~ nrofchunks = 350
+	nrofchunks = len(filelist)
 	chunksize = len(filelist)/nrofchunks
 	
 	
