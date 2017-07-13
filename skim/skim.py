@@ -150,31 +150,29 @@ class Skim(object):
 		bgoRec_slope[0]*BGO_BottomZ + bgoRec_intercept[0]
 		if not all( [ abs(x) < 280 for x in [topX,topY,bottomX,bottomY] ] ):
 			return False
+		
+		# "cut maxElayer"
+		ELayer_max = 0
+		for i in range(14):
+			e = event.pEvtBgoRec().GetELayer(i)
+			if e > ELayer_max: ELayer_max = e
 			
-		ELayer_max_XZ = 0
-		ELayer_max_YZ = 0
-		for i in range(1,14,2):
-			e = event.pEvtBgoRec().GetELayer(i)
-			if e > ELayer_max_XZ: ELayer_max_XZ = e
-		for i in range(0,14,2):
-			e = event.pEvtBgoRec().GetELayer(i)
-			if e > ELayer_max_YZ: ELayer_max_YZ = e
-		if 
+		rMaxELayerTotalE = ELayer_max / event.pEvtBgoRec().GetElectronEcor()
+		if rMaxELayerTotalE > 0.35: 
+			return False
+		
+		barNumberMaxEBarLay1_2_3 = [-1 for i in [1,2,3]]
+		MaxEBarLay1_2_3 = [0 for i in [1,2,3]]
+		for ihit in range(0, event.pEvtBgoHits().GetHittedBarNumber()):
+			hitE = event.pEvtBgoHits().fEnergy[ihit]
+			lay = event.pEvtBgoHits().GetLayerID(ihit)
+			if lay in [1,2,3]:
+				if hitE > MaxEBarLay1_2_3[lay-1]:
+					
 
 ############################################################################
+ int nBgoHits = bgohits->GetHittedBarNumber();
 ############################################################################
-        double ELayer_max_XZ = 0;
-    double ELayer_max_YZ = 0;
-    for (int i=1; i<14; i=i+2) { double e=bgorec->GetELayer(i); if (e > ELayer_max_XZ) {ELayer_max_XZ = e; }}
-    for (int i=0; i<14; i=i+2) { double e=bgorec->GetELayer(i); if (e > ELayer_max_YZ) {ELayer_max_YZ = e; }}
-        
-    
-    double MaxELayer;
-    if (ELayer_max_XZ > ELayer_max_YZ) MaxELayer = ELayer_max_XZ;
-    else MaxELayer = ELayer_max_YZ;
-    bool passed_maxELayerTotalE_cut = true;
-    double rMaxELayerTotalE = MaxELayer/bgoTotalE;
-    if(rMaxELayerTotalE>0.35) passed_maxELayerTotalE_cut = false;
 
     // cut maxBarLayer
     bool  passed_maxBarLayer_cut = true;
