@@ -29,25 +29,6 @@ import cPickle as pickle
 import gc
 gc.enable()
 
-#~ import psutil
-#~ import logging
-
-#~ def restart_program():
-    #~ """Restarts the current program, with file objects and descriptors
-       #~ cleanup
-       #~ https://stackoverflow.com/questions/11329917/restart-python-script-from-within-itself
-    #~ """
-
-    #~ try:
-        #~ p = psutil.Process(os.getpid())
-        #~ for handler in p.get_open_files() + p.connections():
-            #~ os.close(handler.fd)
-    #~ except Exception, e:
-        #~ logging.error(e)
-
-    #~ python = sys.executable
-    #~ os.execl(python, python, *sys.argv)
-
 def openRootFile(efilelist): 
 	'''
 	Returns a TChain from a filelist
@@ -410,14 +391,14 @@ def analysis(files,pid,nr):
 	
 	a = []
 	for i in xrange(nvts):
-		#~ pev = dmpch.GetDmpEvent(i)
+		pev = dmpch.GetDmpEvent(i)
 		
 		#~ if selection(pev,pid):
 			#~ templist = getValues(pev)
 			#~ a.append(templist)
 		#~ else :
 			#~ continue
-		a.append(getValues(dmpch.GetDmpEvent(i)))
+		a.append(getValues(pev))
 		
 	arr = np.array(a)
 	
@@ -426,77 +407,26 @@ def analysis(files,pid,nr):
 	del arr, a
 	
 	dmpch.Terminate()
-	return
-		
-def merge():
-	print " Concatenating..."
-	
-	for particle in ['elec','prot']:
-		
-		listofsubarr = glob.glob('./tmp/*/' + particle + '*.npy')
-		
-		bigarr = np.load(listofsubarr[0])
-		
-		for miniarr in listofsubarr[1:]:
-			bigarr = np.concatenate((bigarr, np.load(miniarr) ))
-		
-		outstr = 'dataset_' + particle + '.npy'
-		bigarr = bigarr[np.any(bigarr,axis=1)]
-		for i in xrange(5):
-			np.random.shuffle(bigarr)
-		
-		np.save(outstr,bigarr)
-		if particle=='elec':
-			nrofelectrons = bigarr.shape[0]
-		else:
-			nrofprotons = bigarr.shape[0]
-		del bigarr
-	print "Done."
-	print "Number of protons: ", nrofprotons
-	print "Number of electrons: ", nrofelectrons		
+	return	
 
 if __name__ == "__main__" :
 	
-	t0 = time.time()
-
+	
 	filelist = []
 	with open(sys.argv[1],'r') as f:
 		for lines in f:
 			if ".root" in lines:
 				filelist.append(lines.replace('\n',''))
 	
-	if len(sys.argv) > 2:
-		particle = identifyParticle(sys.argv[2])
-	else:
-		particle = identifyParticle(sys.argv[1])
+	if len(sys.argv) < 3:
+		raise Exception("Not enough arguments")
 	
-	#~ if particle == 2212:
-		#~ nrofchunks = 1000
-	#~ elif particle == 11:
-		#~ nrofchunks = 350
-	nrofchunks = len(filelist)
-	chunksize = len(filelist)/nrofchunks
-	
-	try:
-		istart = int(sys.argv[2])
-	except:
-		istart = 0
+	particle = identifyParticle(sys.argv[2])
 	
 	if not os.path.isdir('tmp'):
 		os.mkdir('tmp')
+		
+	analysis(filelist,particle,int(sys.argv[3]))
 	
-	for i in xrange(nrofchunks):
-		print "--- Chunk ", i
-		
-		if len(filelist) < chunksize: break
-		
-		chunk = []
-		for k in xrange(chunksize):
-			chunk.append( filelist.pop(0) )
-		
-		if i >= istart:
-			analysis(chunk,particle,i)
-		
 	analysis(filelist,particle,nrofchunks)
 	
-	print 'Run time: ', str(strftime('%H:%M:%S', gmtime( time.time() - t0 )))
