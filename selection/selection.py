@@ -29,6 +29,25 @@ import cPickle as pickle
 import gc
 gc.enable()
 
+import psutil
+import logging
+
+def restart_program():
+    """Restarts the current program, with file objects and descriptors
+       cleanup
+       https://stackoverflow.com/questions/11329917/restart-python-script-from-within-itself
+    """
+
+    try:
+        p = psutil.Process(os.getpid())
+        for handler in p.get_open_files() + p.connections():
+            os.close(handler.fd)
+    except Exception, e:
+        logging.error(e)
+
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
+
 def openRootFile(efilelist): 
 	'''
 	Returns a TChain from a filelist
@@ -404,7 +423,9 @@ def analysis(files,pid,nr):
 	
 	np.save(outstr,arr)
 	
-	del arr, a, dmpch
+	del arr, a
+	
+	dmpch.Terminate()
 	return
 		
 def merge():
@@ -474,7 +495,10 @@ if __name__ == "__main__" :
 			chunk.append( filelist.pop(0) )
 		
 		if i >= istart:
-			analysis(chunk,particle,i)
+			try:
+				analysis(chunk,particle,i)
+			except SystemError:
+				restart_program()
 		
 	analysis(filelist,particle,nrofchunks)
 	
