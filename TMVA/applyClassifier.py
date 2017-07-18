@@ -50,7 +50,7 @@ def main(args=None):
 		
 		# do not touch below
 		fTree.Fill()
-	dpch.Finalize()
+	dpch.Terminate()
 	fTree.Write()
 	fout.Write("",TObject.kOverwrite)
 	fout.Close()
