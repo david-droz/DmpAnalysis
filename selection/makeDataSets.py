@@ -95,7 +95,7 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 	random.shuffle(available_E)							# Pick randomly
 	random.shuffle(available_P)
 	
-	for i in xrange(int(1e+6)):								# 1M events
+	for i in xrange(int(1.2e+6)):								# 1M events
 		selectedE_train.append( available_E.pop() )			# Use "pop" : don't want to reuse events
 		selectedP_train.append( available_P.pop() )			# Same number of events for training
 
@@ -106,7 +106,7 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 	selectedP_validate = []		
 	
 	if oversampling:
-		for i in xrange(60000):								# 60k electrons because otherwise it will be too long
+		for i in xrange(0.75e+6):								# 750k electrons 
 			selectedE_validate.append( available_E.pop() )
 		
 		if (validationMixture * len(selectedE_validate) ) > ( 0.7*len(available_P)) :		# Not enough protons, sampling with replacement
@@ -118,7 +118,8 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 			for i in xrange(validationMixture * len(selectedE_validate)):
 				selectedP_validate.append( available_P.pop() )	
 	else:
-		n_elecs = int((len(available_P)/2.)/validationMixture)
+		#n_elecs = int((len(available_P)/2.)/validationMixture)
+		n_elecs = int(0.75e+6)
 		for i in xrange(n_elecs):
 			selectedE_validate.append( available_E.pop() )
 		for i in xrange(len(available_P)/2):
@@ -141,7 +142,8 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 			for i in xrange(testMixture * len(selectedE_test)):
 				selectedP_test.append( available_P.pop() )
 	else:
-		n_elecs = (len(available_P))/testMixture
+		#n_elecs = (len(available_P))/testMixture
+		n_elecs = int(0.75e+6)
 		for i in xrange(n_elecs):
 			selectedE_test.append( available_E.pop() )
 		selectedP_test = available_P
@@ -196,8 +198,15 @@ if __name__ == '__main__':
 	protonFiles = glob.glob('tmp/*/prot*.npy')
 	for f in [electronFiles,protonFiles]: f.sort()
 	
-	nrofe = getNrEvents(electronFiles)
-	nrofp = getNrEvents(protonFiles)
+	evtFile = 'eventNumbers.pickle'
+	if os.path.isfile(evtFile):
+		with open(evtFile,'rb') as f:
+			nrofe,nrofp = pickle.load(f)
+	else:
+		nrofe = getNrEvents(electronFiles)
+		nrofp = getNrEvents(protonFiles)
+		with open(evtFile,'wb') as f:
+			pickle.dump([nrofe,nrofp],f)
 	
 	arr = np.load(electronFiles[0])
 	nrofvars = arr.shape[1]
