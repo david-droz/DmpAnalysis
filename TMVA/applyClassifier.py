@@ -44,9 +44,8 @@ def main(args=None):
 		# here you can add the usual logic, just *never* use continue
 		
 		# finally, compute scores in the end.
-		
-		DNN_score = 0.5
-		BDT_score = 0.5
+		fTree.DNN_score = 0.5
+		fTree.BDT_score = 0.5
 		
 		# do not touch below
 		fTree.Fill()
