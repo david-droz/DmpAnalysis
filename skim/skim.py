@@ -161,44 +161,21 @@ class Skim(object):
 		if rMaxELayerTotalE > 0.35: 
 			return False
 		
+		# "cut maxBarLayer"
 		barNumberMaxEBarLay1_2_3 = [-1 for i in [1,2,3]]
 		MaxEBarLay1_2_3 = [0 for i in [1,2,3]]
 		for ihit in range(0, event.pEvtBgoHits().GetHittedBarNumber()):
-			hitE = event.pEvtBgoHits().fEnergy[ihit]
-			lay = event.pEvtBgoHits().GetLayerID(ihit)
+			hitE = (event.pEvtBgoHits().fEnergy)[ihit]
+			lay = (event.pEvtBgoHits().GetLayerID)(ihit)
 			if lay in [1,2,3]:
 				if hitE > MaxEBarLay1_2_3[lay-1]:
-					
-
-############################################################################
- int nBgoHits = bgohits->GetHittedBarNumber();
-############################################################################
-
-    // cut maxBarLayer
-    bool  passed_maxBarLayer_cut = true;
-    short  barNumberMaxEBarLay1_2_3[3] = {-1}; //bar number of maxE bar in layer 1, 2, 3
-    double MaxEBarLay1_2_3[3] = {0};           //E of maxE bar in layer 1, 2, 3
-    for (int ihit = 0; ihit <nBgoHits; ihit++){
-      double hitE = (bgohits->fEnergy)[ihit];
-      short   lay = bgohits->GetLayerID(ihit);
-      if(lay==1 || lay==2 || lay==3) {
-	if(hitE>MaxEBarLay1_2_3[lay-1]) {
-	  int iBar = ((bgohits->fGlobalBarID)[ihit]>>6) & 0x1f;
-	  MaxEBarLay1_2_3[lay-1] = hitE;
-	  barNumberMaxEBarLay1_2_3[lay-1] = iBar; }}}
-    for (int j = 0; j <3; j++){
-      if(barNumberMaxEBarLay1_2_3[j] <=0 || barNumberMaxEBarLay1_2_3[j] == 21) passed_maxBarLayer_cut = false; }
-
-
-
-    if (apply_cut>1) {
-      if (!passed_maxELayerTotalE_cut) continue;
-      if (!passed_maxBarLayer_cut) continue;
-    }		
-		
-		
-		############################################################################
-		############################################################################		
+					iBar =  ((event.pEvtBgoHits().fGlobalBarId)[ihit]>>6) & 0x1f		# What the fuck?
+					MaxEBarLay1_2_3[lay-1] = hitE
+					barNumberMaxEBarLay1_2_3[lay-1] = iBar
+		for j in range(3):
+			if barNumberMaxEBarLay1_2_3[j] <=0 or barNumberMaxEBarLay1_2_3[j] == 21:
+				return False
+						
 		return True
 		
 	def analysis(self):
