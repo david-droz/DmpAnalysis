@@ -39,17 +39,25 @@ def main(args=None):
 	# next is the usual event loop
 	nevts = dpch.GetEntries()
 	print 'found {i} events in {ifile}'.format(i=nevts,ifile=opts.infile)
+	# space to declare your variables
+	BgoTotalE = zeros(nevts, dtype=float)
+	# event loop to read out variables
+	print 'read out events'
 	for i in xrange(nevts):
 		pev = dpch.GetDmpEvent(i)
 		# here you can add the usual logic, just *never* use continue
-		
-		# finally, compute scores in the end.
-		DNN_score[0] = 0.5
-		BDT_score[0] = 0.5
-		
-		# do not touch below
-		fTree.Fill()
+		BgoTotalE[i] = pev.pEvtBgoRec().GetTotalEnergy()
 	dpch.Terminate()
+	# here comes some keras 'magic'
+	# ...
+	# i'm assuming you compute scores as DNN_sk & BDT_sk
+	
+	# now loop again, creating scoring variables
+	print 'store scores'
+	for i in xrange(nevts):
+		DNN_score[0] = DNN_sk[i]
+		BDT_score[0] = BDT_sk[i]
+		fTree.Fill()
 	fTree.Write()
 	fout.Write("",TObject.kOverwrite)
 	fout.Close()
