@@ -35,9 +35,10 @@ def main(args=None):
 	# register branch in tree
 	fTree.Branch("DNN_score",DNN_score,"DNN_score/D")
 	fTree.Branch("BDT_score",BDT_score,"BDT_score/D")
-
+	
 	# next is the usual event loop
 	nevts = dpch.GetEntries()
+	print 'found {i} events in {ifile}'.format(i=nevts,ifile=opts.infile)
 	for i in xrange(nevts):
 		pev = dpch.GetDmpEvent(i)
 		# here you can add the usual logic, just *never* use continue
