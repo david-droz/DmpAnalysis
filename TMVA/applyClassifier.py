@@ -7,7 +7,7 @@
 
 from sys import argv
 from shutil import copy
-from array import array
+from numpy import zeros
 from argparse import ArgumentParser
 
 def main(args=None):
@@ -30,8 +30,8 @@ def main(args=None):
 	fTree = TTree("MVAtree","MVA scores")
 	# modify, add new variables here
 	# basically, you need to add an 'array' of doubles "d" with length 1.
-	DNN_score = array("d",[0.])
-	BDT_score = array("d",[0.])
+	DNN_score = zeros(1, dtype=float)
+	BDT_score = zeros(1, dtype=float)
 	# register branch in tree
 	fTree.Branch("DNN_score",DNN_score,"DNN_score/D")
 	fTree.Branch("BDT_score",BDT_score,"BDT_score/D")
@@ -44,8 +44,8 @@ def main(args=None):
 		# here you can add the usual logic, just *never* use continue
 		
 		# finally, compute scores in the end.
-		fTree.DNN_score = 0.5
-		fTree.BDT_score = 0.5
+		DNN_score[0] = 0.5
+		BDT_score[0] = 0.5
 		
 		# do not touch below
 		fTree.Fill()
