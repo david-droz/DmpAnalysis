@@ -78,8 +78,8 @@ def run(preNorm,runOn,n):
 	
 	if preNorm:
 		
-		elecsSet = np.load('/home/drozd/analysis/fraction1/data_train_elecs.npy')
-		protsSet = np.load('/home/drozd/analysis/fraction1/data_train_prots.npy')
+		elecsSet = np.load('/home/drozd/analysis/newData/data_train_elecs.npy')
+		protsSet = np.load('/home/drozd/analysis/newData/data_train_prots.npy')
 		
 		if runOn == 'e':
 			p.fit(elecsSet[:,0:-2])
@@ -91,10 +91,10 @@ def run(preNorm,runOn,n):
 		del elecsSet, protsSet		
 	
 	
-	train_e = getParticleSet('/home/drozd/analysis/fraction1/data_train_elecs.npy')
-	train_p = getParticleSet('/home/drozd/analysis/fraction1/data_train_prots.npy')
-	val_e = getParticleSet('/home/drozd/analysis/fraction1/data_validate_elecs_1.npy') 
-	val_p = getParticleSet('/home/drozd/analysis/fraction1/data_validate_prots_1.npy') 
+	train_e = getParticleSet('/home/drozd/analysis/newData/data_train_elecs_under_1.npy')
+	train_p = getParticleSet('/home/drozd/analysis/newData/data_train_prots_under_1.npy')
+	val_e = getParticleSet('/home/drozd/analysis/newData/data_validate_elecs_under_1.npy') 
+	val_p = getParticleSet('/home/drozd/analysis/newData/data_validate_prots_under_1.npy')[0:val_e.shape[0],:]
 
 	train = np.concatenate(( train_e, train_p ))
 	np.random.shuffle(train)
@@ -175,18 +175,12 @@ def run(preNorm,runOn,n):
 	with open(outfile,'wb') as f:
 		pickle.dump([n,AUC,mf1,pr,rc,contamination,contamination_95],f,protocol=2)
 		
-	############################################################################################################
-	############################################################################################################
-	############################################################################################################
-	
-	
-	
-	
-	
-	
-	
-	
+	del Y_val, predictions_proba, predictions_binary
 		
+	############################################################################################################
+	############################################################################################################
+	############################################################################################################
+	
 		
 	
 if __name__ == '__main__' :
