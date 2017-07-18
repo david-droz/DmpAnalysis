@@ -411,12 +411,14 @@ def analysis(files,pid,nr):
 
 if __name__ == "__main__" :
 	
-	
-	filelist = []
-	with open(sys.argv[1],'r') as f:
-		for lines in f:
-			if ".root" in lines:
-				filelist.append(lines.replace('\n',''))
+	if ".root" in sys.argv[1]:
+		filelist=[sys.argv[1]]
+	else:
+		filelist = []
+		with open(sys.argv[1],'r') as f:
+			for lines in f:
+				if ".root" in lines:
+					filelist.append(lines.replace('\n',''))
 	
 	if len(sys.argv) < 3:
 		raise Exception("Not enough arguments")
