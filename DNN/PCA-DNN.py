@@ -108,9 +108,9 @@ def run(preNorm,runOn,n):
 		
 	if not preNorm:
 		if runOn == 'e':
-			p.fit(train_e[:,0:-1])
+			p.fit(train_e[:,0:-2])
 		elif runOn == 'p':
-			p.fit(train_p[:,0:-1])
+			p.fit(train_p[:,0:-2])
 		else:
 			p.fit(X_train)
 		
