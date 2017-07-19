@@ -70,24 +70,25 @@ def run():
 	np.random.seed(5)
 	
 
-	train_e = getParticleSet('/home/drozd/analysis/fraction1/data_train_elecs.npy')
-	train_p = getParticleSet('/home/drozd/analysis/fraction1/data_train_prots.npy')
-	val_e = getParticleSet('/home/drozd/analysis/fraction1/data_validate_elecs_1.npy') 
-	val_p = getParticleSet('/home/drozd/analysis/fraction1/data_validate_prots_1.npy') 
+	train_e = np.load('/home/drozd/analysis/fraction1/data_train_elecs.npy')
+	train_p = np.load('/home/drozd/analysis/fraction1/data_train_prots.npy')
+	val_e = np.load('/home/drozd/analysis/fraction1/data_validate_elecs_1.npy') 
+	val_p = np.load('/home/drozd/analysis/fraction1/data_validate_prots_1.npy') 
 
+	mx = np.concatenate(( train_e[:,0:-2] , train_p[:,0:-2] )).max(axis=0)
 	
-	arr_elecs = train_e[:,0:-1]
-	arr_prots = train_p[:,0:-1]
+	arr_elecs = train_e[:,0:-2] / mx
+	arr_prots = train_p[:,0:-2] / mx
 		
 	train = np.concatenate(( train_e, train_p ))
 	np.random.shuffle(train)
-	X_train = train[:,0:-1]
+	X_train = train[:,0:-2] / (train[:,0:-2]).max(axis=0)
 	Y_train = train[:,-1]
 	del train_e,train_p, train
 	
 	val = np.concatenate(( val_e, val_p ))
 	np.random.shuffle(val)
-	X_val = val[:,0:-1]
+	X_val = val[:,0:-2] / (val[:,0:-2]).max(axis=0)
 	Y_val = val[:,-1]
 	del val_e, val_p, val
 	
