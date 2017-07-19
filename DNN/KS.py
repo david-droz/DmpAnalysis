@@ -70,10 +70,10 @@ def run():
 	np.random.seed(5)
 	
 
-	train_e = np.load('/home/drozd/analysis/fraction1/data_train_elecs.npy')
-	train_p = np.load('/home/drozd/analysis/fraction1/data_train_prots.npy')
-	val_e = np.load('/home/drozd/analysis/fraction1/data_validate_elecs_1.npy') 
-	val_p = np.load('/home/drozd/analysis/fraction1/data_validate_prots_1.npy') 
+	train_e = np.load('/home/drozd/analysis/newData/data_train_elecs_under_1.npy')
+	train_p = np.load('/home/drozd/analysis/newData/data_train_prots_under_1.npy')
+	val_e = np.load('/home/drozd/analysis/newData/data_validate_elecs_under_1.npy') 
+	val_p = np.load('/home/drozd/analysis/newData/data_validate_prots_under_1.npy')[0:val_e.shape[0],:]
 
 	mx = np.concatenate(( train_e[:,0:-2] , train_p[:,0:-2] )).max(axis=0)
 	
