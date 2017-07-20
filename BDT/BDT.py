@@ -24,6 +24,10 @@ import random
 import hashlib
 import sys
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.externals import joblib
 from sklearn.metrics import roc_curve, roc_auc_score, precision_score, average_precision_score, precision_recall_curve, recall_score
@@ -67,29 +71,41 @@ def load_training(fname='../dataset_train.npy'): return XY_split(fname)
 def load_validation(fname='../dataset_validate.npy'): return XY_split(fname)
 def load_test(fname='../dataset_test.npy'): return XY_split(fname)
 
+def getClassifierScore(truth,pred):
+	elecs = pred[truth.astype(bool)]
+	prots = pred[~truth.astype(bool)]
+			
+	return elecs, prots
 
 def _run():
 	
 
 	t0 = time.time()
 	
-	if len(sys.argv) == 1:
-		X_train, Y_train = load_training()
-		X_val, Y_val = load_validation()
-	else:
-		X_train, Y_train = load_training(sys.argv[1])
-		X_val, Y_val = load_validation(sys.argv[2])
+	train_e = np.load('/home/drozd/analysis/newData/data_train_elecs_under_1.npy')
+	train_p = np.load('/home/drozd/analysis/newData/data_train_prots_under_1.npy')
+	train = np.concatenate(( train_e, train_p ))
+	np.random.shuffle(train)
 	
+	X_train = train[:,0:-2]
+	Y_train = train[:,-1]
+	del train_e, train_p, train 
+	
+	val_e = np.load('/home/drozd/analysis/newData/data_validate_elecs_under_1.npy') 
+	val_p = np.load('/home/drozd/analysis/newData/data_validate_prots_under_1.npy')[0:val_e.shape[0],:]
+	val = np.concatenate(( val_e, val_p ))
+	np.random.shuffle(val)
+	del val_e, val_p
+	X_val = val[:,0:-2] 
+	Y_val = val[:,-1]
+	del val
 	
 	while True:
 		params = getRandomParams()
 		ID = ParamsID(params)										# Get an unique ID associated to the parameters
 		if not os.path.isfile('results/' + str(ID) + '/purity_completeness.txt'):		# Check if set of params has already been tested. Don't write file yet because what's below can get interrupted
 			break
-	
-
 	if not os.path.isdir('models'): os.mkdir('models')
-	
 	
 	with open('models/params_' + str(ID) + '.pick','wb') as f:	# Save the parameters into a file determined by unique ID
 		pickle.dump(params,f,protocol=2)
@@ -152,14 +168,27 @@ def _run():
 		g.write("Precision: "+str(prec_95)+'\n')
 		g.write("Recall: "+str(recall_95)+'\n')
 		
-	del X_train, X_val, Y_train, Y_val, predictions_binary, predictions_proba
+	elecs_p, prots_p = getClassifierScore(Y_val,predictions_proba)
+	binList = [x/50 for x in range(0,51)]
+	fig4 = plt.figure()
+	plt.hist(elecs_p,bins=binList,label='e',alpha=0.7,histtype='step',color='green')
+	plt.hist(prots_p,bins=binList,label='p',alpha=0.7,histtype='step',color='red')
+	plt.xlabel('Classifier score')
+	plt.ylabel('Number of events')
+	plt.title('Balanced validation set')
+	plt.legend(loc='upper center')
+	plt.yscale('log')
+	plt.savefig('images/' + str(ID))
+	plt.close(fig4)
+		
+	del X_train, X_val, Y_train, Y_val, predictions_binary, predictions_proba, l_precision, l_recall, l_thresholds, elecs_p, prots_p
 	
 		
 		
 	
 if __name__ == '__main__' :
 	
-	for x in range(5):
+	for x in range(10):
 		print('------------ ', x, ' ----------------')
 		_run()
 
