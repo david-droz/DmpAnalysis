@@ -78,8 +78,8 @@ def run(preNorm,runOn,n):
 	
 	if preNorm:
 		
-		elecsSet = np.load('/home/drozd/analysis/newData/data_train_elecs.npy')
-		protsSet = np.load('/home/drozd/analysis/newData/data_train_prots.npy')
+		elecsSet = np.load('/home/drozd/analysis/newData/data_train_elecs_under_1.npy')
+		protsSet = np.load('/home/drozd/analysis/newData/data_train_prots_under_1.npy')
 		
 		if runOn == 'e':
 			p.fit(elecsSet[:,0:-2])
