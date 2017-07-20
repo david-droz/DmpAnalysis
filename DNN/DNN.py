@@ -123,28 +123,23 @@ def run():
 	
 	t0 = time.time()
 	
-	if len(sys.argv) == 1:
-		train_e = getParticleSet('/home/drozd/analysis/data_train_elecs.npy')
-		train_p = getParticleSet('/home/drozd/analysis/data_train_prots.npy')
-		val_e = getParticleSet('/home/drozd/analysis/data_validate_elecs.npy') 
-		val_p = getParticleSet('/home/drozd/analysis/data_validate_prots.npy') 
-	else:
-		train_e = getParticleSet(sys.argv[1])
-		train_p = getParticleSet(sys.argv[2])
-		val_e = getParticleSet(sys.argv[3]) 
-		val_p = getParticleSet(sys.argv[4])
-		
+	train_e = np.load('/home/drozd/analysis/newData/data_train_elecs_under_1.npy')
+	train_p = np.load('/home/drozd/analysis/newData/data_train_prots_under_1.npy')
 	train = np.concatenate(( train_e, train_p ))
 	np.random.shuffle(train)
-	X_train = train[:,0:-1]
-	Y_train = train[:,-1]
-	del train_e,train_p, train
 	
+	X_train = train[:,0:-2] / (train[:,0:-2]).max(axis=0)
+	Y_train = train[:,-1]
+	del train_e, train_p, train 
+	
+	val_e = np.load('/home/drozd/analysis/newData/data_validate_elecs_under_1.npy') 
+	val_p = np.load('/home/drozd/analysis/newData/data_validate_prots_under_1.npy')[0:val_e.shape[0],:]
 	val = np.concatenate(( val_e, val_p ))
 	np.random.shuffle(val)
-	X_val = val[:,0:-1]
+	del val_e, val_p
+	X_val = val[:,0:-2]  / (val[:,0:-2] ).max(axis=0)
 	Y_val = val[:,-1]
-	del val_e, val_p, val
+	del val
 
 	existence = True
 	while existence:
@@ -206,10 +201,30 @@ def run():
 		pickle.dump([l_precision,l_recall,l_thresholds],f,protocol=2)
 	np.save('results/' + str(ID) + '/predictions.npy',predictions_proba)
 	np.save('results/Y_Val.npy',Y_val)
+	
+	save_history(history,'results/'+str(ID)+'/history.hdf')
+	
+	elecs_p, prots_p = getClassifierScore(Y_val,predictions_proba)
+	binList = [x/50 for x in range(0,51)]
+	fig4 = plt.figure()
+	plt.hist(elecs_p,bins=binList,label='e',alpha=0.7,histtype='step',color='green')
+	plt.hist(prots_p,bins=binList,label='p',alpha=0.7,histtype='step',color='red')
+	plt.xlabel('Classifier score')
+	plt.ylabel('Number of events')
+	plt.title('Balanced validation set')
+	plt.legend(loc='upper center')
+	plt.yscale('log')
+	plt.savefig('images/' + str(ID))
+	plt.close(fig4)
+	
+	n_elecs_top = elecs_p[ elecs_p > 0.8 ].shape[0]
+	n_prots_top = prots_p[ prots_p > 0.8 ].shape[0]
+	contamination = n_prots_top / (n_elecs_top + n_prots_top)
+	
 	with open('results/' + str(ID) + '/purity_completeness.txt','w') as g:
 		g.write("Precision: "+str(prec_95)+'\n')
 		g.write("Recall: "+str(recall_95)+'\n')
-	save_history(history,'results/'+str(ID)+'/history.hdf')
+		g.write("Contamination: "+str(contamination)+'\n')
 	
 	del X_train, X_val, Y_train, Y_val, history, predictions_binary, predictions_proba
 	
