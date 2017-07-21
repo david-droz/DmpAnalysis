@@ -62,8 +62,8 @@ if __name__ == '__main__':
 	arr_elecs = np.load(sys.argv[1])[:,0:-2]
 	arr_prots = np.load(sys.argv[2])[:,0:-2]
 	
-	arr_elecs = arr_e / arr_e.max(axis=0)
-	arr_prots = arr_p / arr_p.max(axis=0)
+	arr_elecs = arr_elecs / arr_elecs.max(axis=0)
+	arr_prots = arr_prots / arr_prots.max(axis=0)
 		
 	lab = getLabels()
 	
