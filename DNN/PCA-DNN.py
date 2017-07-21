@@ -68,6 +68,15 @@ def _normalise(arr):
 
 def run(preNorm,runOn,n):
 	
+	PCtoThrowAway = [7,9]
+	
+	indexList = [i for i in range(n)]
+	for x in PCtoThrowAway:
+		try:
+			indexList.remove(x-1)
+		except ValueError:
+			pass
+	
 	if preNorm: outfile = "results/pre_" + runOn + '_' + "%02d" % (n,) + '.pick'
 	else: outfile = "results/post_" + runOn + '_' + "%02d" % (n,) + '.pick'
 	
@@ -118,8 +127,8 @@ def run(preNorm,runOn,n):
 	del train_e,train_p, train, val_e, val_p, val
 	
 	
-	X_train = p.transform(X_train)[:,0:n]
-	X_val = p.transform(X_val)[:,0:n]
+	X_train = p.transform(X_train)[:,indexList]
+	X_val = p.transform(X_val)[:,indexList]
 	
 	model = getModel(X_train)
 	history = model.fit(X_train,Y_train,batch_size=150,epochs=40,verbose=0,callbacks=[],validation_data=(X_val,Y_val))
@@ -137,7 +146,9 @@ def run(preNorm,runOn,n):
 	plt.xlabel('Classifier score')
 	plt.ylabel('Number of events')
 	plt.title('Balanced validation set')
-	plt.legend(loc='best')
+	plt.grid(True)
+	plt.ylim((0.5,1e+6))
+	plt.legend(loc='upper center')
 	plt.yscale('log')
 	if preNorm : plt.savefig('images/pre_'+runOn+'_predHisto_'+ "%02d" % (n,))
 	else: plt.savefig('images/post_'+runOn+'_predHisto_'+ "%02d" % (n,))
