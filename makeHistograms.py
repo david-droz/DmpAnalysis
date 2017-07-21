@@ -59,16 +59,19 @@ def _normalise(arr):
 
 if __name__ == '__main__':
 	
-	arr_elecs = _normalise(np.load(sys.argv[1])[:,0:-2])
-	arr_prots = _normalise(np.load(sys.argv[2])[:,0:-2])
+	arr_elecs = np.load(sys.argv[1])[:,0:-2]
+	arr_prots = np.load(sys.argv[2])[:,0:-2]
 	
+	arr_elecs = arr_e / arr_e.max(axis=0)
+	arr_prots = arr_p / arr_p.max(axis=0)
+		
 	lab = getLabels()
 	
 	pp = PdfPages('multipage.pdf')
 	
 	for i in range(arr_elecs.shape[1]):
 		
-		KS_statistic, p_value = stats.ks_2samp(arr_elecs[:,i],arr_prots[:,i])	# Kolmogorov-Smirnov test
+		#~ KS_statistic, p_value = stats.ks_2samp(arr_elecs[:,i],arr_prots[:,i])	# Kolmogorov-Smirnov test
 																				# If p-value is high, then the two distributions are likely the same
 																				# If K-S statistic is high, then the two distributions are likely different.
 		
@@ -78,7 +81,8 @@ if __name__ == '__main__':
 		plt.legend(loc='best')
 		#~ plt.xscale("log")
 		plt.yscale('log')
-		plt.title(lab[i] + '\n K-S : ' + str(KS_statistic))
+		#~ plt.title(lab[i] + '\n K-S : ' + str(KS_statistic))
+		plt.title(lab[i])
 		plt.savefig(pp, format='pdf')
 		plt.close(f1)
 	pp.close()
