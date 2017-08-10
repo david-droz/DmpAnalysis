@@ -101,6 +101,12 @@ def getRandomParams():
 	mydic['metrics'] = random.choice(p_metric)
 	
 	return mydic
+	
+def getClassifierScore(truth,pred):
+	elecs = pred[truth.astype(bool)]
+	prots = pred[~truth.astype(bool)]
+			
+	return elecs, prots
 
 def getParticleSet(fname):
 	arr = np.load(fname)
@@ -161,8 +167,8 @@ def run():
 		pickle.dump(params,f,protocol=2)
 		
 	chck = ModelCheckpoint("models/weights_"+str(ID)+"__{epoch:02d}-{val_loss:.2f}.hdf5",period=10)
-	earl = EarlyStopping(monitor='loss',min_delta=0.0001,patience=10)			# Alternative: train epoch per epoch, evaluate something at every epoch.
-	rdlronplt = ReduceLROnPlateau(monitor='loss',patience=3,min_lr=0.001)
+	earl = EarlyStopping(monitor='loss',min_delta=0.0001,patience=8)			# Alternative: train epoch per epoch, evaluate something at every epoch.
+	rdlronplt = ReduceLROnPlateau(monitor='loss',patience=3,min_lr=0.0001)
 	callbacks = [chck,earl,rdlronplt]
 	
 	history = model.fit(X_train,Y_train,batch_size=200,epochs=200,verbose=2,callbacks=callbacks,validation_data=(X_val,Y_val))
