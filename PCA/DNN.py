@@ -34,6 +34,12 @@ def getParticleSet(fname):
 	r = np.concatenate(( X, Y.reshape(( Y.shape[0], 1 )) ) , axis=1)
 	del arr, X, Y
 	return r
+	
+def getClassifierScore(truth,pred):
+	elecs = pred[truth.astype(bool)]
+	prots = pred[~truth.astype(bool)]
+			
+	return elecs, prots
 
 def run(applyPCA,balanced):
 	
