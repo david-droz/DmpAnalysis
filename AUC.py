@@ -68,6 +68,9 @@ for i in range(len(best_AUC_l_precision)):
 best_f1_prec = best_AUC_l_precision[fscore_best_index]
 best_f1_recall = best_AUC_l_recall[fscore_best_index]
 
+print('-- Best ROC AUC --')
+print(bestROC_values[0])
+
 print('-- Best F1 score on best AUC --')
 print('F1:',fscore_best)
 print('Precision:',best_f1_prec)
