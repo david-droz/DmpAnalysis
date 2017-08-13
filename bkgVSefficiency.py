@@ -47,7 +47,11 @@ npoints = 1000
 for i in range(npoints):
 	thr = i * (1./npoints)
 	tp,fp,tn,fn = getcounts(Y_val,predictions,thr)
-	l_bkg.append( fp / (tp + fp) )
+	
+	try:
+		l_bkg.append( fp / (tp + fp) )
+	except ZeroDivisionError :
+		l_bkg.append( 1 )
 	l_efficiency.append( tp / (tp + fn) )
 	l_thresholds.append( thr )
 
