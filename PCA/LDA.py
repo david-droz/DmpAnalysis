@@ -47,15 +47,30 @@ def _run():
 	
 	outdir = 'pics/LDA'
 	if not os.path.isdir(outdir): os.mkdir(outdir)
-
-	X_train, Y_train = load_training()
-	X_val,Y_val = load_validation('/home/drozd/analysis/fraction1/dataset_validate_1.npy')
 	
-	X_train = StandardScaler().fit_transform(X_train)
-	X_val = StandardScaler().fit_transform(X_val)
+	train_e = np.load('/home/drozd/analysis/newData/data_train_elecs_under_1.npy')
+	train_p = np.load('/home/drozd/analysis/newData/data_train_prots_under_1.npy')
+	train = np.concatenate(( train_e, train_p ))
+	np.random.shuffle(train)
+	
+	X_train = train[:,0:-2]
+	Y_train = train[:,-1]
+	del train_e,train_p, train
+	
+	val_e = np.load('/home/drozd/analysis/newData/data_validate_elecs_under_1.npy') 
+	val_p = np.load('/home/drozd/analysis/newData/data_validate_prots_under_1.npy')[0:val_e.shape[0],:]
+	val = np.concatenate(( val_e, val_p ))
+	del val_e, val_p
 
-	#p = LinearDiscriminantAnalysis()
-	p = QuadraticDiscriminantAnalysis()
+	X_val = val[:,0:-2]
+	Y_val = val[:,-1]
+	del val
+	
+	#~ X_train = StandardScaler().fit_transform(X_train)
+	#~ X_val = StandardScaler().fit_transform(X_val)
+
+	p = LinearDiscriminantAnalysis()
+	#~ p = QuadraticDiscriminantAnalysis()
 	p.fit(X_train,Y_train)
 	
 	predictions_binary = p.predict(X_val)			# Array of 0 and 1
@@ -66,6 +81,9 @@ def _run():
 	F1score = f1_score(Y_val,predictions_binary)				# Average of precision and recall
 	
 	l_precision, l_recall, l_thresholds = precision_recall_curve(Y_val,predictions_proba)
+	
+	np.save('predictions.npy',predictions_proba)
+	np.save('truth.npy',Y_val)
 	
 	
 	# 1 - precision = 1 - (TP/(TP + FP)) = (TP + FP)/(TP + FP) - (TP / (TP+FP)) = FP/(TP+FP) = FPR
@@ -115,26 +133,28 @@ def _run():
 	plt.hist(p.predict_proba(protons)[:,1],50,histtype='step',label='p')
 	plt.legend(loc='best')
 	plt.yscale('log')
-	plt.savefig(outdir+'/QDA')
+	#~ plt.savefig(outdir+'/QDA')
 	
-	fig2 = plt.figure()
-	
-	l_e = []
-	l_p = []
-	for i in range(Y_val.shape[0]):
-		if Y_val[i] == 0:
-			l_p.append(predictions_proba[i])
-		else:
-			l_e.append(predictions_proba[i])
-	plt.hist(l_e,50,label='e',alpha=0.5,histtype='step',color='green')
-	plt.hist(l_p,50,label='p',alpha=0.5,histtype='step',color='red')
-	plt.yscale('log')
-	plt.legend(loc='best')
-	plt.savefig(outdir+'/QDA_hist')
+	#~ fig2 = plt.figure()
+	#~ 
+	#~ l_e = []
+	#~ l_p = []
+	#~ for i in range(Y_val.shape[0]):
+		#~ if Y_val[i] == 0:
+			#~ l_p.append(predictions_proba[i])
+		#~ else:
+			#~ l_e.append(predictions_proba[i])
+	#~ plt.hist(l_e,50,label='e',alpha=0.5,histtype='step',color='green')
+	#~ plt.hist(l_p,50,label='p',alpha=0.5,histtype='step',color='red')
+	#~ plt.yscale('log')
+	#~ plt.legend(loc='best')
+	#~ plt.savefig(outdir+'/QDA_hist')
 	
 	#plt.hist(p.predict_proba(protons),50,histtype='step',label='p')
 	#plt.yscale('log')
 	#plt.savefig(outdir+'/QDA_p')
+	
+	print('AUC: ',roc_auc_score(Y_val,predictions_proba))
 	
 		
 		
