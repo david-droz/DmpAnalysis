@@ -40,6 +40,11 @@ def load_training(fname='../dataset_train.npy'): return XY_split(fname)
 def load_validation(fname='../dataset_validate.npy'): return XY_split(fname)
 def load_test(fname='../dataset_test.npy'): return XY_split(fname)
 
+def getClassifierScore(truth,pred):
+	elecs = pred[truth.astype(bool)]
+	prots = pred[~truth.astype(bool)]
+			
+	return elecs, prots
 
 def _run():
 	
@@ -120,39 +125,20 @@ def _run():
 	print("Recall: ", recall_95)
 	
 	
-	#~ electrons = p.transform( np.load('/home/drozd/analysis/fraction1/data_test_elecs_1.npy')[:,0:-2]  )
-	#~ protons = p.transform( np.load('/home/drozd/analysis/fraction1/data_test_prots_1.npy')[:,0:-2]  )
-	electrons = np.load('/home/drozd/analysis/data_test_elecs.npy')[:,0:-2]
-	protons = np.load('/home/drozd/analysis/data_test_prots.npy')[:,0:-2]
-
-	electrons = StandardScaler().fit_transform(electrons)
-	protons = StandardScaler().fit_transform(protons)
-		
-	fig1 = plt.figure()
-	plt.hist(p.predict_proba(electrons)[:,1],50,histtype='step',label='e')
-	plt.hist(p.predict_proba(protons)[:,1],50,histtype='step',label='p')
-	plt.legend(loc='best')
+	elecs_p, prots_p = getClassifierScore(Y_val,predictions_proba)
+	binList = [x/50 for x in range(0,51)]
+	fig4 = plt.figure()
+	plt.hist(elecs_p,bins=binList,label='e',alpha=0.7,histtype='step',color='green')
+	plt.hist(prots_p,bins=binList,label='p',alpha=0.7,histtype='step',color='red')
+	plt.xlabel('Classifier score')
+	plt.ylabel('Number of events')
+	plt.title('Prediction histogram')
+	plt.legend(loc='upper center')
+	plt.grid(True)
+	plt.ylim((9,1e+6))
 	plt.yscale('log')
-	#~ plt.savefig(outdir+'/QDA')
-	
-	#~ fig2 = plt.figure()
-	#~ 
-	#~ l_e = []
-	#~ l_p = []
-	#~ for i in range(Y_val.shape[0]):
-		#~ if Y_val[i] == 0:
-			#~ l_p.append(predictions_proba[i])
-		#~ else:
-			#~ l_e.append(predictions_proba[i])
-	#~ plt.hist(l_e,50,label='e',alpha=0.5,histtype='step',color='green')
-	#~ plt.hist(l_p,50,label='p',alpha=0.5,histtype='step',color='red')
-	#~ plt.yscale('log')
-	#~ plt.legend(loc='best')
-	#~ plt.savefig(outdir+'/QDA_hist')
-	
-	#plt.hist(p.predict_proba(protons),50,histtype='step',label='p')
-	#plt.yscale('log')
-	#plt.savefig(outdir+'/QDA_p')
+	plt.savefig('predHisto')
+	plt.close(fig4)
 	
 	print('AUC: ',roc_auc_score(Y_val,predictions_proba))
 	
