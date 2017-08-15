@@ -44,7 +44,7 @@ def run():
 		sub = [abs(e_n[i] - p_n[i]) for i in range(len(e_n))]
 		
 		
-		plt.plot(e_bins_c,sub,histtype='step',color='blue',label='sub')
+		plt.plot(e_bins_c,sub,color='blue',label='sub')
 		plt.legend(loc='best')
 		plt.yscale('log')
 		
