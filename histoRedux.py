@@ -91,7 +91,7 @@ def run():
 		
 		l_area.append(area)
 		
-		if area > 3500:
+		if area > 3000:
 			print(n)
 		
 	fig2 = plt.figure()
