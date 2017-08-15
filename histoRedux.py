@@ -46,8 +46,9 @@ def run():
 		
 		plt.hist(sub,bins=binList,histtype='step',color='blue',label='sub')
 		plt.legend(loc='best')
+		plt.yscale('log')
 		
-		plt.savefig('images/'+str(n))
+		plt.savefig('images/'+"%02d" % (n,))
 		
 		area = np.trapz(sub,x=e_bins_c)
 		
@@ -55,6 +56,7 @@ def run():
 		
 	fig2 = plt.figure()
 	plt.plot([n for n in range(nrofvars)],l_area,'o')
+	plt.grid(True)
 	plt.savefig('result')
 	
 	
