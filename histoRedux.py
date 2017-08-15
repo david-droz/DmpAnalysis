@@ -14,13 +14,47 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import os
 
-
+def getLabels():
+	
+	lab = []
+	
+	ebgo = 'BGO_E_layer_'
+	for i in range(14):
+		lab.append(ebgo + str(i))
+	erms = 'BGO_E_RMS_layer_'
+	for i in range(14):
+		lab.append(erms + str(i))
+	lab.append('BGO_RMS_longitudinal')
+	lab.append('BGO_RMS_radial')
+	lab.append('BGO_E_total_corrected')
+	lab.append('BGO_total_hits')
+	
+	for i in range(2):
+		lab.append('PSD_E_layer_' + str(i))
+	for i in range(2):
+		lab.append('PSD_hits_layer_' + str(i))
+	for k in ['1a','1b','2a','2b']:
+		lab.append('PSD_E_RMS_layer_' + k)
+		
+	lab.append('STK_NClusters')
+	lab.append('STK_NTracks')
+	for i in range(8):
+		lab.append('STK_E_' + str(i))
+	for i in range(8):
+		lab.append('STK_E_RMS_' + str(i))
+		
+	lab.append('timestamp')
+	lab.append('label')
+	
+	return lab
 
 def run():
 	val_e = np.load('/home/drozd/analysis/newData/data_validate_elecs_under_1.npy') 
 	val_p = np.load('/home/drozd/analysis/newData/data_validate_prots_under_1.npy')[0:val_e.shape[0],:]
 	
 	nrofvars = val_e.shape[1] - 2
+	
+	lab = getLabels()
 	
 	for i in range(nrofvars):
 		val_e[:,i] = val_e[:,i] / val_e[:,i].max(axis=0)
@@ -47,15 +81,23 @@ def run():
 		plt.plot(e_bins_c,sub,color='blue',label='sub')
 		plt.legend(loc='best')
 		plt.yscale('log')
+		plt.ylabel('Nr of events')
+		plt.title(lab[n])
 		
 		plt.savefig('images/'+"%02d" % (n,))
+		plt.close(fig1)
 		
 		area = np.trapz(sub,x=e_bins_c)
 		
 		l_area.append(area)
 		
+		if area > 3500:
+			print(n)
+		
 	fig2 = plt.figure()
 	plt.plot([n for n in range(nrofvars)],l_area,'o')
+	plt.xlabel('Variable number')
+	plt.ylabel('Area of histogram difference')
 	plt.grid(True)
 	plt.savefig('result')
 	
