@@ -12,6 +12,7 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import os
 
 
 
@@ -29,6 +30,8 @@ def run():
 	
 	if not os.path.isdir('images'): os.mkdir('images')
 	
+	l_area = []
+	
 	for n in range(nrofvars):
 		
 		fig1 = plt.figure()
@@ -45,6 +48,14 @@ def run():
 		plt.legend(loc='best')
 		
 		plt.savefig('images/'+str(n))
+		
+		area = np.trapz(sub,x=e_bins_c)
+		
+		l_area.append(area)
+		
+	fig2 = plt.figure()
+	plt.plot([n for n in range(nrofvars)],l_area,'o')
+	plt.savefig('result')
 	
 	
 	
