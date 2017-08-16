@@ -224,7 +224,7 @@ if __name__ == '__main__' :
 	
 	if preNorm: 
 		listofPicks = glob.glob('results/pre_'+runOn+'*.pick')
-		figBaseName = "pre_runOn_"
+		figBaseName = "pre_runOn_" + runOn + '_'
 	else: 
 		listofPicks = glob.glob('results/post_'+runOn+'*.pick')
 		figBaseName = "post_runOn_" + runOn + '_'
