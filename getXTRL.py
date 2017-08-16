@@ -21,8 +21,10 @@ import ROOT
 def computeSumRMS(pev):
 	
 	RMSarr = pev.pEvtBgoRec().GetRMS2()
+	s = 0
+	for i in xrange(14): s+=RMSarr[i]
 	
-	return sum(RMSarr)
+	return s
 	
 	
 def computeFLAST(pev):
