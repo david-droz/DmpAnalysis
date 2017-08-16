@@ -33,14 +33,6 @@ from keras.layers.advanced_activations import PReLU, ELU, LeakyReLU
 from scipy import stats
 
 
-def getParticleSet(fname):
-	arr = np.load(fname)
-	X = arr[:,0:-2]				### Last two columns are timestamp and particle id
-	Y = arr[:,-1]
-	X = _normalise(X)
-	r = np.concatenate(( X, Y.reshape(( Y.shape[0], 1 )) ) , axis=1)
-	del arr, X, Y
-	return r
 	
 def getClassifierScore(truth,pred):
 	elecs = pred[truth.astype(bool)]
@@ -61,28 +53,22 @@ def getModel(X_train):
 	return model
 	
 
-def _normalise(arr):
-	for i in range(arr.shape[1]):
-		arr[:,i] = (arr[:,i] - np.mean(arr[:,i])) / np.std(arr[:,i])	
-	return arr
-
 def run(preNorm,runOn,n):
 	
-	PCtoThrowAway = [7,9]
-	
+	#~ PCtoThrowAway = [7,9]
+	#~ 
 	indexList = [i for i in range(n)]
-	for x in PCtoThrowAway:
-		try:
-			indexList.remove(x-1)
-		except ValueError:
-			pass
+	#~ for x in PCtoThrowAway:
+		#~ try:
+			#~ indexList.remove(x-1)
+		#~ except ValueError:
+			#~ pass
 	
 	if preNorm: outfile = "results/pre_" + runOn + '_' + "%02d" % (n,) + '.pick'
 	else: outfile = "results/post_" + runOn + '_' + "%02d" % (n,) + '.pick'
 	
 	if os.path.isfile(outfile): return
 	
-	np.random.seed(5)
 	p = PCA(n_components=n)
 	
 	if preNorm:
@@ -131,7 +117,7 @@ def run(preNorm,runOn,n):
 	X_val = p.transform(X_val)[:,indexList]
 	
 	model = getModel(X_train)
-	history = model.fit(X_train,Y_train,batch_size=150,epochs=40,verbose=0,callbacks=[],validation_data=(X_val,Y_val))
+	history = model.fit(X_train,Y_train,batch_size=150,epochs=50,verbose=0,callbacks=[],validation_data=(X_val,Y_val))
 
 	predictions_proba = model.predict(X_val)
 	predictions_binary = np.around(predictions_proba)
@@ -162,9 +148,17 @@ def run(preNorm,runOn,n):
 		n_elecs_top_95 = elecs_p[ elecs_p > 0.95 ].shape[0]
 		n_prots_top_95 = prots_p[ prots_p > 0.95 ].shape[0]
 		contamination_95 = n_prots_top_95 / (n_elecs_top_95 + n_prots_top_95)
+		
 	except ZeroDivisionError:
 		contamination = 1.
 		contamination_95 = 1.
+	try:
+		efficiency = elecs_p[ elecs_p > 0.8 ].shape[0] / elecs_p.shape[0]
+		
+		backgroundFraction = prots_p[ prots_p > 0.8 ].shape[0] / predictions_proba[ predictions_proba > 0.8 ].shape[0]
+	except:
+		efficiency = 0.
+		backgroundFraction = 1.	
 		
 	l_precision, l_recall, l_thresholds = precision_recall_curve(Y_val,predictions_proba)
 	
@@ -184,7 +178,7 @@ def run(preNorm,runOn,n):
 	
 	
 	with open(outfile,'wb') as f:
-		pickle.dump([n,AUC,mf1,pr,rc,contamination,contamination_95],f,protocol=2)
+		pickle.dump([n,AUC,mf1,pr,rc,contamination,contamination_95,efficiency,backgroundFraction],f,protocol=2)
 		
 	del Y_val, predictions_proba, predictions_binary
 		
@@ -244,8 +238,10 @@ if __name__ == '__main__' :
 	l_rc = []
 	l_contamination = []
 	l_con_95 = []
+	l_efficiency = []
+	l_backgroundFraction = []
 	for f in listofPicks:
-		a,b,c,d,e,f,g = pickle.load(open(f,'rb'))
+		a,b,c,d,e,f,g,h,i = pickle.load(open(f,'rb'))
 		nrofvariables.append(a)
 		l_AUC.append(b)
 		l_f1.append(c)
@@ -253,6 +249,8 @@ if __name__ == '__main__' :
 		l_rc.append(e)
 		l_contamination.append(f)
 		l_con_95.append(g)
+		l_efficiency.append(h)
+		l_backgroundFraction.append(i)
 	
 	fig1 = plt.figure()
 	plt.plot(nrofvariables,l_AUC,'o-',label='AUC')
@@ -278,4 +276,11 @@ if __name__ == '__main__' :
 	plt.yscale('log')
 	plt.legend(loc='best')
 	plt.title('Background fraction')
+	plt.savefig(figBaseName+'Bkg')
+	
+	fig4 = plt.figure()
+	plt.plot(nrofvariables,l_efficiency,'o-',label='efficiency')
+	plt.plot(nrofvariables,l_backgroundFraction,'o-',label='residual background fraction')
+	plt.xlabel('Nr of variables')
+	plt.legend(loc='best')
 	plt.savefig(figBaseName+'Bkg')
