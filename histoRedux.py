@@ -75,7 +75,7 @@ def run():
 		e_bins_c = [(e_bins[i]+e_bins[i+1])/2. for i in range(len(e_n))]
 		p_bins_c = [(p_bins[i]+p_bins[i+1])/2. for i in range(len(p_n))]
 		
-		sub = [abs(e_n[i] - p_n[i]) for i in range(len(e_n))]
+		sub = [(e_n[i] - p_n[i]) for i in range(len(e_n))]
 		
 		
 		plt.plot(e_bins_c,sub,color='blue',label='sub')
