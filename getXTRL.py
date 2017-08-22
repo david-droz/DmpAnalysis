@@ -4,17 +4,12 @@ Get XTRL histograms from ROOT files
 
 '''
 
+from __future__ import division
+
 import math
 import numpy as np
-import ctypes
 import sys
-import glob
-import argparse
 import os
-import time
-from ROOT import gSystem
-gSystem.Load("libDmpEvent.so")
-import ROOT
 import pickle
 
 '''
@@ -87,9 +82,7 @@ def computeCOG(position,EdepArr):				# DmpAlgBgoRecExtra
 	cog = np.zeros((14))
 	
 	for i in range(14):
-		cog[i] = -999
 		layerEnergy = np.sum(EdepArr[i])
-		if layerEnergy < 0.1: continue
 		maxEnergy = np.max(EdepArr[i])
 		maxBar = np.argmax(EdepArr[i])
 		
@@ -111,21 +104,18 @@ def calcRMS(pev,position,EdepArr):
 	RMS2 = np.zeros((14))
 	
 	for i in range(14):
-		RMS2[i] = -999
 		re = 0
 		layerEnergy = np.sum(EdepArr[i])
-		if coG[i] < -900 : continue
 		
 		for j in range(22):
 			re += EdepArr[i,j] * (position[i,j,0] - coG[i]) * (position[i,j,0] - coG[i])
 		
-		if layerEnergy > 0.1:
-			RMS2[i] = re / layerEnergy
+		RMS2[i] = re / layerEnergy
 	
 	return RMS2
 	
 
-def computeSumRMS(pev,position):
+def computeSumRMS(pev,position,Edep):
 	
 	#~ RMSarr = pev.pEvtBgoRec().GetRMS2()
 	#~ s = 0
@@ -133,7 +123,7 @@ def computeSumRMS(pev,position):
 	#~ 
 	#~ s = pev.pEvtBgoRec().GetRMS_r()
 	
-	RMS2 = calcRMS(pev,position,getEdep(pev))
+	RMS2 = calcRMS(pev,position,Edep)
 	s = 0
 	for i in xrange(14): s+= np.sqrt(RMS2[i])
 	
@@ -145,22 +135,27 @@ def computeFLAST(pev):
 	return (pev.pEvtBgoRec().GetELayer(13) / pev.pEvtBgoRec().GetTotalEnergy())
 	
 	
-def buildXTRL(pev,position):
+def buildXTRL(pev,position,Edep):
 	
-	Flast = computeFLAST(pev)
-	SumRMS = computeSumRMS(pev,position)
+	Flast = np.sum(Edep[13]) / np.sum(Edep)
+	SumRMS = computeSumRMS(pev,position,Edep)
 	
 	XTRL = Flast * (SumRMS**4) / 8e+6
 	
 	return XTRL, Flast, SumRMS
 	
-def cuts(pev):
+def cuts(pev,Edep):
 	
-	if pev.pEvtBgoRec().GetTotalEnergy() < 1e+3 : return False
-	if pev.pEvtBgoRec().GetELayer(13) == 0 : return False
+	Etot = np.sum(Edep)
 	
-	f = computeFLAST(pev)
-	if f > 0.2 or f < 1e-5 : return False
+	if Etot < 1e+3 : return False
+	
+	#if Etot < 5e+5 or Etot > 1e+6 : return False
+
+	if not all( [ np.sum(Edep[i]) > 0.1 for i in range(14)] ) : return False
+	
+	f = np.sum(Edep[13]) / np.sum(Edep)
+	if f > 1.0 or f < 1e-5 : return False
 	
 	#~ if computeSumRMS(pev) > 3e+5 : return False
 	
@@ -169,26 +164,25 @@ def cuts(pev):
 	
 def run():
 	
+	from ROOT import gSystem
+	gSystem.Load("libDmpEvent.so")
+	import ROOT
+	
 	with open('/dampe/data4/users/ddroz/getXTRL/allElectrons.txt','r') as f:
 		allElectrons = []
 		for line in f:
 			allElectrons.append( line.replace('\n','') )
 	with open('/dampe/data4/users/ddroz/getXTRL/allProtons.txt','r') as g:
 		allProtons = []
-		for line in g:
-			allProtons.append( line.replace('\n','') )
+		for lines in g:
+			allProtons.append( lines.replace('\n','') )
 			
 	chain_e = ROOT.DmpChain("CollectionTree")
 	for f in allElectrons:
 		chain_e.Add(f)
-	chain_p = ROOT.DmpChain("CollectionTree")
-	for g in allProtons:
-		chain_p.Add(g)
-		
+	
 	nrofe = chain_e.GetEntries()
 	if not nrofe: raise Exception("No electrons in DmpChain!")
-	nrofp = chain_p.GetEntries()
-	if not nrofp: raise Exception("No protons in DmpChain!")
 	
 	position = CalcPosition()
 	
@@ -200,36 +194,80 @@ def run():
 	rms_p = []
 	energy_e = []
 	energy_p = []
+	
 	for ne in xrange(nrofe):
 		pev = chain_e.GetDmpEvent(ne)
 		
-		if not cuts(pev): continue
-		x,f,r = buildXTRL(pev,position)
+		Edep = getEdep(pev)
+		
+		if not cuts(pev,Edep): continue
+		x,f,r = buildXTRL(pev,position,Edep)
 		xtrl_e.append( x )
 		flast_e.append( f )
 		rms_e.append( r )
 		energy_e.append( pev.pEvtBgoRec().GetElectronEcor() )
 		
+	chain_e.Terminate()
+	
+	del chain_e
+	
+	chain_p = ROOT.DmpChain("CollectionTree")
+	for g in allProtons:
+		chain_p.Add(g)
+	nrofp = chain_p.GetEntries()
+	if not nrofp: raise Exception("No protons in DmpChain!")
+		
 	for np in xrange(nrofp):
 		ppev = chain_p.GetDmpEvent(np)
 		
-		if not cuts(pev): continue
+		EdepP = getEdep(ppev)
+		
+		if not cuts(ppev,EdepP): continue
 			
-		x,f,r = buildXTRL(pev,position)
+		x,f,r = buildXTRL(ppev,position,EdepP)
 		xtrl_p.append( x )
 		flast_p.append( f )
 		rms_p.append( r )
-		energy_p.append( pev.pEvtBgoRec().GetElectronEcor() )
+		energy_p.append( ppev.pEvtBgoRec().GetElectronEcor() )
+		
+	chain_p.Terminate()
+	
+	## !!!
+	returns = [xtrl_e , xtrl_p, flast_e, flast_p, rms_e, rms_p, energy_e, energy_p,official_rms_e,official_rms_p]
+	## !!!
 		
 	with open("XTRL.pick",'w') as h:
-		pickle.dump([xtrl_e,xtrl_p],h)
+		pickle.dump(returns,h)
 		
-	return xtrl_e , xtrl_p, flast_e, flast_p, rms_e, rms_p, energy_e, energy_p
+	print "Selected:"
+	print len(energy_e), " electrons"
+	print len(energy_p), " protons"
+		
+	return returns
 	
-def makeHisto(a,b):
+
+
+if __name__ == '__main__':
+	
+	if os.path.isfile('XTRL.pick'):
+		with open('XTRL.pick','r') as f:
+			aba = pickle.load(f)
+			xe, xp, fe, fp, re, rp, ee, ep, of_rms_e, of_rms_p = aba
+	else:
+		xe, xp, fe, fp, re, rp, ee, ep, of_rms_e, of_rms_p = run()
+	
+	########
+	## Graphs !
+	########
+	
 	import matplotlib
 	matplotlib.use('Agg')
 	import matplotlib.pyplot as plt
+	
+	
+	##
+	# Histogram of XTR distribution
+	##
 	
 	ma = max(a)
 	mb = max(b)
@@ -238,91 +276,129 @@ def makeHisto(a,b):
 	binlist = [ x*float(m)/100. for x in range(101) ]
 	
 	fig1 = plt.figure()
-	plt.hist(a,bins=binlist,histtype='step',label='e',color='green')
-	plt.hist(b,bins=binlist,histtype='step',label='p',color='red',ls='dashed')
+	plt.hist(xe,bins=binlist,histtype='step',label='e',color='green')
+	plt.hist(xp,bins=binlist,histtype='step',label='p',color='red',ls='dashed')
 	plt.yscale('log')
-	plt.xlabel('XTRL')
+	#~ plt.xscale('log')
+	plt.xlabel('XTR')
 	plt.grid(True)
 	plt.legend(loc='best')
 	plt.savefig('XTRL')
-	
-def make2DHisto(a,b,c,d):
-	
-	import matplotlib
-	matplotlib.use('Agg')
-	import matplotlib.pyplot as plt
-	
-	fig1 = plt.figure()
-	plt.hist2d(c+d,a+b,bins=80,norm=matplotlib.colors.LogNorm())
-	plt.colorbar()
-	plt.yscale('log')
-	plt.xlabel('Sum RMS')
-	plt.ylabel('FLast')
-	plt.savefig('2d')
+	plt.close(fig1)
 	
 	fig2 = plt.figure()
-	plt.hist(c,100,histtype='step',label='e')
-	plt.hist(d,100,histtype='step',label='p')
-	plt.xlabel('Sum RMS')
+	plt.hist(np.log10(xe),bins=binlist,histtype='step',label='e',color='green')
+	plt.hist(np.log10(xp),bins=binlist,histtype='step',label='p',color='red',ls='dashed')
+	plt.yscale('log')
+	plt.xlabel('log10(XTR)')
+	plt.grid(True)
+	plt.legend(loc='best')
+	plt.savefig('XTRL_log')
+	plt.close(fig2)
+	
+	
+	##
+	# Histogram of SumRMS distribution
+	##
+	
+	fig2b = plt.figure()
+	plt.hist(re,100,histtype='step',label='e',normed=True)
+	plt.hist(rp,100,histtype='step',label='p',normed=True)
+	plt.xlabel('Sum RMS [mm]')
+	plt.ylabel('Fraction of events')
+	plt.ylim((0,0.002))
 	plt.legend(loc='best')
 	plt.savefig('sumRMS')
+	plt.close(fig2b)
+	
+	fig2bb = plt.figure()
+	plt.hist(re,100,histtype='step',label='hand RMS elec',normed=False)
+	plt.hist(of_rms_e,100,histtype='step',label='official RMS elec',normed=False)
+	plt.xlabel('Sum RMS [mm]')
+	plt.legend(loc='best')
+	plt.savefig('sumRMS_offVShand_elec')
+	plt.close(fig2bb)
+	
+	##
+	# 2D plot of SumRMS vs FLast
+	##
+	
+	fig1b = plt.figure()
+	plt.hist2d(re+rp,fe+fp,bins=120,norm=matplotlib.colors.LogNorm())
+	plt.colorbar()
+	#~ plt.xlim((200,1200))
+	plt.yscale('log')
+	plt.xlabel('Sum RMS [mm]')
+	plt.ylabel('FLast')
+	plt.savefig('2d')
+	plt.close(fig1b)
 	
 	fig3 = plt.figure()
-	plt.hist2d(c,a,bins=80,norm=matplotlib.colors.LogNorm())
+	plt.hist2d(re,fe,bins=120,norm=matplotlib.colors.LogNorm())
+	#~ plt.xlim((200,1200))
 	plt.colorbar()
 	plt.yscale('log')
-	plt.xlabel('Sum RMS')
+	plt.xlabel('Sum RMS [mm]')
 	plt.ylabel('FLast')
+	plt.title('Electrons')
 	plt.savefig('2d_electrons')
+	plt.close(fig3)
 	
 	fig4 = plt.figure()
-	plt.hist2d(d,b,bins=80,norm=matplotlib.colors.LogNorm())
+	plt.hist2d(rp,fp,bins=120,norm=matplotlib.colors.LogNorm())
+	#~ plt.xlim((200,1200))
 	plt.colorbar()
 	plt.yscale('log')
-	plt.xlabel('Sum RMS')
+	plt.xlabel('Sum RMS [mm]')
 	plt.ylabel('FLast')
+	plt.title('Protons')
 	plt.savefig('2d_protons')
+	plt.close(fig4)
 	
-def energyVSxtr(ee,xe,ep,xp):
 	
-	import matplotlib
-	matplotlib.use('Agg')
-	import matplotlib.pyplot as plt
+	##
+	# 2D Histograms of XTR vs Energy
+	##
 	
-	fig1 = plt.figure()
-	plt.hist2d(ee+ep,xe+xp,bins=80)
-	plt.xlabel('Corrected BGO energy')
-	plt.ylabel('XTR')
+	eeG = [x / 1000. for x in ee]
+	epG = [x / 1000. for x in ep]
+	
+	fig1c = plt.figure()
+	plt.hist2d(eeG+epG,xe+xp,bins=200,norm=matplotlib.colors.LogNorm())
+	plt.xlabel('Corrected BGO energy [GeV]')
+	plt.ylabel('XTR [mm^4]')
+	#~ plt.ylim((0,140))
 	plt.xscale('log')
+	#~ plt.yscale('log')
+	plt.tight_layout()
 	plt.colorbar()
 	plt.savefig('2d_XTR')
+	plt.close(fig1c)
 	
-	fig2 = plt.figure()
-	plt.hist2d(ee,xe,bins=80)
-	plt.xlabel('Corrected BGO energy')
-	plt.ylabel('XTR')
+	fig2c = plt.figure()
+	plt.hist2d(eeG,xe,bins=200,norm=matplotlib.colors.LogNorm())
+	#~ plt.hist2d(eeg,[x for x in xe if x < 140],bins=120,norm=matplotlib.colors.LogNorm())
+	plt.xlabel('Corrected BGO energy [GeV]')
+	plt.ylabel('XTR [mm^4]')
 	plt.xscale('log')
+	#~ plt.yscale('log')
+	plt.tight_layout()
+	plt.ylim((0,5))
 	plt.title('Electrons')
 	plt.colorbar()
 	plt.savefig('2d_XTR_electrons')
+	plt.close(fig2c)
 	
-	fig3 = plt.figure()
-	plt.hist2d(ep,xp,bins=80)
-	plt.xlabel('Corrected BGO energy')
-	plt.ylabel('XTR')
+	fig3c = plt.figure()
+	plt.hist2d(epG,xp,bins=200,norm=matplotlib.colors.LogNorm())
+	#~ plt.hist2d(epG,[x for x in xp if x < 140],bins=120,norm=matplotlib.colors.LogNorm())
+	plt.xlabel('Corrected BGO energy [GeV]')
+	plt.ylabel('XTR [mm^4]')
+	plt.ylim((5.5e-2,5))
 	plt.xscale('log')
+	#~ plt.yscale('log')
+	plt.tight_layout()
 	plt.title('Protons')
 	plt.colorbar()
 	plt.savefig('2d_XTR_protons')
-	
-	
-
-if __name__ == '__main__':
-	
-	xe, xp, fe, fp, re, rp, ee, ep = run()
-	
-	makeHisto(xe,xp)
-	
-	make2DHisto(fe,fp,re,rp)
-	
-	energyVSxtr(ee,xe,ep,xp)
+	plt.close(fig3c)
