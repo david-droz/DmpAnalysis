@@ -70,7 +70,7 @@ def run(subDetector):
 	rdlronplt = ReduceLROnPlateau(monitor='loss',patience=3,min_lr=0.0001)
 	callbacks = [rdlronplt]
 	
-	history = model.fit(X_train,Y_train,batch_size=100,epochs=100,verbose=2,callbacks=callbacks,validation_split=0.1)
+	history = model.fit(X_train,Y_train,batch_size=100,epochs=300,verbose=2,callbacks=callbacks,validation_split=0.1)
 	del X_train, Y_train
 	
 	
