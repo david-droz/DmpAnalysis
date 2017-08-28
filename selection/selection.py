@@ -384,5 +384,3 @@ if __name__ == "__main__" :
 		
 	analysis(filelist,particle,int(sys.argv[3]))
 	
-	analysis(filelist,particle,nrofchunks)
-	
