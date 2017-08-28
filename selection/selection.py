@@ -14,6 +14,8 @@ Usage:
 
 '''
 
+from __future__ import division
+
 import math
 import numpy as np
 import ctypes
@@ -130,46 +132,32 @@ def selection(pev,particle):
 
 def getBGOvalues(pev):
 	templist = []
-	BHXS = [0. for i in xrange(14)]	
-	for i in xrange(14):	# Numbers of BGO layers
-		
-		templist.append(  pev.pEvtBgoRec().GetELayer(i)  )
-
-		im = None				
-		em = 0.0;
-		for j in xrange(22):						# Find the maximum of energy (em) and its position (im)
-			ebar = pev.pEvtBgoRec().GetEdep(i,j)
-			if ebar < em : continue 
-			em = ebar
-			im = j
-		if not em: continue
-		if im in [0,21]:
-			cog = 27.5 * im	
-		else:	
-			ene = 0.0			
-			cog = 0.0
-			for j in [im-1, im, im+1]: 				# im : bar that was hit, and then check the two neighbours
-				ebar = pev.pEvtBgoRec().GetEdep(i,j)
-				ene+=ebar
-				cog+= 27.5 * j * ebar
-			cog/=ene					# Center of energy distribution.	CoG = Center of Gravity
-		posrms   = 0.0
-		enelayer = 0.0
-		for j in xrange(22):
-			ebar = pev.pEvtBgoRec().GetEdep(i,j)
-			posbar = 27.5 * j 		# 27.5mm : horizontal position of BGO bar
-			enelayer += ebar
-			posrms += ebar * (posbar-cog)*(posbar-cog)
-		BHXS[i] = math.sqrt( posrms / enelayer)
 	
-	for item in BHXS:
-		templist.append( item )
+	RMS2 = pev.pEvtBgoRec().GetRMS2()
+	
+	for i in xrange(14): templist.append(  pev.pEvtBgoRec().GetELayer(i)  )
+	
+	for j in xrange(14): 
+		if RMS2[j] < 0 :
+			templist.append( 0 )
+		else:
+			templist.append( RMS2[j] )
+			
+	hitsPerLayer = pev.pEvtBgoRec().GetLayerHits()
+	for k in xrange(14):
+		templist.append(hitsPerLayer[k])
 		
 	templist.append( pev.pEvtBgoRec().GetRMS_l() )
 	templist.append( pev.pEvtBgoRec().GetRMS_r() )
 
 	templist.append( pev.pEvtBgoRec().GetElectronEcor() )
 	templist.append( pev.pEvtBgoRec().GetTotalHits() )
+	
+	XZ = pev.pEvtBgoRec().GetSlopeXZ()
+	YZ = pev.pEvtBgoRec().GetSlopeYZ()
+	
+	tgZ = math.atan(np.sqrt( (XZ*XZ) + (YZ*YZ) ) )
+	templist.append(tgZ*180./math.pi)
 	
 	return templist
 
@@ -183,7 +171,6 @@ def getPSDvalues(pev):
 		2. Energy on layer 2
 		3. Nr of hits on layer 1
 		4. Nr of hits on layer 2
-		5-8. RMS of energy on layer 1a, 1b, 2a, 2b.
 	
 	'''
 	templist = []
@@ -193,54 +180,7 @@ def getPSDvalues(pev):
 	templist.append(pev.pEvtPsdRec().GetLayerHits(0))
 	templist.append(pev.pEvtPsdRec().GetLayerHits(1))
 
-	PSD_total_hits = pev.NEvtPsdHits()
-	if PSD_total_hits == 0:
-		for i in xrange(4): 
-			templist.append(0)
-		return templist
-
-	l_pos = np.zeros(PSD_total_hits)
-	l_z = np.zeros(PSD_total_hits)
-	l_energy = np.zeros(PSD_total_hits)
 	
-	for i in xrange(PSD_total_hits):
-		pos = pev.pEvtPsdHits().GetHitX(i)
-		if pos == 0:
-			pos = pev.pEvtPsdHits().GetHitY(i)
-		z = pev.pEvtPsdHits().GetHitZ(i)
-		energy = pev.pEvtPsdHits().fEnergy[i]
-		
-		l_pos[i] = pos
-		l_z[i] = z
-		l_energy[i] = energy
-		
-	minz = np.min(l_z)
-	maxz = np.max(l_z)
-	bins = np.linspace(minz,maxz,5)		# 4 bins
-	
-	for i in xrange(4):
-		
-		cog = 0
-		ene_tot = 0
-		for j in xrange(PSD_total_hits):
-			if l_z[j] < bins[i] or l_z[j] > bins[i+1]:	# Wrong bin
-				continue
-			ene_tot = ene_tot + l_energy[j]
-			cog = cog + l_pos[j]*l_energy[j]
-		if ene_tot == 0:
-			templist.append(0)
-			continue
-		cog = cog/ene_tot
-		rms = 0
-		for j in xrange(PSD_total_hits):
-			if l_z[j] < bins[i] or l_z[j] > bins[i+1]:	# Wrong bin
-				continue
-			rms = rms + (l_energy[j] * (l_pos[j] - cog) * (l_pos[j] - cog) )
-		rms = math.sqrt(rms/ene_tot)
-	
-		templist.append(rms)
-	
-	del l_z, l_energy, l_pos
 	return templist
 	
 def getSTKvalues(pev):
@@ -251,13 +191,14 @@ def getSTKvalues(pev):
 	DmpEvent :  Int_t 	NStkSiCluster ()
 	'''
 	templist = []
+	nBins = 4
 	
 	nrofclusters = pev.NStkSiCluster()
 	templist.append(nrofclusters)
 	templist.append(pev.NStkKalmanTrack())
 	
 	if nrofclusters == 0:
-		for i in xrange(8):
+		for i in xrange(nBins):
 			templist.append(0)
 			templist.append(0)
 		return templist
@@ -265,27 +206,24 @@ def getSTKvalues(pev):
 	l_pos = np.zeros(nrofclusters)
 	l_z = np.zeros(nrofclusters)
 	l_energy = np.zeros(nrofclusters)
-	l_width = np.zeros(nrofclusters)
 	
 	for i in xrange(nrofclusters):
 		pos = pev.pStkSiCluster(i).GetH()
 		z = pev.pStkSiCluster(i).GetZ()
 		energy = pev.pStkSiCluster(i).getEnergy()
-		width = pev.pStkSiCluster(i).getWidth()
 		
 		l_pos[i] = pos
 		l_z[i] = z
 		l_energy[i] = energy
-		l_width[i] = width
 	
 	minz = np.min(l_z)
 	maxz = np.max(l_z)
-	bins = np.linspace(minz,maxz,9)		# 8 bins
+	bins = np.linspace(minz,maxz,nBins+1)
 	
 	ene_per_bin = []
 	rms_per_bin = []
 	
-	for i in xrange(8):
+	for i in xrange(nBins):
 		
 		cog = 0
 		ene_tot = 0
@@ -315,28 +253,38 @@ def getSTKvalues(pev):
 	
 	del l_pos, l_z, l_energy, l_width, ene_per_bin, rms_per_bin
 	return templist	
+	
+def getNUDvalues(pev):
+	templist = []
+	f = pev.pEvtNudRaw().fADC
+	for i in range(4): templist.append(f[i])
+	return templist
 
 def getValues(pev):
 	'''
 	templist:
 		0 - 13 : Energy in BGO layer i
-		14 - 27 : RMS of energy deposited in layer i
-		28 : longitudinal RMS ( DmpEvtBgoRec::GetRMS_l )
-		29 : radial RMS ( DmpEvtBgoRec::GetRMS_r )
-		30 : total BGO energy (corrected)
-		31 : total BGO hits
+		14 - 27 : RMS2 of energy deposited in layer i
+		28 - 41 : Number of hits in layer i
+		
+		42 : longitudinal RMS ( DmpEvtBgoRec::GetRMS_l )
+		43 : radial RMS ( DmpEvtBgoRec::GetRMS_r )
+		44 : total BGO energy (corrected)
+		45 : total BGO hits
+		46 : theta angle of BGO trajectory
 		----
-		32 - 33 : Energy in PSD layer 1,2
-		34 - 35 : Nr of hits in PSD layer 1,2
-		36 - 39 : RMS of energy deposited in PSD layer 1a,1b,2a,2b
+		47 - 48 : Energy in PSD layer 1,2
+		49 - 50 : Nr of hits in PSD layer 1,2
 		----
-		40 : nr of Si clusters
-		41 : nr of tracks
-		42 - 49 : energy in STK clusters, 8 vertical bins
-		50 - 57 : RMS of energy in STK clusters, 8 vertical bins
+		51 : nr of Si clusters
+		52 : nr of tracks
+		53 - 56 : energy in STK clusters, 4 vertical bins
+		57 - 60 : RMS of energy in STK clusters, 4 vertical bins
 		----
-		58 : timestamp
-		59 : Particle ID (0 for proton, 1 for electron)
+		61 - 64 : Raw NUD signal
+		----
+		65 : timestamp
+		66 : Particle ID (0 for proton, 1 for electron, 2 for photon)
 	'''
 	templist = []
 
@@ -349,15 +297,21 @@ def getValues(pev):
 	### STK
 	templist = templist + getSTKvalues(pev)
 	
+	### NUD
+	templsit = templist + getNUDvalues(pev)
+	
+	### Timestamp
 	sec = pev.pEvtHeader().GetSecond()			
 	msec = pev.pEvtHeader().GetMillisecond()
 	if msec >= 1. :
 		msec = msec / 1000.
 	templist.append(sec + msec)
 	
-	if pev.pEvtSimuPrimaries().pvpart_pdg == 11 :
+	if pev.pEvtSimuPrimaries().pvpart_pdg == 11 :		# Electron
 		templist.append(1)
-	else:
+	elif pev.pEvtSimuPrimaries().pvpart_pdg == 22 :		# Photon
+		templist.append(2)
+	else:												# Proton
 		templist.append(0)
 
 	
