@@ -251,7 +251,7 @@ def getSTKvalues(pev):
 	for y in rms_per_bin:
 		templist.append(y)
 	
-	del l_pos, l_z, l_energy, l_width, ene_per_bin, rms_per_bin
+	del l_pos, l_z, l_energy, ene_per_bin, rms_per_bin
 	return templist	
 	
 def getNUDvalues(pev):
