@@ -4,7 +4,7 @@ Get XTRL histograms from ROOT files
 
 '''
 
-from __future__ import division
+from __future__ import division, print_function
 
 import math
 import numpy as np
@@ -155,7 +155,8 @@ def cuts(pev,Edep):
 	if not all( [ np.sum(Edep[i]) > 0.1 for i in range(14)] ) : return False
 	
 	f = np.sum(Edep[13]) / np.sum(Edep)
-	if f > 1.0 or f < 1e-5 : return False
+	if f > 1.0 : return False
+	#~ if f > 1.0 or f < 1e-5 : return False
 	
 	#~ if computeSumRMS(pev) > 3e+5 : return False
 	
@@ -233,15 +234,15 @@ def run():
 	chain_p.Terminate()
 	
 	## !!!
-	returns = [xtrl_e , xtrl_p, flast_e, flast_p, rms_e, rms_p, energy_e, energy_p,official_rms_e,official_rms_p]
+	returns = [xtrl_e , xtrl_p, flast_e, flast_p, rms_e, rms_p, energy_e, energy_p]
 	## !!!
 		
-	with open("XTRL.pick",'w') as h:
-		pickle.dump(returns,h)
+	with open("XTRL.pick",'wb') as h:
+		pickle.dump(returns,h,protocol=2)
 		
-	print "Selected:"
-	print len(energy_e), " electrons"
-	print len(energy_p), " protons"
+	print("Selected:")
+	print(len(energy_e), " electrons")
+	print(len(energy_p), " protons")
 		
 	return returns
 	
@@ -250,7 +251,10 @@ def run():
 if __name__ == '__main__':
 	
 	if os.path.isfile('XTRL.pick'):
-		with open('XTRL.pick','r') as f:
+		
+		import codecs
+		
+		with codecs.open('XTRL.pick','rb') as f:
 			aba = pickle.load(f)
 			xe, xp, fe, fp, re, rp, ee, ep, of_rms_e, of_rms_p = aba
 	else:
