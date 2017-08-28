@@ -270,9 +270,9 @@ if __name__ == '__main__':
 			np.save('data_train'+outname_e , arr_e[ selectedE_train, :])
 			np.save('data_validate'+outname_e , arr_e[ selectedE_validate, :])
 			np.save('data_test'+outname_e , arr_e[ selectedE_test, :])
-			np2root(arr_e[ selectedE_train, :] , getLabels() , outname='dataset_train'+outname_e.replace('npy','root'))
-			np2root(arr_e[ selectedE_validate, :] , getLabels() , outname='dataset_validate'+outname_e.replace('npy','root'))
-			np2root(arr_e[ selectedE_test, :] , getLabels() , outname='dataset_test'+outname_e.replace('npy','root'))
+			#~ np2root(arr_e[ selectedE_train, :] , getLabels() , outname='dataset_train'+outname_e.replace('npy','root'))
+			#~ np2root(arr_e[ selectedE_validate, :] , getLabels() , outname='dataset_validate'+outname_e.replace('npy','root'))
+			#~ np2root(arr_e[ selectedE_test, :] , getLabels() , outname='dataset_test'+outname_e.replace('npy','root'))
 			
 			del arr_e
 			print "Done saving (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
@@ -300,15 +300,15 @@ if __name__ == '__main__':
 			
 			print "Saving proton train (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
 			np.save('data_train'+outname_p , arr_p[ selectedP_train, :])
-			np2root(arr_p[ selectedP_train, :] , getLabels() , outname='dataset_train'+outname_p.replace('npy','root') )
+			#~ np2root(arr_p[ selectedP_train, :] , getLabels() , outname='dataset_train'+outname_p.replace('npy','root') )
 			
 			print "Saving proton validate (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
 			np.save('data_validate'+outname_p , arr_p[ selectedP_validate, :])
-			np2root(arr_p[ selectedP_validate, :] , getLabels(),outname='dataset_validate'+outname_p.replace('npy','root') )
+			#~ np2root(arr_p[ selectedP_validate, :] , getLabels(),outname='dataset_validate'+outname_p.replace('npy','root') )
 
 			print "Saving test (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
 			np.save('data_test'+outname_p , arr_p[ selectedP_test, :])
-			np2root(arr_p[ selectedP_test, :] , getLabels() , outname='dataset_test'+outname_p.replace('npy','root') )
+			#~ np2root(arr_p[ selectedP_test, :] , getLabels() , outname='dataset_test'+outname_p.replace('npy','root') )
 
 			del arr_p
 			print "Done saving (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
@@ -331,7 +331,7 @@ if __name__ == '__main__':
 		train_set = np.concatenate( ( np.load('data_train'+outname_e) , np.load('data_train'+outname_p) ) )
 		np.random.shuffle(train_set)
 		np.save('dataset_train'+outname_all , train_set)
-		np2root(train_set , getLabels() , outname='dataset_train'+outname_all.replace('npy','root'))
+		#~ np2root(train_set , getLabels() , outname='dataset_train'+outname_all.replace('npy','root'))
 		del train_set
 		print "Done  (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
 		
@@ -341,7 +341,7 @@ if __name__ == '__main__':
 		validate_set = np.concatenate( (set_e_validate, set_p_validate ) )
 		np.random.shuffle(validate_set)
 		np.save('dataset_validate'+outname_all , validate_set)
-		np2root(validate_set , getLabels() , outname='dataset_validate'+outname_all.replace('npy','root'))
+		#~ np2root(validate_set , getLabels() , outname='dataset_validate'+outname_all.replace('npy','root'))
 		del validate_set, set_e_validate, set_p_validate
 		print "Done  (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
 		
@@ -351,7 +351,7 @@ if __name__ == '__main__':
 		test_set = np.concatenate( (set_e_test, set_p_test ) )
 		np.random.shuffle(test_set)
 		np.save('dataset_test'+outname_all , test_set)
-		np2root(test_set , getLabels() , outname='dataset_test'+outname_all.replace('npy','root') )
+		#~ np2root(test_set , getLabels() , outname='dataset_test'+outname_all.replace('npy','root') )
 		del test_set, set_e_test, set_p_test
 		print "Done (", str(time.strftime('%H:%M:%S', time.gmtime( time.time() - t0 ))), ')'
 	
