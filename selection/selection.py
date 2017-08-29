@@ -255,9 +255,10 @@ def getSTKvalues(pev):
 	return templist	
 	
 def getNUDvalues(pev):
-	templist = []
+	templist = [0 for x in xrange(4)]
 	f = pev.pEvtNudRaw().fADC
-	for i in range(4): templist.append(f[i])
+	for i in xrange(4): 
+		templist[i] = f[i]
 	return templist
 
 def getValues(pev):
@@ -298,7 +299,7 @@ def getValues(pev):
 	templist = templist + getSTKvalues(pev)
 	
 	### NUD
-	templsit = templist + getNUDvalues(pev)
+	templist = templist + getNUDvalues(pev)
 	
 	### Timestamp
 	sec = pev.pEvtHeader().GetSecond()			
@@ -352,6 +353,9 @@ def analysis(files,pid,nr):
 			#~ a.append(templist)
 		#~ else :
 			#~ continue
+		
+		if not pev.pEvtHeader().GeneratedTrigger(3): continue		# High energy trigger, recommended by Valentina	
+		
 		a.append(getValues(pev))
 		
 	arr = np.array(a)
