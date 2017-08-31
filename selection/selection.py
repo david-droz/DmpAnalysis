@@ -1,5 +1,5 @@
 '''
-selection.py v0.1
+selection.py v0.5
 
 Selects events from ROOT files, extracts useful variables and write NumPy arrays ready to use by deep neural networks
 
@@ -64,6 +64,8 @@ def identifyParticle(part):
 def selection(pev,particle):
 	'''
 	Returns True if good event, False otherwise
+	
+	OBSOLETE function. Not used since preselection is done at skim level.
 	'''
 	if not pev.pEvtHeader().GeneratedTrigger(3):		# High energy trigger
 		return False
@@ -97,10 +99,10 @@ def selection(pev,particle):
 		if not em: continue
 		
 		if im in [0,21]:		# Edge bars (first and last BGO bars)
-			cog = 27.5 * im		# 27.5 = BARPITCH    What is that? No idea
+			cog = 27.5 * im		# 27.5 = BARPITCH
 		else:	
-			ene = 0.0			# I have no idea what this is doing. 
-			cog = 0.0			# cog = center of gravity?
+			ene = 0.0			
+			cog = 0.0			
 			for j in [im-1, im, im+1]: 
 				ebar = pev.pEvtBgoRec().GetEdep(i,j)
 				ene+=ebar
@@ -121,9 +123,9 @@ def selection(pev,particle):
 		if im in [0,21]:
 			SIDE[i] = True
 			
-	if [SIDE[s] for s in [1,2,3] if SIDE[s] ]: 		# "First layers not side" ... ?
+	if [SIDE[s] for s in [1,2,3] if SIDE[s] ]: 
 		return False
-	if bhm > 0.35: 				# "Max layer cut" ... ?
+	if bhm > 0.35: 
 		return False
 	# End Andrii's electron cut
 	
@@ -131,18 +133,24 @@ def selection(pev,particle):
 
 
 def getBGOvalues(pev):
+	'''
+	Extract values related to BGO and write them as a python list.
+	'''
 	templist = []
 	
 	RMS2 = pev.pEvtBgoRec().GetRMS2()
 	
+	# Energy per layer
 	for i in xrange(14): templist.append(  pev.pEvtBgoRec().GetELayer(i)  )
 	
+	# RMS2 per layer
 	for j in xrange(14): 
-		if RMS2[j] < 0 :
+		if RMS2[j] < 0 :		# In PMO code, if RMS is not defined then RMS2 = -999. Prefer to move it to 0.
 			templist.append( 0 )
 		else:
 			templist.append( RMS2[j] )
-			
+	
+	# Hits on every layer		
 	hitsPerLayer = pev.pEvtBgoRec().GetLayerHits()
 	for k in xrange(14):
 		templist.append(hitsPerLayer[k])
@@ -153,6 +161,7 @@ def getBGOvalues(pev):
 	templist.append( pev.pEvtBgoRec().GetElectronEcor() )
 	templist.append( pev.pEvtBgoRec().GetTotalHits() )
 	
+	# Angle of reconstructed trajectory
 	XZ = pev.pEvtBgoRec().GetSlopeXZ()
 	YZ = pev.pEvtBgoRec().GetSlopeYZ()
 	
@@ -163,15 +172,7 @@ def getBGOvalues(pev):
 
 def getPSDvalues(pev):
 	'''
-	https://dampevm3.unige.ch/doxygen/trunk/Documentation/html/classDmpEvtPsdHits.html
-	https://dampevm3.unige.ch/doxygen/trunk/Documentation/html/classDmpEvtPsdRec.html
-	
-	Returns a list:
-		1. Energy on layer 1
-		2. Energy on layer 2
-		3. Nr of hits on layer 1
-		4. Nr of hits on layer 2
-	
+	Extracts PSD values and return as a Python list
 	'''
 	templist = []
 	
@@ -180,19 +181,16 @@ def getPSDvalues(pev):
 	templist.append(pev.pEvtPsdRec().GetLayerHits(0))
 	templist.append(pev.pEvtPsdRec().GetLayerHits(1))
 
-	
 	return templist
 	
 def getSTKvalues(pev):
 	'''
-	https://dampevm3.unige.ch/doxygen/trunk/Documentation/html/classDmpEvent.html
-	https://dampevm3.unige.ch/doxygen/trunk/Documentation/html/classDmpStkTrack.html
-	
-	DmpEvent :  Int_t 	NStkSiCluster ()
+	Extracts STK values and return as list
 	'''
 	templist = []
-	nBins = 4
-	
+	nBins = 4				# In DmpSoftware package, STK is not defined per layers. 
+							# Here we treat it as a calorimeter
+	# Nr of clusters, nr of tracks
 	nrofclusters = pev.NStkSiCluster()
 	templist.append(nrofclusters)
 	templist.append(pev.NStkKalmanTrack())
@@ -203,6 +201,7 @@ def getSTKvalues(pev):
 			templist.append(0)
 		return templist
 	
+	# Below: compute the RMS of cluster distributions
 	l_pos = np.zeros(nrofclusters)
 	l_z = np.zeros(nrofclusters)
 	l_energy = np.zeros(nrofclusters)
@@ -255,6 +254,9 @@ def getSTKvalues(pev):
 	return templist	
 	
 def getNUDvalues(pev):
+	'''
+	Extract raw ADC signal from NUD
+	'''
 	templist = [0 for x in xrange(4)]
 	f = pev.pEvtNudRaw().fADC
 	for i in xrange(4): 
@@ -263,7 +265,7 @@ def getNUDvalues(pev):
 
 def getValues(pev):
 	'''
-	templist:
+	List of variables:
 		0 - 13 : Energy in BGO layer i
 		14 - 27 : RMS2 of energy deposited in layer i
 		28 - 41 : Number of hits in layer i
@@ -302,7 +304,7 @@ def getValues(pev):
 	templist = templist + getNUDvalues(pev)
 	
 	### Timestamp
-	sec = pev.pEvtHeader().GetSecond()			
+	sec = pev.pEvtHeader().GetSecond()					# Timestamp is used as an unique particle identifier for data. If need be.
 	msec = pev.pEvtHeader().GetMillisecond()
 	if msec >= 1. :
 		msec = msec / 1000.

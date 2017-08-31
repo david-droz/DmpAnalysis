@@ -160,6 +160,9 @@ def getSetIndexes(nrofe,nrofp,trainingFraction,validationFraction,validationMixt
 
 
 def getLabels():
+	'''
+	Names of all the variables
+	'''
 	
 	lab = []
 	
