@@ -73,8 +73,8 @@ def run(preNorm,runOn,n):
 	
 	if preNorm:
 		
-		elecsSet = np.load('/home/drozd/analysis/newData/data_train_elecs_under_1.npy')
-		protsSet = np.load('/home/drozd/analysis/newData/data_train_prots_under_1.npy')
+		elecsSet = np.load('/home/drozd/analysis/ntuples/MC-skim-fullBGO-NUD-HET-30Aug17/data_train_elecs_under_1.npy')
+		protsSet = np.load('/home/drozd/analysis/ntuples/MC-skim-fullBGO-NUD-HET-30Aug17/data_train_prots_under_1.npy')
 		
 		if runOn == 'e':
 			p.fit(elecsSet[:,0:-2])
@@ -86,19 +86,21 @@ def run(preNorm,runOn,n):
 		del elecsSet, protsSet		
 	
 	
-	train_e = np.load('/home/drozd/analysis/newData/data_train_elecs_under_1.npy')
-	train_p = np.load('/home/drozd/analysis/newData/data_train_prots_under_1.npy')
-	val_e = np.load('/home/drozd/analysis/newData/data_validate_elecs_under_1.npy') 
-	val_p = np.load('/home/drozd/analysis/newData/data_validate_prots_under_1.npy')[0:val_e.shape[0],:]
+	train_e = np.load('/home/drozd/analysis/ntuples/MC-skim-fullBGO-NUD-HET-30Aug17/data_train_elecs_under_1.npy')
+	train_p = np.load('/home/drozd/analysis/ntuples/MC-skim-fullBGO-NUD-HET-30Aug17/data_train_prots_under_1.npy')
+	val_e = np.load('/home/drozd/analysis/ntuples/MC-skim-fullBGO-NUD-HET-30Aug17/data_validate_elecs_under_1.npy') 
+	val_p = np.load('/home/drozd/analysis/ntuples/MC-skim-fullBGO-NUD-HET-30Aug17/data_validate_prots_under_1.npy')[0:val_e.shape[0],:]
 
 	train = np.concatenate(( train_e, train_p ))
 	np.random.shuffle(train)
-	X_train = train[:,0:-2] / (train[:,0:-2]).max(axis=0)
+	#~ X_train = train[:,0:-2] / (train[:,0:-2]).max(axis=0)
+	X_train = (train[:,0:-2] - np.mean(train[:,0:-2],axis=0))/np.std(train[:,0:-2],axis=0)
 	Y_train = train[:,-1]
 
 	val = np.concatenate(( val_e, val_p ))
 	np.random.shuffle(val)
-	X_val = val[:,0:-2] / (val[:,0:-2]).max(axis=0)
+	#~ X_val = val[:,0:-2] / (val[:,0:-2]).max(axis=0)
+	X_val = (val[:,0:-2] - np.mean(val[:,0:-2],axis=0))/np.std(val[:,0:-2],axis=0)
 	Y_val = val[:,-1]
 		
 	if not preNorm:
@@ -108,16 +110,14 @@ def run(preNorm,runOn,n):
 			p.fit(train_p[:,0:-2])
 		else:
 			p.fit(X_train)
-		
-	
+
 	del train_e,train_p, train, val_e, val_p, val
-	
 	
 	X_train = p.transform(X_train)[:,indexList]
 	X_val = p.transform(X_val)[:,indexList]
 	
 	model = getModel(X_train)
-	history = model.fit(X_train,Y_train,batch_size=150,epochs=50,verbose=0,callbacks=[],validation_data=(X_val,Y_val))
+	history = model.fit(X_train,Y_train,batch_size=100,epochs=50,verbose=0,callbacks=[],validation_data=(X_val,Y_val))
 
 	predictions_proba = model.predict(X_val)
 	predictions_binary = np.around(predictions_proba)
@@ -133,7 +133,7 @@ def run(preNorm,runOn,n):
 	plt.ylabel('Number of events')
 	plt.title('Balanced validation set')
 	plt.grid(True)
-	plt.ylim((0.5,1e+6))
+	plt.ylim((0.9,1e+6))
 	plt.legend(loc='upper center')
 	plt.yscale('log')
 	if preNorm : plt.savefig('images/pre_'+runOn+'_predHisto_'+ "%02d" % (n,))
@@ -141,12 +141,12 @@ def run(preNorm,runOn,n):
 	plt.close(fig4)
 	
 	try:
-		n_elecs_top = elecs_p[ elecs_p > 0.9 ].shape[0]
-		n_prots_top = prots_p[ prots_p > 0.9 ].shape[0]
+		n_elecs_top = elecs_p[ elecs_p > 0.5 ].shape[0]
+		n_prots_top = prots_p[ prots_p > 0.5 ].shape[0]
 		contamination = n_prots_top / (n_elecs_top + n_prots_top)
 		
-		n_elecs_top_95 = elecs_p[ elecs_p > 0.95 ].shape[0]
-		n_prots_top_95 = prots_p[ prots_p > 0.95 ].shape[0]
+		n_elecs_top_95 = elecs_p[ elecs_p > 0.9 ].shape[0]
+		n_prots_top_95 = prots_p[ prots_p > 0.9 ].shape[0]
 		contamination_95 = n_prots_top_95 / (n_elecs_top_95 + n_prots_top_95)
 		
 	except ZeroDivisionError:
@@ -269,8 +269,8 @@ if __name__ == '__main__' :
 	plt.savefig(figBaseName+'PR-RC')
 	
 	fig3 = plt.figure()
-	plt.plot(nrofvariables,l_contamination,'o-',label='cut at 0.9')
-	plt.plot(nrofvariables,l_con_95,'o-',label='cut at 0.95')
+	plt.plot(nrofvariables,l_contamination,'o-',label='cut at 0.5')
+	plt.plot(nrofvariables,l_con_95,'o-',label='cut at 0.9')
 	plt.xlabel('Nr of variables')
 	plt.ylabel('p/(e+p) ratio')
 	plt.yscale('log')
