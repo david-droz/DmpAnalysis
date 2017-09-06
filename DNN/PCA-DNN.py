@@ -127,8 +127,8 @@ def run(preNorm,runOn,n):
 	elecs_p, prots_p = getClassifierScore(Y_val,predictions_proba)
 	binList = [x/50 for x in range(0,51)]
 	fig4 = plt.figure()
-	plt.hist(elecs_p,bins=binList,label='e',alpha=0.7,histtype='step',color='green')
-	plt.hist(prots_p,bins=binList,label='p',alpha=0.7,histtype='step',color='red')
+	plt.hist(elecs_p,bins=binList,label='e',alpha=1.,histtype='step',color='green')
+	plt.hist(prots_p,bins=binList,label='p',alpha=1.,ls='dashed',histtype='step',color='red')
 	plt.xlabel('Classifier score')
 	plt.ylabel('Number of events')
 	plt.title('Balanced validation set')
@@ -206,7 +206,7 @@ if __name__ == '__main__' :
 	if not os.path.isdir('images'): os.mkdir('images')
 		
 	
-	for n in range(1,59):
+	for n in range(1,66):
 		
 		touched = "touch_"+str(int(preNorm)) + runOn + "%02d" % (n,)
 		
@@ -278,9 +278,9 @@ if __name__ == '__main__' :
 	plt.title('Background fraction')
 	plt.savefig(figBaseName+'Bkg')
 	
-	fig4 = plt.figure()
-	plt.plot(nrofvariables,l_efficiency,'o-',label='efficiency')
-	plt.plot(nrofvariables,l_backgroundFraction,'o-',label='residual background fraction')
-	plt.xlabel('Nr of variables')
-	plt.legend(loc='best')
-	plt.savefig(figBaseName+'Bkg')
+	#~ fig4 = plt.figure()
+	#~ plt.plot(nrofvariables,l_efficiency,'o-',label='efficiency')
+	#~ plt.plot(nrofvariables,l_backgroundFraction,'o-',label='residual background fraction')
+	#~ plt.xlabel('Nr of variables')
+	#~ plt.legend(loc='best')
+	#~ plt.savefig(figBaseName+'Bkg')
