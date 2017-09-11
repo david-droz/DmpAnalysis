@@ -68,7 +68,7 @@ def getBGOvalues(pev):
 	RMS2 = pev.pEvtBgoRec().GetRMS2()
 	totalEnergy = pev.pEvtBgoRec().GetElectronEcor()
 	sumRMS = 0
-	for i in xrange(14): sumRMS += RMS2[j]
+	for i in xrange(14): sumRMS += RMS2[i]
 	totalHits = pev.pEvtBgoRec().GetTotalHits()
 	
 	# Energy per layer
