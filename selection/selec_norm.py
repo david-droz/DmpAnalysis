@@ -97,10 +97,13 @@ def getPSDvalues(pev):
 	totalE = pev.pEvtPsdRec().GetLayerEnergy(0) + pev.pEvtPsdRec().GetLayerEnergy(1)
 	totalHits = pev.pEvtPsdRec().GetLayerHits(0) + pev.pEvtPsdRec().GetLayerHits(1)
 	
-	templist.append(pev.pEvtPsdRec().GetLayerEnergy(0) / totalE)
-	templist.append(pev.pEvtPsdRec().GetLayerEnergy(1) / totalE)
-	templist.append(pev.pEvtPsdRec().GetLayerHits(0) / totalHits)
-	templist.append(pev.pEvtPsdRec().GetLayerHits(1) / totalHits)
+	if totalE > 0:
+		templist.append(pev.pEvtPsdRec().GetLayerEnergy(0) / totalE)
+		templist.append(pev.pEvtPsdRec().GetLayerEnergy(1) / totalE)
+		templist.append(pev.pEvtPsdRec().GetLayerHits(0) / totalHits)
+		templist.append(pev.pEvtPsdRec().GetLayerHits(1) / totalHits)
+	else:
+		return [0,0,0,0]
 
 	return templist
 	
@@ -166,10 +169,17 @@ def getSTKvalues(pev):
 		rms = math.sqrt(rms/ene_tot)
 		rms_per_bin.append(rms)
 
-	for x in ene_per_bin:
-		templist.append(x / sum(ene_per_bin))
-	for y in rms_per_bin:
-		templist.append(y / sum(rms_per_bin))
+	if sum(ene_per_bin) > 0:
+		for x in ene_per_bin:
+			templist.append(x / sum(ene_per_bin))
+	else:
+		templist = templist + ene_per_bin
+		
+	if sum(rms_per_bin) > 0:
+		for y in rms_per_bin:
+			templist.append(y / sum(rms_per_bin))
+	else:
+		templist = templist + rms_per_bin
 	
 	del l_pos, l_z, l_energy, ene_per_bin, rms_per_bin
 	return templist	
@@ -183,7 +193,10 @@ def getNUDvalues(pev):
 	for i in xrange(4): 
 		templist[i] = f[i]
 	total = sum(templist)
-	return [x / total for x in templist]
+	if total == 0:
+		return templist
+	else:
+		return [x / total for x in templist]
 
 def getValues(pev):
 	'''
