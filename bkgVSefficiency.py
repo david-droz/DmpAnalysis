@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 import pickle
 import sys
 
+from sklearn.metrics import roc_auc_score
+
 # Stephan on Slack (10 Aug. 2017) :
 # on the x-axis you have signal efficiency
 # and on the y-axis: residual background fraction 
@@ -60,6 +62,8 @@ l_bkg = []
 l_efficiency = []
 l_thresholds = []
 npoints = 1000
+
+print('ROC AUC score: ', roc_auc_score(Y_val,predictions))
 
 for i in range(npoints):
 	thr = i * (1./npoints)
