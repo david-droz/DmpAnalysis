@@ -34,9 +34,26 @@ def getcounts(truth,pred,threshold):
 				tn += 1
 	return tp,fp,tn,fn
 	
+def getcountsFast(truth,pred,threshold):
+	
+	pred_e = pred[truth.astype(bool)]
+	pred_p = pred[~truth.astype(bool)]
+	
+	tp = pred_e[ pred_e >= threshold].shape[0]
+	fn = pred_e[ pred_e < threshold].shape[0]
+	fp = pred_p[ pred_p >= threshold].shape[0]
+	tn = pred_p[ pred_p < threshold].shape[0]
+	
+	del pred_e, pred_p
+	return tp, fp, tn, fn
+	
+	
 ID = sys.argv[1]
 
-Y_val = np.load('results/Y_Val.npy')
+try:
+	Y_val = np.load('results/Y_Val.npy')
+except:
+	Y_val = np.load('results/'+ID+'/Y_Val.npy')
 predictions = np.load('results/'+ID+'/predictions.npy')
 
 l_bkg = []
@@ -46,7 +63,7 @@ npoints = 1000
 
 for i in range(npoints):
 	thr = i * (1./npoints)
-	tp,fp,tn,fn = getcounts(Y_val,predictions,thr)
+	tp,fp,tn,fn = getcountsFast(Y_val,predictions,thr)
 	
 	try:
 		l_bkg.append( fp / (tp + fp) )
