@@ -73,5 +73,5 @@ for i in range(npoints):
 	l_thresholds.append( thr )
 
 
-with open('bkgVSefficiency.pick','wb') as f:
+with open('data_roc_'+ID+'.pick','wb') as f:
 	pickle.dump([l_bkg,l_efficiency],f,protocol=2)
