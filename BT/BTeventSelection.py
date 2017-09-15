@@ -123,7 +123,9 @@ def __get_track_parameters__(track,stkclusters):
 
 
 
-def BTselection(pev,trackhelper,stktracks,stkclusters):
+def BTselection(pev,trackhelper,stktracks,stkclusters,dataset):
+	
+	DO_PMO_PRESELECTION, HIGH_REC_ENERGY_SELECTION, HIGH_ENERGY_TRIGGER_SELECTION, REMOVE_PILEUP, REMOVE_PILEUP_IMPACT, REMOVE_PILEUP_BGO, NO_BGO_CRACK_SELECTIONY, LONG_TRACK_SELECTION, NO_BGO_CRACK_SELECTIONX, INVERSE_NOCRACKSELECTION, HIGH_REC_ENERGY_MIN, HIGH_REC_ENERGY_MAX, BT_E_250 = BTcuts.BTcuts(dataset)
 	
 	if not pev.pEvtHeader().GeneratedTrigger(3): return False
 	

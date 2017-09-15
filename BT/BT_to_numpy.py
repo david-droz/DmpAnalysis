@@ -54,7 +54,7 @@ def identifyParticle(part):
 	
 	raise Exception("Particle not identified - " + part)
 
-def analysis(files,pid,nr):
+def analysis(files,pid,nr,dataset):
 	
 	folder = './tmp/'
 	temp_basename = os.path.basename(sys.argv[1])
@@ -89,7 +89,7 @@ def analysis(files,pid,nr):
 		
 		pev = dmpch.GetDmpEvent(i)
 		
-		if BTselection(pev,trackhelper,stktracks,stkclusters):
+		if BTselection(pev,trackhelper,stktracks,stkclusters,dataset):
 			a.append(getValues(pev,pid))
 			
 	np.save(outstr,np.array(a))
@@ -121,4 +121,4 @@ if __name__ == '__main__' :
 	if not os.path.isdir('tmp'):
 		os.mkdir('tmp')
 		
-	analysis(filelist,particle,int(sys.argv[3]))
+	analysis(filelist,particle,int(sys.argv[3]),sys.argv[4])
