@@ -90,7 +90,7 @@ def analysis(files,pid,nr):
 		pev = dmpch.GetDmpEvent(i)
 		
 		if BTselection(pev,trackhelper,stktracks,stkclusters):
-			a.append(getValues(pev))
+			a.append(getValues(pev,pid))
 			
 	np.save(outstr,np.array(a))
 	

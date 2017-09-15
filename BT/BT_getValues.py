@@ -134,7 +134,7 @@ def getNUDvalues(pev):
 		templist[i] = f[i]
 	return templist
 
-def getValues(pev):
+def getValues(pev,pid):
 	'''
 	List of variables:
 		0 - 13 : Energy in BGO layer i
@@ -181,11 +181,11 @@ def getValues(pev):
 		msec = msec / 1000.
 	templist.append(sec + msec)
 	
-	if pev.pEvtSimuPrimaries().pvpart_pdg == 11 :		# Electron
+	if pid == 11 :							# Electron
 		templist.append(1)
-	elif pev.pEvtSimuPrimaries().pvpart_pdg == 22 :		# Photon
+	elif pid == 22 :						# Photon
 		templist.append(2)
-	else:												# Proton
+	else:									# Proton
 		templist.append(0)
 
 	
