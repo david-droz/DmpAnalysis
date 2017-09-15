@@ -127,6 +127,11 @@ def BTselection(pev,trackhelper,stktracks,stkclusters):
 	
 	if not pev.pEvtHeader().GeneratedTrigger(3): return False
 	
+	if BT_E_250 :
+		YZ = pev.pEvtBgoRec().GetInterceptYZ()
+		if YZ < 430. or YZ > 570:
+			return False
+	
 	BHET = sum([ 
 		sum([
 			pev.pEvtBgoRec().GetEdep(i,j) for j in xrange(NBARSLAYER)

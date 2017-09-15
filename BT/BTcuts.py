@@ -4,6 +4,7 @@ Hosts global constants for the BTeventSelection.py code
 
 '''
 
+BT_E_250                      = False
 
 """
 # Protons/Electrons, Orbit MC (not Beam Test!!!)
@@ -21,7 +22,7 @@ HIGH_REC_ENERGY_MIN           = 1000000.   if args.startenergy is None else args
 HIGH_REC_ENERGY_MAX           = 1300000.   if args.stopenergy is None else args.stopenergy    #150000. # PROTON / ELECTRON HIGH ENERGY (250 GeV)
 """
 
-"""
+
 # Protons
 DO_PMO_PRESELECTION           = True
 HIGH_REC_ENERGY_SELECTION     = True
@@ -33,9 +34,9 @@ NO_BGO_CRACK_SELECTIONY       = False
 LONG_TRACK_SELECTION          = False
 NO_BGO_CRACK_SELECTIONX       = False
 INVERSE_NOCRACKSELECTION      = False
-HIGH_REC_ENERGY_MIN           = 150000.   if args.startenergy is None else args.startenergy  #50000.  # PROTON / ELECTRON HIGH ENERGY (250 GeV)
-HIGH_REC_ENERGY_MAX           = 99999999. if args.stopenergy is None else args.stopenergy    #150000. # PROTON / ELECTRON HIGH ENERGY (250 GeV)
-"""
+HIGH_REC_ENERGY_MIN           = 150000.
+HIGH_REC_ENERGY_MAX           = 99999999.
+
 
 """
 # Electrons 250 GeV
@@ -67,9 +68,10 @@ NO_BGO_CRACK_SELECTIONX       = True
 INVERSE_NOCRACKSELECTION      = False
 HIGH_REC_ENERGY_MIN           = 150000.   #50000.  # PROTON / ELECTRON HIGH ENERGY (250 GeV)
 HIGH_REC_ENERGY_MAX           = 99999999. #150000. # PROTON / ELECTRON HIGH ENERGY (250 GeV)
+BT_E_250                      = True
 """
 
-
+"""
 # Electrons 100 GeV
 DO_PMO_PRESELECTION           = True
 HIGH_REC_ENERGY_SELECTION     = True
@@ -83,7 +85,7 @@ NO_BGO_CRACK_SELECTIONX       = True
 INVERSE_NOCRACKSELECTION      = False
 HIGH_REC_ENERGY_MIN           = 50000.   #50000.  # PROTON / ELECTRON HIGH ENERGY (250 GeV)
 HIGH_REC_ENERGY_MAX           = 150000.  #150000. # PROTON / ELECTRON HIGH ENERGY (250 GeV)
-
+"""
 
 
 """

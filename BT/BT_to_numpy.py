@@ -79,7 +79,7 @@ def analysis(files,pid,nr):
 	stktracks = ROOT.TClonesArray("DmpStkTrack")
 	dmpch.SetBranchAddress("StkKalmanTracks", stktracks)
 
-	self.stkclusters = ROOT.TClonesArray("DmpStkSiCluster")
+	stkclusters = ROOT.TClonesArray("DmpStkSiCluster")
 	dmpch.SetBranchAddress("StkClusterCollection",stkclusters)
 	
 	trackhelper = ROOT.DmpStkTrackHelper(stktracks, False)
