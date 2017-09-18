@@ -67,7 +67,7 @@ def getRandomParams():
 	Returns a dictionary containing all the parameters to train the Keras DNN. Is then fed to getModel::getModel()
 	'''
 	p_dropout = [0.,0.1,0.2,0.5]
-	p_batchnorm = [True, True, False]			# Repetition of values to increase probability
+	p_batchnorm = [True, False]
 	p_activation = ['relu','relu','relu','sigmoid','softplus','elu','elu']
 	#~ p_activation = ['relu','relu','relu','sigmoid','softplus','elu','elu',PRelu(),PRelu(),ELU(),LeakyReLU()]	 
 	p_acti_out = ['sigmoid']
@@ -153,6 +153,8 @@ def run():
 	
 	if not os.path.isdir('models'): os.mkdir('models')
 	if not os.path.isdir('models/'+str(ID)): os.mkdir('models/'+str(ID))
+	if not os.path.isdir('results'): os.mkdir('results')
+	if not os.path.isdir('results/' + str(ID)) : os.mkdir('results/' + str(ID))
 	with open('models/'+str(ID)+'/params.pick','wb') as f:	# Save the parameters into a file determined by unique ID
 		pickle.dump(params,f,protocol=2)
 		
@@ -199,8 +201,6 @@ def run():
 	print("Recall:", recall_95)
 	print("Iteration run time: ", time.strftime('%H:%M:%S', time.gmtime(time.time() - t0))	)
 	
-	if not os.path.isdir('results'): os.mkdir('results')
-	if not os.path.isdir('results/' + str(ID)) : os.mkdir('results/' + str(ID))
 	with open('results/' + str(ID) + '/results.pick','wb') as f:
 		pickle.dump([l_precision,l_recall,l_thresholds],f,protocol=2)
 	np.save('results/' + str(ID) + '/predictions.npy',predictions_proba)
