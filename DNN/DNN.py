@@ -112,21 +112,6 @@ def getClassifierScore(truth,pred):
 			
 	return elecs, prots
 
-def getParticleSet(fname):
-	arr = np.load(fname)
-	X = arr[:,0:-2]				### Last two columns are timestamp and particle id
-	Y = arr[:,-1]
-	X = _normalise(X)
-	r = np.concatenate(( X, Y.reshape(( Y.shape[0], 1 )) ) , axis=1)
-	del arr, X, Y
-	return r
-
-
-def _normalise(arr):
-	for i in range(arr.shape[1]):
-		arr[:,i] = (arr[:,i] - np.mean(arr[:,i])) / np.std(arr[:,i])	
-	return arr
-
 def save_history(hist, hist_filename):
 	import pandas as pd
 
@@ -139,21 +124,21 @@ def run():
 	
 	t0 = time.time()
 	
-	train_e = np.load('/home/drozd/analysis/newData/data_train_elecs_under_1.npy')
-	train_p = np.load('/home/drozd/analysis/newData/data_train_prots_under_1.npy')
+	train_e = np.load('/home/drozd/analysis/ntuples/MC-skim-fullBGO-NUD-HET-30Aug17/data_train_elecs_under_1.npy')
+	train_p = np.load('/home/drozd/analysis/ntuples/MC-skim-fullBGO-NUD-HET-30Aug17/data_train_prots_under_1.npy')
 	train = np.concatenate(( train_e, train_p ))
 	np.random.shuffle(train)
 	
-	X_train = train[:,0:-2] / (train[:,0:-2]).max(axis=0)
+	X_max = (train[:,0:-2]).max(axis=0)
+	X_train = train[:,0:-2] / X_max
 	Y_train = train[:,-1]
 	del train_e, train_p, train 
 	
-	val_e = np.load('/home/drozd/analysis/newData/data_validate_elecs_under_1.npy') 
-	val_p = np.load('/home/drozd/analysis/newData/data_validate_prots_under_1.npy')[0:val_e.shape[0],:]
+	val_e = np.load('/home/drozd/analysis/ntuples/MC-skim-fullBGO-NUD-HET-30Aug17/data_validate_elecs_under_1.npy') 
+	val_p = np.load('/home/drozd/analysis/ntuples/MC-skim-fullBGO-NUD-HET-30Aug17/data_validate_prots_under_1.npy')[0:val_e.shape[0],:]
 	val = np.concatenate(( val_e, val_p ))
-	np.random.shuffle(val)
 	del val_e, val_p
-	X_val = val[:,0:-2]  / (val[:,0:-2] ).max(axis=0)
+	X_val = val[:,0:-2]  / X_max
 	Y_val = val[:,-1]
 	del val
 
@@ -167,18 +152,21 @@ def run():
 	model = getModel.get_model(params,X_train.shape[1])
 	
 	if not os.path.isdir('models'): os.mkdir('models')
-	with open('models/params_' + str(ID) + '.pick','wb') as f:	# Save the parameters into a file determined by unique ID
+	if not os.path.isdir('models/'+str(ID)): os.mkdir('models/'+str(ID))
+	with open('models/'+str(ID)+'/params.pick','wb') as f:	# Save the parameters into a file determined by unique ID
 		pickle.dump(params,f,protocol=2)
 		
-	chck = ModelCheckpoint("models/weights_"+str(ID)+"__{epoch:02d}-{val_loss:.2f}.hdf5",period=10)
+	np.save('results/'+str(ID)+'/X_max.npy',X_max)
+		
+	chck = ModelCheckpoint("models/"+str(ID)+"/weights__{epoch:02d}-{val_loss:.2f}.hdf5",period=10)
 	earl = EarlyStopping(monitor='loss',min_delta=0.0001,patience=8)			# Alternative: train epoch per epoch, evaluate something at every epoch.
 	rdlronplt = ReduceLROnPlateau(monitor='loss',patience=3,min_lr=0.0001)
 	callbacks = [chck,earl,rdlronplt]
 	
 	history = model.fit(X_train,Y_train,batch_size=200,epochs=200,verbose=2,callbacks=callbacks,validation_data=(X_val,Y_val))
 	
-	predictions_binary = np.around(model.predict(X_val))		# Array of 0 and 1
 	predictions_proba = model.predict(X_val)				# Array of numbers [0,1]
+	predictions_binary = np.around(predictions_proba)
 	
 	purity = precision_score(Y_val,predictions_binary)			# Precision:  true positive / (true + false positive). Purity (how many good events in my prediction?)
 	completeness = recall_score(Y_val,predictions_binary)		# Recall: true positive / (true positive + false negative). Completeness (how many good events did I find?)
@@ -223,8 +211,8 @@ def run():
 	elecs_p, prots_p = getClassifierScore(Y_val,predictions_proba)
 	binList = [x/50 for x in range(0,51)]
 	fig4 = plt.figure()
-	plt.hist(elecs_p,bins=binList,label='e',alpha=0.7,histtype='step',color='green')
-	plt.hist(prots_p,bins=binList,label='p',alpha=0.7,histtype='step',color='red')
+	plt.hist(elecs_p,bins=binList,label='e',alpha=1.,histtype='step',color='green')
+	plt.hist(prots_p,bins=binList,label='p',alpha=1.,histtype='step',color='red',ls='dashed')
 	plt.xlabel('Classifier score')
 	plt.ylabel('Number of events')
 	plt.title('Balanced validation set')
