@@ -85,14 +85,22 @@ def analysis(files,pid,nr,dataset):
 	trackhelper = ROOT.DmpStkTrackHelper(stktracks, False)
 	
 	a = []
+	selected = 0
+	rejected = 0
 	for i in xrange(nvts):
 		
 		pev = dmpch.GetDmpEvent(i)
 		
 		if BTselection(pev,trackhelper,stktracks,stkclusters,dataset):
 			a.append(getValues(pev,pid))
+			selected += 1
+		else:
+			rejected += 1
 			
 	np.save(outstr,np.array(a))
+	
+	print "Selected ", selected, " events"
+	print "Rejected ", rejected, " events"
 	
 	del a
 	dmpch.Terminate()

@@ -49,6 +49,7 @@ def BTcuts(dataset):
 		INVERSE_NOCRACKSELECTION      = False
 		HIGH_REC_ENERGY_MIN           = 150000.   #50000.  # PROTON / ELECTRON HIGH ENERGY (250 GeV)
 		HIGH_REC_ENERGY_MAX           = 99999999. #150000. # PROTON / ELECTRON HIGH ENERGY (250 GeV)
+		BT_E_250                      = True
 
 	elif dataset == 'electron250i' :			# Inclined
 		DO_PMO_PRESELECTION           = True
