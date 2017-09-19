@@ -93,14 +93,12 @@ def run(preNorm,runOn,n):
 
 	train = np.concatenate(( train_e, train_p ))
 	np.random.shuffle(train)
-	#~ X_train = train[:,0:-2] / (train[:,0:-2]).max(axis=0)
-	X_train = (train[:,0:-2] - np.mean(train[:,0:-2],axis=0))/np.std(train[:,0:-2],axis=0)
+	X_max = (train[:,0:-2]).max(axis=0)
+	X_train = train[:,0:-2] / X_max
 	Y_train = train[:,-1]
 
 	val = np.concatenate(( val_e, val_p ))
-	np.random.shuffle(val)
-	#~ X_val = val[:,0:-2] / (val[:,0:-2]).max(axis=0)
-	X_val = (val[:,0:-2] - np.mean(val[:,0:-2],axis=0))/np.std(val[:,0:-2],axis=0)
+	X_val = val[:,0:-2]  / X_max
 	Y_val = val[:,-1]
 		
 	if not preNorm:
