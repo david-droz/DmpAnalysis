@@ -121,30 +121,55 @@ def __get_track_parameters__(track,stkclusters):
 	nstrips_atpsdy /= chargeaverage_atpsdy_n if chargeaverage_atpsdy_n else -1.
 	return chargeaverage, chargeaverage_atbgo, chargemax, chargemax_atbgo, chargeaverage_atpsdx, chargeaverage_atpsdy, nstrips_atpsdx, nstrips_atpsdy
 
+def incrementCutCount(dic,key):
+	raise Exception("Don't use incrementCutCount! Key:" +key)
+	try:
+		dic[key] += 1
+	except KeyError:
+		dic[key] = 1
 
+'''		
+ Result:
+ {'HIGH_REC_ENERGY_MIN': 2581, 'PMO_FIRSTLAYERNOTSIDE': 3961, 'PMO_NOTALLLAYERS': 531, 'REMOVE_PILEUP_BGO': 64, 
+	'LONG_TRACK_NPOINTSPASSED': 28064, 'PMO_MAXLAYERCUT': 234, 'HIGH_ENERGY_TRIGGER_SELECTION': 1438, 
+	'NO_BGO_CRACK_CHARGEAVERAGE': 28064, 'BT_E_250': 22672}
+'''
 
-def BTselection(pev,trackhelper,stktracks,stkclusters,dataset):
+def BTselection(bgorec, b_bgorec, nudraw, b_nudraw, evtheader, psdhits, bgohits, stktracks, stkclusters, trackhelper,dataset):
+	
+	if os.path.isfile('cutCounts.pick'):
+		mydic = pickle.load(open('cutCounts.pick','rb'))
+	else:
+		mydic = {}
 	
 	DO_PMO_PRESELECTION, HIGH_REC_ENERGY_SELECTION, HIGH_ENERGY_TRIGGER_SELECTION, REMOVE_PILEUP, REMOVE_PILEUP_IMPACT, REMOVE_PILEUP_BGO, NO_BGO_CRACK_SELECTIONY, LONG_TRACK_SELECTION, NO_BGO_CRACK_SELECTIONX, INVERSE_NOCRACKSELECTION, HIGH_REC_ENERGY_MIN, HIGH_REC_ENERGY_MAX, BT_E_250 = BTcuts(dataset)
 	
-	if not pev.pEvtHeader().GeneratedTrigger(3): return False
+	if HIGH_ENERGY_TRIGGER_SELECTION:
+		if not evtheader.GeneratedTrigger(3): 
+			#~ incrementCutCount(mydic,'HIGH_ENERGY_TRIGGER_SELECTION')
+			return False
 	
 	if BT_E_250 :
-		YZ = pev.pEvtBgoRec().GetInterceptYZ()
-		if YZ < 430. or YZ > 570:
+		YZ = bgorec.GetInterceptYZ()
+		if YZ < 30. or YZ > 170:
+			#~ incrementCutCount(mydic,'BT_E_250')
 			return False
 	
 	BHET = sum([ 
 		sum([
-			pev.pEvtBgoRec().GetEdep(i,j) for j in xrange(NBARSLAYER)
+			bgorec.GetEdep(i,j) for j in xrange(NBARSLAYER)
 			])  
 		for i in xrange(NBGOLAYERS) 
 	])
 
 	# ENERGY CUT
 	if HIGH_REC_ENERGY_SELECTION:
-		if BHET < HIGH_REC_ENERGY_MIN: return False 
-		if BHET > HIGH_REC_ENERGY_MAX: return False
+		if BHET < HIGH_REC_ENERGY_MIN: 
+			#~ incrementCutCount(mydic,'HIGH_REC_ENERGY_MIN')
+			return False 
+		if BHET > HIGH_REC_ENERGY_MAX: 
+			#~ incrementCutCount(mydic,'HIGH_REC_ENERGY_MAX')
+			return False
 		
 	# LAYER CHARACTERISTICS
 	BHXS = [0. for i in xrange(NBGOLAYERS)]
@@ -160,7 +185,7 @@ def BTselection(pev,trackhelper,stktracks,stkclusters,dataset):
 		im = None
 		em = 0.0
 		for j in xrange(NBARSLAYER):
-			ebar = pev.pEvtBgoRec().GetEdep(i,j)
+			ebar = bgorec.GetEdep(i,j)
 			if ebar < em : continue 
 			em = ebar
 			im = j
@@ -176,7 +201,7 @@ def BTselection(pev,trackhelper,stktracks,stkclusters,dataset):
 			ene =0.0
 			cog =0.0
 			for  j in [im-1, im, im+1]: 
-				ebar = pev.pEvtBgoRec().GetEdep(i,j)
+				ebar = bgorec.GetEdep(i,j)
 				ene+=ebar;
 				cog+= BARPITCH * j * ebar;
 			cog/=ene
@@ -185,7 +210,7 @@ def BTselection(pev,trackhelper,stktracks,stkclusters,dataset):
 		posrms   = 0.0
 		enelayer = 0.0
 		for j in xrange(NBARSLAYER):
-			ebar = pev.pEvtBgoRec().GetEdep(i,j)
+			ebar = bgorec.GetEdep(i,j)
 			posbar = BARPITCH * j 
 			enelayer += ebar
 			posrms += ebar * (posbar-cog)*(posbar-cog)
@@ -203,9 +228,15 @@ def BTselection(pev,trackhelper,stktracks,stkclusters,dataset):
 
 	# BGO PMO pre-selection
 	if DO_PMO_PRESELECTION:
-		if len([r for r in BHER if r]) < NBGOLAYERS: return False
-		if [SIDE[s] for s in FIRSTLAYERSNOTSIDE if SIDE[s] ]: return False
-		if bhm > MAXLAYERCUT: return False
+		if len([r for r in BHER if r]) < NBGOLAYERS: 
+			#~ incrementCutCount(mydic,'PMO_NOTALLLAYERS')
+			return False
+		if [SIDE[s] for s in FIRSTLAYERSNOTSIDE if SIDE[s] ]: 
+			#~ incrementCutCount(mydic,'PMO_FIRSTLAYERNOTSIDE')
+			return False
+		if bhm > MAXLAYERCUT: 
+			#~ incrementCutCount(mydic,'PMO_MAXLAYERCUT')
+			return False
 		
 	# TRACK CUTS
 	sortedtracks = False
@@ -216,41 +247,56 @@ def BTselection(pev,trackhelper,stktracks,stkclusters,dataset):
 			chargeaverage, chargeaverage_atbgo, chargemax, chargemax_atbgo, chargeaverage_atpsdx, chargeaverage_atpsdy, nstrips_atpsdx, nstrips_atpsdy = __get_track_parameters__(trackhelper.GetTrack(0),stkclusters)
 		else:
 			chargeaverage = None
-		if chargeaverage is None: return False
-		if TRACK_SELECTION and chargeaverage > CHARGE_AVERAGE_CUT: return False
-		if TRACK_NOTPROTON_SELECTION and chargeaverage < CHARGE_AVERAGE_CUT: return False
+		if chargeaverage is None: 
+			#~ incrementCutCount(mydic,'NO_BGO_CRACK_CHARGEAVERAGE')
+			return False
+		if TRACK_SELECTION and chargeaverage > CHARGE_AVERAGE_CUT: 
+			#~ incrementCutCount(mydic,'TRACK_SELECTION_CHARGE_AVERAGE_CUT')
+			return False
+		if TRACK_NOTPROTON_SELECTION and chargeaverage < CHARGE_AVERAGE_CUT: 
+			#~ incrementCutCount(mydic,'TRACK_NOTPROTON_CHARGE_AVERAGE_CUT')
+			return False
 		if NO_BGO_CRACK_SELECTIONY: 
 			for t in xrange(stktracks.GetLast()+1):
 				trackparams = stktracks.ConstructedAt(t).getTrackParams()
-				if is_close_bgocrack(trackparams.getInterceptY()) and not INVERSE_NOCRACKSELECTION: return False
-				if not is_close_bgocrack(trackparams.getInterceptY()) and INVERSE_NOCRACKSELECTION: return False
+				if is_close_bgocrack(trackparams.getInterceptY()) and not INVERSE_NOCRACKSELECTION: 
+					#~ incrementCutCount(mydic,'NO_BGO_CRACK_Y_INVERSE_1')
+					return False
+				if not is_close_bgocrack(trackparams.getInterceptY()) and INVERSE_NOCRACKSELECTION: 
+					#~ incrementCutCount(mydic,'NO_BGO_CRACK_Y_INVERSE_2')
+					return False
 		if NO_BGO_CRACK_SELECTIONX:
 			for t in xrange(stktracks.GetLast()+1):
 				trackparams = stktracks.ConstructedAt(t).getTrackParams()
-				if is_close_bgocrack(trackparams.getInterceptX()) and not INVERSE_NOCRACKSELECTION: return False
-				if not is_close_bgocrack(trackparams.getInterceptX()) and INVERSE_NOCRACKSELECTION: return False
+				if is_close_bgocrack(trackparams.getInterceptX()) and not INVERSE_NOCRACKSELECTION: 
+					#~ incrementCutCount(mydic,'NO_BGO_CRACK_X_INVERSE_1')
+					return False
+				if not is_close_bgocrack(trackparams.getInterceptX()) and INVERSE_NOCRACKSELECTION: 
+					#~ incrementCutCount(mydic,'NO_BGO_CRACK_X_INVERSE_2')
+					return False
 		sortedtracks = True
 		
 	# ONE LONG TRACK SELECTION
 	if LONG_TRACK_SELECTION:
 		npointspassed = False
-		for t in xrange(stktracks.GetLast()+1):
+		for t in xrange(stktracks.GetLast()+1):				# stktracks.GetLast() always evaluate at -1 !! So this loop does not even start
 			track = stktracks.ConstructedAt(t)
-			if abs(pev.pEvtBgoRec().GetInterceptYZ() - track.getTrackParams().getInterceptY()) > BGO_STK_INTERCEPTMATCH: continue
-			if abs(pev.pEvtBgoRec().GetSlopeYZ() - track.getTrackParams().getSlopeY()) > BGO_STK_ANGMATCH: continue
+			if abs(bgorec.GetInterceptYZ() - track.getTrackParams().getInterceptY()) > BGO_STK_INTERCEPTMATCH: continue
+			if abs(bgorec.GetSlopeYZ() - track.getTrackParams().getSlopeY()) > BGO_STK_ANGMATCH: continue
 			if track.GetNPoints() < TRACK_MINNPOINTS_SELECTION: continue
 			npointspassed = True
 			break
 		if not npointspassed:
+			#~ incrementCutCount(mydic,'LONG_TRACK_NPOINTSPASSED')
 			return False
 			
 	# TRACK_BASED PILEUP
 	if REMOVE_PILEUP:
 		bgoclosetrack = False
-		bgoslx = pev.pEvtBgoRec().GetSlopeXZ()
-		bgosly = pev.pEvtBgoRec().GetSlopeYZ()
-		bgpprojx = pev.pEvtBgoRec().GetInterceptXZ() +  PILEUP_BGO_Z * pev.pEvtBgoRec().GetSlopeXZ()
-		bgpprojy = pev.pEvtBgoRec().GetInterceptYZ() +  PILEUP_BGO_Z * pev.pEvtBgoRec().GetSlopeYZ()
+		bgoslx = bgorec.GetSlopeXZ()
+		bgosly = bgorec.GetSlopeYZ()
+		bgpprojx = bgorec.GetInterceptXZ() +  PILEUP_BGO_Z * bgorec.GetSlopeXZ()
+		bgpprojy = bgorec.GetInterceptYZ() +  PILEUP_BGO_Z * bgorec.GetSlopeYZ()
 		for track1_i in xrange(stktracks.GetLast()+1):
 			track1 = stktracks.ConstructedAt(track1_i)
 			slx1 = track1.getTrackParams().getSlopeX()
@@ -268,6 +314,7 @@ def BTselection(pev,trackhelper,stktracks,stkclusters,dataset):
 						]
 				if differences: continue
 				# found pileup
+				#~ incrementCutCount(mydic,'REMOVE_PILEUP')
 				return False
 
 			# BGO
@@ -280,17 +327,24 @@ def BTselection(pev,trackhelper,stktracks,stkclusters,dataset):
 		
 	# CHECK BGO 
 	if REMOVE_PILEUP_IMPACT and not bgoclosetrack: 
+		#~ incrementCutCount(mydic,'REMOVE_PILEUP_IMPACT')
 		return False
 
 	# BGO BASED PILE UP
 	if REMOVE_PILEUP_BGO:
-		clustersx, clustersy = get_clusters(pev.pEvtBgoHits())
+		clustersx, clustersy = get_clusters(bgohits)
 		maxdistance = max(get_maximum_peak_distance(clustersx), get_maximum_peak_distance(clustersy))
 		if maxdistance > 1:
+			#~ incrementCutCount(mydic,'REMOVE_PILEUP_BGO')
 			return False
 			
 	# PSD PRESELECTION
 	if PSD_DOUBLEMIP_CUT:
-		if [i for i in xrange(len(pev.pEvtPsdHits().fEnergy)) if pev.pEvtPsdHits().fEnergy[i]>PSD_HIT_ENERGY_DOUBLEMIP_CUT]: return False
+		if [i for i in xrange(len(psdhits.fEnergy)) if psdhits.fEnergy[i]>PSD_HIT_ENERGY_DOUBLEMIP_CUT]: 
+			#~ incrementCutCount(mydic,'PSD_DOUBLEMIP_CUT')
+			return False
+			
+	with open('cutCounts.pick','wb') as f:
+		pickle.dump(mydic,f)
 
 	return True 

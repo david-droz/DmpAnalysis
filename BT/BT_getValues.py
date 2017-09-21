@@ -3,16 +3,16 @@ from __future__ import division
 import math
 import numpy as np
 
-def getBGOvalues(pev):
+def getBGOvalues(bgorec):
 	'''
 	Extract values related to BGO and write them as a python list.
 	'''
 	templist = []
 	
-	RMS2 = pev.pEvtBgoRec().GetRMS2()
+	RMS2 = bgorec.GetRMS2()
 	
 	# Energy per layer
-	for i in xrange(14): templist.append(  pev.pEvtBgoRec().GetELayer(i)  )
+	for i in xrange(14): templist.append(  bgorec.GetELayer(i)  )
 	
 	# RMS2 per layer
 	for j in xrange(14): 
@@ -22,39 +22,39 @@ def getBGOvalues(pev):
 			templist.append( RMS2[j] )
 	
 	# Hits on every layer		
-	hitsPerLayer = pev.pEvtBgoRec().GetLayerHits()
+	hitsPerLayer = bgorec.GetLayerHits()
 	for k in xrange(14):
 		templist.append(hitsPerLayer[k])
 		
-	templist.append( pev.pEvtBgoRec().GetRMS_l() )
-	templist.append( pev.pEvtBgoRec().GetRMS_r() )
+	templist.append( bgorec.GetRMS_l() )
+	templist.append( bgorec.GetRMS_r() )
 
-	templist.append( pev.pEvtBgoRec().GetElectronEcor() )
-	templist.append( pev.pEvtBgoRec().GetTotalHits() )
+	templist.append( bgorec.GetElectronEcor() )
+	templist.append( bgorec.GetTotalHits() )
 	
 	# Angle of reconstructed trajectory
-	XZ = pev.pEvtBgoRec().GetSlopeXZ()
-	YZ = pev.pEvtBgoRec().GetSlopeYZ()
+	XZ = bgorec.GetSlopeXZ()
+	YZ = bgorec.GetSlopeYZ()
 	
 	tgZ = math.atan(np.sqrt( (XZ*XZ) + (YZ*YZ) ) )
 	templist.append(tgZ*180./math.pi)
 	
 	return templist
 
-def getPSDvalues(pev):
+def getPSDvalues(psdrec):
 	'''
 	Extracts PSD values and return as a Python list
 	'''
 	templist = []
 	
-	templist.append(pev.pEvtPsdRec().GetLayerEnergy(0))
-	templist.append(pev.pEvtPsdRec().GetLayerEnergy(1))
-	templist.append(pev.pEvtPsdRec().GetLayerHits(0))
-	templist.append(pev.pEvtPsdRec().GetLayerHits(1))
+	templist.append(psdrec.GetLayerEnergy(0))
+	templist.append(psdrec.GetLayerEnergy(1))
+	templist.append(psdrec.GetLayerHits(0))
+	templist.append(psdrec.GetLayerHits(1))
 
 	return templist
 	
-def getSTKvalues(pev):
+def getSTKvalues(stktracks,stkclusters):
 	'''
 	Extracts STK values and return as list
 	'''
@@ -62,9 +62,9 @@ def getSTKvalues(pev):
 	nBins = 4				# In DmpSoftware package, STK is not defined per layers. 
 							# Here we treat it as a calorimeter
 	# Nr of clusters, nr of tracks
-	nrofclusters = pev.NStkSiCluster()
+	nrofclusters = stkclusters.GetLast()+1
 	templist.append(nrofclusters)
-	templist.append(pev.NStkKalmanTrack())
+	templist.append(stktracks.GetLast()+1)
 	
 	if nrofclusters == 0:
 		for i in xrange(nBins):
@@ -78,9 +78,9 @@ def getSTKvalues(pev):
 	l_energy = np.zeros(nrofclusters)
 	
 	for i in xrange(nrofclusters):
-		pos = pev.pStkSiCluster(i).GetH()
-		z = pev.pStkSiCluster(i).GetZ()
-		energy = pev.pStkSiCluster(i).getEnergy()
+		pos = stkclusters.ConstructedAt(i).GetH()
+		z = stkclusters.ConstructedAt(i).GetZ()
+		energy = stkclusters.ConstructedAt(i).getEnergy()
 		
 		l_pos[i] = pos
 		l_z[i] = z
@@ -124,17 +124,17 @@ def getSTKvalues(pev):
 	del l_pos, l_z, l_energy, ene_per_bin, rms_per_bin
 	return templist	
 	
-def getNUDvalues(pev):
+def getNUDvalues(nudraw):
 	'''
 	Extract raw ADC signal from NUD
 	'''
 	templist = [0 for x in xrange(4)]
-	f = pev.pEvtNudRaw().fADC
+	f = nudraw.fADC
 	for i in xrange(4): 
 		templist[i] = f[i]
 	return templist
 
-def getValues(pev,pid):
+def getValues(bgorec, b_bgorec, nudraw, b_nudraw, evtheader, psdhits, bgohits, stktracks, stkclusters, trackhelper,psdrec,pid):
 	'''
 	List of variables:
 		0 - 13 : Energy in BGO layer i
@@ -163,20 +163,20 @@ def getValues(pev,pid):
 	templist = []
 
 	### BGO
-	templist = templist + getBGOvalues(pev)
+	templist = templist + getBGOvalues(bgorec)
 	
 	### PSD
-	templist = templist + getPSDvalues(pev)
+	templist = templist + getPSDvalues(psdrec)
 	
 	### STK
-	templist = templist + getSTKvalues(pev)
+	templist = templist + getSTKvalues(stktracks,stkclusters)
 	
 	### NUD
-	templist = templist + getNUDvalues(pev)
+	templist = templist + getNUDvalues(nudraw)
 	
 	### Timestamp
-	sec = pev.pEvtHeader().GetSecond()					# Timestamp is used as an unique particle identifier for data. If need be.
-	msec = pev.pEvtHeader().GetMillisecond()
+	sec = evtheader.GetSecond()					# Timestamp is used as an unique particle identifier for data. If need be.
+	msec = evtheader.GetMillisecond()
 	if msec >= 1. :
 		msec = msec / 1000.
 	templist.append(sec + msec)

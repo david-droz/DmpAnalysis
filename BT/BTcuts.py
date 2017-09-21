@@ -37,15 +37,15 @@ def BTcuts(dataset):
 		HIGH_REC_ENERGY_MAX           = 99999999.
 	
 	elif dataset == 'electron250' :
-		DO_PMO_PRESELECTION           = True
-		HIGH_REC_ENERGY_SELECTION     = True
-		HIGH_ENERGY_TRIGGER_SELECTION = True
-		REMOVE_PILEUP                 = True
+		DO_PMO_PRESELECTION           = True		# Rejects 4480 events
+		HIGH_REC_ENERGY_SELECTION     = True		# Rejects 2500 events (10%)
+		HIGH_ENERGY_TRIGGER_SELECTION = True		# Rejects 1438 events
+		REMOVE_PILEUP                 = True		
 		REMOVE_PILEUP_IMPACT          = False
-		REMOVE_PILEUP_BGO             = True
-		NO_BGO_CRACK_SELECTIONY       = True
-		LONG_TRACK_SELECTION          = True
-		NO_BGO_CRACK_SELECTIONX       = True
+		REMOVE_PILEUP_BGO             = True		# Rejects 64 events
+		NO_BGO_CRACK_SELECTIONY       = True		# all
+		LONG_TRACK_SELECTION          = True		# all
+		NO_BGO_CRACK_SELECTIONX       = True		# all
 		INVERSE_NOCRACKSELECTION      = False
 		HIGH_REC_ENERGY_MIN           = 150000.   #50000.  # PROTON / ELECTRON HIGH ENERGY (250 GeV)
 		HIGH_REC_ENERGY_MAX           = 99999999. #150000. # PROTON / ELECTRON HIGH ENERGY (250 GeV)

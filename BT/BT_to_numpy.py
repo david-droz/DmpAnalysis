@@ -73,8 +73,31 @@ def analysis(files,pid,nr,dataset):
 	if os.path.isfile(outstr):
 		return
 	
-	dmpch = openRootFile(files)
+	#~ dmpch = openRootFile(files)
+	dmpch = ROOT.TChain("CollectionTree")
+	for f in files:
+		dmpch.Add(f)
 	nvts = dmpch.GetEntries()
+	if not nvts: raise IOError('0 events in TChain!!')
+	
+	###
+	
+	bgorec = ROOT.DmpEvtBgoRec()
+	dmpch.SetBranchAddress("DmpEvtBgoRec", bgorec)
+	b_bgorec = dmpch.GetBranch("DmpEvtBgoRec")
+
+	nudraw = ROOT.DmpEvtNudRaw()
+	dmpch.SetBranchAddress("DmpEvtNudRaw", nudraw)
+	b_nudraw = dmpch.GetBranch("DmpEvtNudRaw")
+
+	evtheader = ROOT.DmpEvtHeader()
+	dmpch.SetBranchAddress("EventHeader", evtheader)
+
+	psdhits  = ROOT.DmpEvtPsdHits()
+	dmpch.SetBranchAddress("DmpPsdHits", psdhits) 
+	
+	bgohits = ROOT.DmpEvtBgoHits()
+	dmpch.SetBranchAddress("DmpEvtBgoHits",bgohits)
 	
 	stktracks = ROOT.TClonesArray("DmpStkTrack")
 	dmpch.SetBranchAddress("StkKalmanTracks", stktracks)
@@ -82,17 +105,23 @@ def analysis(files,pid,nr,dataset):
 	stkclusters = ROOT.TClonesArray("DmpStkSiCluster")
 	dmpch.SetBranchAddress("StkClusterCollection",stkclusters)
 	
+	psdrec = ROOT.DmpEvtPsdRec()
+	dmpch.SetBranchAddress("DmpEvtPsdRec",psdrec)
+	
 	trackhelper = ROOT.DmpStkTrackHelper(stktracks, False)
+	
+	###
 	
 	a = []
 	selected = 0
 	rejected = 0
 	for i in xrange(nvts):
 		
-		pev = dmpch.GetDmpEvent(i)
+		dmpch.GetEntry(i)
 		
-		if BTselection(pev,trackhelper,stktracks,stkclusters,dataset):
-			a.append(getValues(pev,pid))
+		if BTselection(bgorec, b_bgorec, nudraw, b_nudraw, evtheader, psdhits, bgohits, stktracks, stkclusters, trackhelper, dataset):
+			#~ a.append(getValues(pev,pid))
+			a.append(getValues(bgorec, b_bgorec, nudraw, b_nudraw, evtheader, psdhits, bgohits, stktracks, stkclusters, trackhelper,psdrec,pid))
 			selected += 1
 		else:
 			rejected += 1
@@ -103,7 +132,7 @@ def analysis(files,pid,nr,dataset):
 	print "Rejected ", rejected, " events"
 	
 	del a
-	dmpch.Terminate()
+	#~ dmpch.Terminate()
 	return
 	
 

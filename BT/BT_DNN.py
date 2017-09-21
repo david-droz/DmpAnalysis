@@ -11,6 +11,7 @@ import glob
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
 # Scikit-learn pre-defined metrics
 from sklearn.metrics import roc_curve, roc_auc_score, precision_score, average_precision_score, precision_recall_curve, recall_score
@@ -117,11 +118,44 @@ def run():
 	BTMC_E_PATH = '/home/drozd/analysis/ntuples/BT/MC_Electron_250G.npy'
 	BTMC_P_PATH = '/home/drozd/analysis/ntuples/BT/MC_Proton_400G.npy'
 	
-	BT = np.concatenate(( np.load(BT_E_PATH), np.load(BT_P_PATH) ))
+	pp_e = PdfPages('vars_e.pdf')
+	pp_p = PdfPages('vars_p.pdf')
+	
+	arr_bt_e = np.load(BT_E_PATH)
+	arr_bt_p = np.load(BT_P_PATH)
+	arr_mc_e = np.load(BTMC_E_PATH)
+	arr_mc_p = np.load(BTMC_P_PATH)
+	
+	for i in range(arr_bt_e.shape[1]):
+		
+		fig_t_e = plt.figure()
+		plt.hist(arr_bt_e[:,i],50,normed=True,histtype='step',label='BT')
+		plt.hist(arr_mc_e[:,i],50,normed=True,histtype='step',label='MC')
+		plt.legend(loc='best')
+		plt.yscale('log')
+		plt.title('Electron, variable ' + str(i) )
+		plt.savefig(pp_e, format='pdf')
+		plt.close(fig_t_e)
+		
+		fig_t_p = plt.figure()
+		plt.hist(arr_bt_p[:,i],50,normed=True,histtype='step',label='BT')
+		plt.hist(arr_mc_p[:,i],50,normed=True,histtype='step',label='MC')
+		plt.legend(loc='best')
+		plt.yscale('log')
+		plt.title('Proton, variable ' + str(i) )
+		plt.savefig(pp_p, format='pdf')
+		plt.close(fig_t_p)
+
+	
+	pp_e.close()
+	pp_p.close()
+	
+	
+	BT = np.concatenate(( arr_bt_e, arr_bt_p ))
 	X_BT = BT[:,0:-2] / X_max
 	Y_BT = BT[:,-1]
 	
-	BTMC = np.concatenate(( np.load(BTMC_E_PATH), np.load(BTMC_P_PATH) ))
+	BTMC = np.concatenate(( arr_mc_e, arr_mc_p ))
 	X_BTMC = BTMC[:,0:-2] / X_max
 	Y_BTMC = BTMC[:,-1]
 	
@@ -157,37 +191,37 @@ def run():
 	plt.close(fig3)
 	
 	fig4 = plt.figure()
-	plt.hist(pred_BT,bins=binList,label='BT data',alpha=1.,histtype='step')
-	plt.hist(pred_BTMC,bins=binList,label='BT MC',alpha=1.,histtype='step')
+	plt.hist(pred_BT,bins=binList,label='BT data',alpha=1.,histtype='step',normed=True)
+	plt.hist(pred_BTMC,bins=binList,label='BT MC',alpha=1.,histtype='step',normed=True)
 	plt.xlabel('Classifier score')
-	plt.ylabel('Number of events')
+	plt.ylabel('Fraction of events')
 	plt.legend(loc='upper center')
 	plt.grid(True)
-	plt.ylim((0.9,1e+6))
+	#~ plt.ylim((0.9,1e+6))
 	plt.yscale('log')
 	plt.savefig('predHisto_BTvsMC')
 	plt.close(fig4)
 	
 	fig4b = plt.figure()
-	plt.hist(pred_e_BT,bins=binList,label='e, BT data',alpha=1.,histtype='step')
-	plt.hist(pred_e_BTMC,bins=binList,label='e, BT MC',alpha=1.,histtype='step')
+	plt.hist(pred_e_BT,bins=binList,label='e, BT data',alpha=1.,histtype='step',normed=True)
+	plt.hist(pred_e_BTMC,bins=binList,label='e, BT MC',alpha=1.,histtype='step',normed=True)
 	plt.xlabel('Classifier score')
-	plt.ylabel('Number of events')
+	plt.ylabel('Fraction of events')
 	plt.legend(loc='upper center')
 	plt.grid(True)
-	plt.ylim((0.9,1e+6))
+	#~ plt.ylim((0.9,1e+6))
 	plt.yscale('log')
 	plt.savefig('predHisto_BTvsMC_e')
 	plt.close(fig4b)
 	
 	fig4c = plt.figure()
-	plt.hist(pred_p_BT,bins=binList,label='p, BT data',alpha=1.,histtype='step')
-	plt.hist(pred_p_BTMC,bins=binList,label='p, BT MC',alpha=1.,histtype='step')
+	plt.hist(pred_p_BT,bins=binList,label='p, BT data',alpha=1.,histtype='step',normed=True)
+	plt.hist(pred_p_BTMC,bins=binList,label='p, BT MC',alpha=1.,histtype='step',normed=True)
 	plt.xlabel('Classifier score')
-	plt.ylabel('Number of events')
+	plt.ylabel('Fraction of events')
 	plt.legend(loc='upper center')
 	plt.grid(True)
-	plt.ylim((0.9,1e+6))
+	#~ plt.ylim((0.9,1e+6))
 	plt.yscale('log')
 	plt.savefig('predHisto_BTvsMC_p')
 	plt.close(fig4c)
