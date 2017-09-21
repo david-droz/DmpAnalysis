@@ -98,3 +98,4 @@ if __name__ == '__main__':
 		plt.close(f2)
 		
 	pp.close()
+	pp_n.close()
