@@ -137,10 +137,10 @@ def incrementCutCount(dic,key):
 
 def BTselection(bgorec, b_bgorec, nudraw, b_nudraw, evtheader, psdhits, bgohits, stktracks, stkclusters, trackhelper,dataset):
 	
-	if os.path.isfile('cutCounts.pick'):
-		mydic = pickle.load(open('cutCounts.pick','rb'))
-	else:
-		mydic = {}
+	#~ if os.path.isfile('cutCounts.pick'):
+		#~ mydic = pickle.load(open('cutCounts.pick','rb'))
+	#~ else:
+		#~ mydic = {}
 	
 	DO_PMO_PRESELECTION, HIGH_REC_ENERGY_SELECTION, HIGH_ENERGY_TRIGGER_SELECTION, REMOVE_PILEUP, REMOVE_PILEUP_IMPACT, REMOVE_PILEUP_BGO, NO_BGO_CRACK_SELECTIONY, LONG_TRACK_SELECTION, NO_BGO_CRACK_SELECTIONX, INVERSE_NOCRACKSELECTION, HIGH_REC_ENERGY_MIN, HIGH_REC_ENERGY_MAX, BT_E_250 = BTcuts(dataset)
 	
