@@ -344,7 +344,7 @@ def BTselection(bgorec, b_bgorec, nudraw, b_nudraw, evtheader, psdhits, bgohits,
 			#~ incrementCutCount(mydic,'PSD_DOUBLEMIP_CUT')
 			return False
 			
-	with open('cutCounts.pick','wb') as f:
-		pickle.dump(mydic,f)
+	#~ with open('cutCounts.pick','wb') as f:
+		#~ pickle.dump(mydic,f)
 
 	return True 
