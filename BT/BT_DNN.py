@@ -40,7 +40,45 @@ def getModel(X_train):
 	model.add(Dense(1,kernel_initializer='he_uniform',activation='sigmoid'))
 	model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy'])
 	return model
+
+def getLabels():
+	'''
+	Names of all the variables
+	'''
+	lab = []
+	ebgo = 'BGO_E_layer_'
+	for i in range(14):
+		lab.append(ebgo + str(i))
+	erms = 'BGO_E_RMS_layer_'
+	for i in range(14):
+		lab.append(erms + str(i))
+	ehit = 'BGO_E_HITS_layer_'
+	for i in range(14):
+		lab.append(ehit + str(i))
+	lab.append('BGO_RMS_longitudinal')
+	lab.append('BGO_RMS_radial')
+	lab.append('BGO_E_total_corrected')
+	lab.append('BGO_total_hits')
+	lab.append('BGO_theta_angle')
 	
+	for i in range(2):
+		lab.append('PSD_E_layer_' + str(i))
+	for i in range(2):
+		lab.append('PSD_hits_layer_' + str(i))
+		
+	lab.append('STK_NClusters')
+	lab.append('STK_NTracks')
+	for i in range(4):
+		lab.append('STK_E_' + str(i))
+	for i in range(4):
+		lab.append('STK_E_RMS_' + str(i))
+	for i in range(4):
+		lab.append('NUD_channel_'+str(i))
+		
+	lab.append('timestamp')
+	lab.append('label')
+	
+	return lab	
 
 def run():
 	
@@ -126,6 +164,8 @@ def run():
 	arr_mc_e = np.load(BTMC_E_PATH)
 	arr_mc_p = np.load(BTMC_P_PATH)
 	
+	labs = getLabels()
+	
 	for i in range(arr_bt_e.shape[1]):
 		
 		fig_t_e = plt.figure()
@@ -133,7 +173,7 @@ def run():
 		plt.hist(arr_mc_e[:,i],50,normed=True,histtype='step',label='MC')
 		plt.legend(loc='best')
 		plt.yscale('log')
-		plt.title('Electron, variable ' + str(i) )
+		plt.title('Electron 250 GeV \n' + labs[i]) )
 		plt.savefig(pp_e, format='pdf')
 		plt.close(fig_t_e)
 		
@@ -142,7 +182,7 @@ def run():
 		plt.hist(arr_mc_p[:,i],50,normed=True,histtype='step',label='MC')
 		plt.legend(loc='best')
 		plt.yscale('log')
-		plt.title('Proton, variable ' + str(i) )
+		plt.title('Proton 400 GeV \n' + labs[i] )
 		plt.savefig(pp_p, format='pdf')
 		plt.close(fig_t_p)
 
@@ -167,10 +207,11 @@ def run():
 	pred_e_BTMC, pred_p_BTMC = getClassifierScore(Y_BTMC,pred_BTMC)
 	
 	fig2 = plt.figure()
-	plt.hist(pred_e_BT,bins=binList,label='e',alpha=1.,histtype='step',color='green')
-	plt.hist(pred_p_BT,bins=binList,label='p',alpha=1.,histtype='step',color='red',ls='dashed')
+	plt.hist(pred_e_BT,bins=binList,label='Electron 250 GeV',alpha=1.,histtype='step',color='green')
+	plt.hist(pred_p_BT,bins=binList,label='Proton 400 GeV',alpha=1.,histtype='step',color='red',ls='dashed')
 	plt.xlabel('Classifier score')
 	plt.ylabel('Number of events')
+	plt.title('Beamtest data')
 	plt.legend(loc='upper center')
 	plt.grid(True)
 	plt.ylim((0.9,1e+6))
@@ -179,10 +220,11 @@ def run():
 	plt.close(fig2)
 	
 	fig3 = plt.figure()
-	plt.hist(pred_e_BTMC,bins=binList,label='e',alpha=1.,histtype='step',color='green')
-	plt.hist(pred_p_BTMC,bins=binList,label='p',alpha=1.,histtype='step',color='red',ls='dashed')
+	plt.hist(pred_e_BTMC,bins=binList,label='Electron 250 GeV',alpha=1.,histtype='step',color='green')
+	plt.hist(pred_p_BTMC,bins=binList,label='Proton 400 GeV',alpha=1.,histtype='step',color='red',ls='dashed')
 	plt.xlabel('Classifier score')
 	plt.ylabel('Number of events')
+	plt.title('Beamtest Monte-Carlo')
 	plt.legend(loc='upper center')
 	plt.grid(True)
 	plt.ylim((0.9,1e+6))
@@ -195,6 +237,7 @@ def run():
 	plt.hist(pred_BTMC,bins=binList,label='BT MC',alpha=1.,histtype='step',normed=True)
 	plt.xlabel('Classifier score')
 	plt.ylabel('Fraction of events')
+	plt.title('Beamtest, electron 250GeV, proton 400GeV')
 	plt.legend(loc='upper center')
 	plt.grid(True)
 	#~ plt.ylim((0.9,1e+6))
@@ -203,10 +246,11 @@ def run():
 	plt.close(fig4)
 	
 	fig4b = plt.figure()
-	plt.hist(pred_e_BT,bins=binList,label='e, BT data',alpha=1.,histtype='step',normed=True)
-	plt.hist(pred_e_BTMC,bins=binList,label='e, BT MC',alpha=1.,histtype='step',normed=True)
+	plt.hist(pred_e_BT,bins=binList,label='BT data',alpha=1.,histtype='step',normed=True)
+	plt.hist(pred_e_BTMC,bins=binList,label='BT MC',alpha=1.,histtype='step',normed=True)
 	plt.xlabel('Classifier score')
 	plt.ylabel('Fraction of events')
+	plt.title('Beamtest, electron 250 GeV')
 	plt.legend(loc='upper center')
 	plt.grid(True)
 	#~ plt.ylim((0.9,1e+6))
@@ -219,6 +263,7 @@ def run():
 	plt.hist(pred_p_BTMC,bins=binList,label='p, BT MC',alpha=1.,histtype='step',normed=True)
 	plt.xlabel('Classifier score')
 	plt.ylabel('Fraction of events')
+	plt.title('Beamtest, proton 400 GeV')
 	plt.legend(loc='upper center')
 	plt.grid(True)
 	#~ plt.ylim((0.9,1e+6))
