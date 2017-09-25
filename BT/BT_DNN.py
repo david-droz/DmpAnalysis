@@ -173,7 +173,7 @@ def run():
 		plt.hist(arr_mc_e[:,i],50,normed=True,histtype='step',label='MC')
 		plt.legend(loc='best')
 		plt.yscale('log')
-		plt.title('Electron 250 GeV \n' + labs[i]) )
+		plt.title('Electron 250 GeV \n' + labs[i] )
 		plt.savefig(pp_e, format='pdf')
 		plt.close(fig_t_e)
 		
