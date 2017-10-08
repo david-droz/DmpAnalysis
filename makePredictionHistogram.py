@@ -38,7 +38,7 @@ if __name__ == '__main__':
 			#~ prots.append(predictions[i])
 			
 	
-	elecs_p, prots_p = getClassifierScore(Y_val,predictions)
+	elecs_p, prots_p = getClassifierScore(truth,predictions)
 	binList = [x/50 for x in range(0,51)]
 	fig4 = plt.figure()
 	plt.hist(elecs_p,bins=binList,label='e',alpha=1.,histtype='step',color='green')
