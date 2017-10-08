@@ -11,6 +11,12 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
+def getClassifierScore(truth,pred):
+	elecs = pred[truth.astype(bool)]
+	prots = pred[~truth.astype(bool)]
+			
+	return elecs, prots
+
 
 if __name__ == '__main__':
 
@@ -25,19 +31,22 @@ if __name__ == '__main__':
 	elecs = []
 	prots = []
 	
-	for i in range(truth.shape[0]):
-		if truth[i] == 1:
-			elecs.append(predictions[i])
-		else:
-			prots.append(predictions[i])
+	#~ for i in range(truth.shape[0]):
+		#~ if truth[i] == 1:
+			#~ elecs.append(predictions[i])
+		#~ else:
+			#~ prots.append(predictions[i])
 			
-	fig1 = plt.figure()
-	plt.hist(elecs,50,label='e',alpha=0.5,histtype='step',color='green')
-	plt.hist(prots,50,label='p',alpha=0.5,histtype='step',color='red')
+	
+	elecs_p, prots_p = getClassifierScore(Y_val,predictions)
+	binList = [x/50 for x in range(0,51)]
+	fig4 = plt.figure()
+	plt.hist(elecs_p,bins=binList,label='e',alpha=1.,histtype='step',color='green')
+	plt.hist(prots_p,bins=binList,label='p',alpha=1.,histtype='step',color='red',ls='dashed')
 	plt.xlabel('Classifier score')
 	plt.ylabel('Number of events')
-	plt.legend(loc='best')
+	plt.legend(loc='upper center')
 	plt.yscale('log')
-	plt.savefig('predictionHistogram')
-	#~ plt.show()
+	plt.savefig('predHisto_' + str(ID))
+	plt.close(fig4)
 	
