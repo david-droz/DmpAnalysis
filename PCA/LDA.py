@@ -53,8 +53,13 @@ def _run():
 	outdir = 'pics/LDA'
 	if not os.path.isdir(outdir): os.mkdir(outdir)
 	
-	train_e = np.load('/home/drozd/analysis/newData/data_train_elecs_under_1.npy')
-	train_p = np.load('/home/drozd/analysis/newData/data_train_prots_under_1.npy')
+	TRAIN_E_PATH = '/home/drozd/analysis/ntuples/MC-skim-fullBGO-NUD-HET-30Aug17/data_train_elecs_under_1.npy'
+	TRAIN_P_PATH = '/home/drozd/analysis/ntuples/MC-skim-fullBGO-NUD-HET-30Aug17/data_train_prots_under_1.npy'
+	VAL_E_PATH = '/home/drozd/analysis/ntuples/MC-skim-fullBGO-NUD-HET-30Aug17/data_validate_elecs_under_1.npy'
+	VAL_P_PATH = '/home/drozd/analysis/ntuples/MC-skim-fullBGO-NUD-HET-30Aug17/data_validate_prots_under_1.npy'
+	
+	train_e = np.load(TRAIN_E_PATH)
+	train_p = np.load(TRAIN_P_PATH)
 	train = np.concatenate(( train_e, train_p ))
 	np.random.shuffle(train)
 	
@@ -62,8 +67,8 @@ def _run():
 	Y_train = train[:,-1]
 	del train_e,train_p, train
 	
-	val_e = np.load('/home/drozd/analysis/newData/data_validate_elecs_under_1.npy') 
-	val_p = np.load('/home/drozd/analysis/newData/data_validate_prots_under_1.npy')[0:val_e.shape[0],:]
+	val_e = np.load(VAL_E_PATH) 
+	val_p = np.load(VAL_P_PATH)[0:val_e.shape[0],:]
 	val = np.concatenate(( val_e, val_p ))
 	del val_e, val_p
 
