@@ -49,87 +49,40 @@ def identifyParticle(part):
 	e = ['e','elec','electron','11','E','Elec','Electron']
 	p = ['p','prot','proton','2212','P','Prot','Proton']
 	gamma = ['g','gamma','photon','22','Gamma','Photon']
-	
 	for cat in [e,p,gamma]:
 		if part in cat:
 			return int(cat[3])
-	
 	for cat in [e,p,gamma]:
 		for x in cat[1:]:
 			if x in part:
 				return int(cat[3])
-	
 	raise Exception("Particle not identified - " + part)
 
-def selection(pev,particle):
+def selection(pev,particle,cutStat):
 	'''
 	Returns True if good event, False otherwise
-	
-	OBSOLETE function. Not used since preselection is done at skim level.
 	'''
-	if not pev.pEvtHeader().GeneratedTrigger(3):		# High energy trigger
+	def incrementKey(dic,key):
+		if key in dic.keys():
+			dic[key] += 1
+		else:
+			dic[key] = 1
+
+	if not pev.pEvtHeader().GeneratedTrigger(3): 
+		incrementKey(cutStat,'HET')
 		return False
 	
-	if pev.pEvtSimuPrimaries().pvpart_pdg != particle:
-		return False
-		
-	if pev.pEvtBgoRec().GetElectronEcor() < 1e+5:	# 100 GeV
-		return False
-		
-	BHET = sum([ 
-				sum([
-					pev.pEvtBgoRec().GetEdep(i,j) for j in xrange(22)
-					])  
-				for i in xrange(14) 
-			])
-	BHXS = [0. for i in xrange(14)]
-	BHER = [0. for i in xrange(14)]
-	bhm  = 0.
-	SIDE = [False for i in xrange(14)]
+	erec = pev.pEvtBgoRec().GetElectronEcor()
 	
-	for i in xrange(14):				
-		im = None				# Find the bar with max energy deposition of a layer and record its number as im
-		em = 0.0;
-		for j in xrange(22):		# 22 BGO bars
-			ebar = pev.pEvtBgoRec().GetEdep(i,j)
-			if ebar < em : continue 
-			em = ebar                  
-			im = j		
-			
-		if not em: continue
-		
-		if im in [0,21]:		# Edge bars (first and last BGO bars)
-			cog = 27.5 * im		# 27.5 = BARPITCH
-		else:	
-			ene = 0.0			
-			cog = 0.0			
-			for j in [im-1, im, im+1]: 
-				ebar = pev.pEvtBgoRec().GetEdep(i,j)
-				ene+=ebar
-				cog+= 27.5 * j * ebar
-			cog/=ene
-			
-		posrms   = 0.0
-		enelayer = 0.0
-		for j in xrange(22):
-			ebar = pev.pEvtBgoRec().GetEdep(i,j)
-			posbar = 27.5 * j 
-			enelayer += ebar
-			posrms += ebar * (posbar-cog)*(posbar-cog)
-		posrms = math.sqrt( posrms / enelayer)
-		BHXS[i] = posrms
-		BHER[i] = enelayer / BHET
-		
-		if im in [0,21]:
-			SIDE[i] = True
-			
-	if [SIDE[s] for s in [1,2,3] if SIDE[s] ]: 
+	if erec < 10 * 1e+3:		# 10 GeV
+		incrementKey(cutStat,'10GeV')
 		return False
-	if bhm > 0.35: 
-		return False
-	# End Andrii's electron cut
+	elif erec > 10 * 1e+6:		# 10 TeV
+		incrementKey(cutstat,'10TeV')
+		
 	
-	return True	
+	
+	return True
 
 
 def getBGOvalues(pev):
@@ -287,7 +240,8 @@ def getValues(pev):
 		61 - 64 : Raw NUD signal
 		----
 		65 : timestamp
-		66 : Particle ID (0 for proton, 1 for electron, 2 for photon)
+		66 : True energy (EKin). Set to 0 if missing (i.e. flight data)
+		67 : Particle ID (0 for proton, 1 for electron, 2 for photon)
 	'''
 	templist = []
 
@@ -309,6 +263,13 @@ def getValues(pev):
 	if msec >= 1. :
 		msec = msec / 1000.
 	templist.append(sec + msec)
+	
+	### EKin
+	try:
+		EKin = pev.pEvtSimuPrimaries().pvpart_ekin
+	except:
+		EKin = 0
+	templist.append(EKin)
 	
 	if pev.pEvtSimuPrimaries().pvpart_pdg == 11 :		# Electron
 		templist.append(1)
@@ -333,6 +294,8 @@ def analysis(files,pid,nr):
 	
 	if not os.path.isdir(folder): os.mkdir(folder)
 	
+	if not os.path.isdir('statistics'): os.mkdir('statistics')
+	
 	if pid == 11:
 		outstr = folder + '/elec_' + str(nr) + '.npy'
 	elif pid == 2212:
@@ -347,18 +310,39 @@ def analysis(files,pid,nr):
 	nvts = dmpch.GetEntries()
 	
 	a = []
+	selectionStatistics = {}
+	fileIndexing = {}
+	cutStatistics = {}
 	for i in xrange(nvts):
+			
 		pev = dmpch.GetDmpEvent(i)
+		currentFileName = os.path.basename(dmpch.GetFile().GetName())
+		if currentFileName not in selectionStatistics.keys():
+			selectionStatistics[currentFileName] = [0,0]
 		
-		#~ if selection(pev,pid):
-			#~ templist = getValues(pev)
-			#~ a.append(templist)
-		#~ else :
-			#~ continue
+		##
+		sel = selection(pev,pid,cutStatistics)
+		##
 		
-		if not pev.pEvtHeader().GeneratedTrigger(3): continue		# High energy trigger, recommended by Valentina	
+		if not sel:
+			selectionStatistics[currentFileName][1] += 1
+			continue
+		
+		selectionStatistics[currentFileName][0] += 1
+		
+		if currentFileName not in fileIndexing.keys():
+			fileIndexing[currentFileName] = [i]
+		else:
+			fileIndexing[currentFileName].append(i)
 		
 		a.append(getValues(pev))
+		
+		
+		# Next: add value of acceptance cut (0.35 / 0.5) to array
+		# 		add index i to array
+		#		write the three dictionaries to files (e.g. yaml file)
+		
+		
 		
 	arr = np.array(a)
 	
