@@ -30,6 +30,7 @@ import ROOT
 import cPickle as pickle
 import gc
 gc.enable()
+import yaml
 
 def openRootFile(efilelist): 
 	'''
@@ -79,6 +80,7 @@ def selection(pev,particle,cutStat):
 		return False
 	elif erec > 10 * 1e+6:		# 10 TeV
 		incrementKey(cutstat,'10TeV')
+		return False
 		
 	
 	
@@ -216,7 +218,7 @@ def getNUDvalues(pev):
 		templist[i] = f[i]
 	return templist
 
-def getValues(pev):
+def getValues(pev,i):
 	'''
 	List of variables:
 		0 - 13 : Energy in BGO layer i
@@ -239,9 +241,12 @@ def getValues(pev):
 		----
 		61 - 64 : Raw NUD signal
 		----
-		65 : timestamp
-		66 : True energy (EKin). Set to 0 if missing (i.e. flight data)
-		67 : Particle ID (0 for proton, 1 for electron, 2 for photon)
+		65 : EneLayerMax/Etot. Must be <0.5 for MC skim, <0.35 for data skim
+		----
+		66 : timestamp
+		67 : True energy (EKin). Set to 0 if missing (i.e. flight data)
+		68 : Event index
+		69 : Particle ID (0 for proton, 1 for electron, 2 for photon)
 	'''
 	templist = []
 
@@ -257,6 +262,13 @@ def getValues(pev):
 	### NUD
 	templist = templist + getNUDvalues(pev)
 	
+	### EneLayerMax/Etot
+	minilist = np.zeros((14))
+	for i in range(14):
+		minilist[i] = pev.pEvtBgoRec().GetELayer(i)
+	templist.append( minilist.max()/ minilist.sum() )
+	del minilist
+	
 	### Timestamp
 	sec = pev.pEvtHeader().GetSecond()					# Timestamp is used as an unique particle identifier for data. If need be.
 	msec = pev.pEvtHeader().GetMillisecond()
@@ -270,6 +282,8 @@ def getValues(pev):
 	except:
 		EKin = 0
 	templist.append(EKin)
+	
+	templist.append(i)
 	
 	if pev.pEvtSimuPrimaries().pvpart_pdg == 11 :		# Electron
 		templist.append(1)
@@ -335,14 +349,20 @@ def analysis(files,pid,nr):
 		else:
 			fileIndexing[currentFileName].append(i)
 		
-		a.append(getValues(pev))
+		a.append(getValues(pev,i))
 		
 		
-		# Next: add value of acceptance cut (0.35 / 0.5) to array
-		# 		add index i to array
+		# Next: 
 		#		write the three dictionaries to files (e.g. yaml file)
 		
-		
+	base = os.path.splitext(os.path.basename(sys.argv[1]))[0]
+	with open('statistics/'+base+'selStat.yaml','w') as f:
+		yaml.dump(selectionStatistics,f)
+	with open('statistics/'+base+'fileIndex.yaml','w') as f:
+		yaml.dump(fileIndexing,f)
+	with open('statistics/'+base+'cutStat.yaml','w') as f:
+		yaml.dump(cutStatistics,f)
+	
 		
 	arr = np.array(a)
 	
