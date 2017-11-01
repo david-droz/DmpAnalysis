@@ -1,5 +1,5 @@
 '''
-selection.py v0.5
+selection.py v0.9
 
 Selects events from ROOT files, extracts useful variables and write NumPy arrays ready to use by deep neural networks
 
@@ -58,6 +58,33 @@ def identifyParticle(part):
 			if x in part:
 				return int(cat[3])
 	raise Exception("Particle not identified - " + part)
+	
+def getEventWeight(pev):
+	EKin = pev.pEvtSimuPrimaries().pvpart_ekin
+	pid = pev.pEvtSimuPrimaries().pvpart_pdg
+	
+	nProtonHighE   = 781390000
+	nProtonLowE    = 492600000
+	nProtonVHE     = 2*11526500	
+	
+	nElectronHighE = 133740000
+	nElectronLowE  = 499600000
+	
+	w = EKin/100000.
+	
+	if pid == 11 :			# electron
+		w = 1/(w*w)
+	elif pid == 2212 :		# proton
+		w = w**(-1.7)
+	
+	if EKin < 100 * 1e+3 :
+		if pid == 2212 : w *= nProtonHighE/nProtonLowE
+		elif pid == 11 : w *= nElectronHighE/nElectronLowE
+	elif EKin > 10 * 1e+6 :
+		if pid == 2212 : w *= nProtonHighE/nProtonVHE
+		
+	return w
+
 
 def selection(pev,particle,cutStat):
 	'''
@@ -79,7 +106,7 @@ def selection(pev,particle,cutStat):
 		incrementKey(cutStat,'10GeV')
 		return False
 	elif erec > 10 * 1e+6:		# 10 TeV
-		incrementKey(cutstat,'10TeV')
+		incrementKey(cutStat,'10TeV')
 		return False
 		
 	
@@ -246,7 +273,8 @@ def getValues(pev,i):
 		66 : timestamp
 		67 : True energy (EKin). Set to 0 if missing (i.e. flight data)
 		68 : Event index
-		69 : Particle ID (0 for proton, 1 for electron, 2 for photon)
+		69 : Event weight (weight according to energy spectrum)
+		70 : Particle ID (0 for proton, 1 for electron, 2 for photon)
 	'''
 	templist = []
 
@@ -283,8 +311,18 @@ def getValues(pev,i):
 		EKin = 0
 	templist.append(EKin)
 	
+	### Event index
 	templist.append(i)
 	
+	### Event weight
+	try:
+		w = getEventWeight(pev)
+	except:
+		w = 1
+		raise
+	templist.append(w)
+	
+	### Event label
 	if pev.pEvtSimuPrimaries().pvpart_pdg == 11 :		# Electron
 		templist.append(1)
 	elif pev.pEvtSimuPrimaries().pvpart_pdg == 22 :		# Photon
