@@ -73,7 +73,7 @@ Classifier::Classifier(std::string moduleName){
 }
 
 
-double Classifier::runTest(std::vector <double> array){
+double Classifier::runTest(const std::vector <double>& array){
 	PyObject *pArgs, *pValue;
 	PyObject *PList = PyList_New(0);
 	
@@ -143,13 +143,20 @@ double Classifier::getScore(DmpEvtBgoRec* bgorec){
 	return getScore(values);
 }
 
-double Classifier::getScore(std::vector <double> eneLayer,std::vector <double> rmsLayer, std::vector <double> hitsLayer, double longitudinalRMS, double radialRMS, double EtotCorrected, double hits, double XZslope, double YZslope){
+double Classifier::getScore(double const& eneLayer[14],double const& rmsLayer[14], double const& hitsLayer[14], double longitudinalRMS, double radialRMS, double EtotCorrected, double hits, double XZslope, double YZslope){
 	std::vector <double> values;
-	values = eneLayer;
+	
+	for(unsigned int i(0);i<14;i++){
+		values.push_back(eneLayer[i]);
+	}
+	for(unsigned int i(0);i<14;i++){
+		values.push_back(rmsLayer[i]);
+	}
+	for(unsigned int i(0);i<14;i++){
+		values.push_back(hitsLayer[i]);
+	}
 	
 	// There has to be a smarter way of doing what I'm doing here...
-	values.insert(values.end(), rmsLayer.begin(), rmsLayer.end());
-	values.insert(values.end(), hitsLayer.begin(), hitsLayer.end());
 	values.push_back(longitudinalRMS);
 	values.push_back(radialRMS);
 	values.push_back(EtotCorrected);
@@ -160,7 +167,23 @@ double Classifier::getScore(std::vector <double> eneLayer,std::vector <double> r
 	return getScore(values);
 }
 
-double Classifier::getScore(std::vector <double> array){
+double Classifier::getScore(double const& array[48]){
+	std::vector <double> values;
+	
+	for(unsigned int i(0); i<48; i++){
+		values.push_back(array[i])
+	}
+	
+	return getScore(values);
+}
+
+double Classifier::getScore(const std::vector <double>& array){
+	
+	if (array.size() != 48){
+		std::cerr << "Warning! Vector given to Classifier::getScore appears to have wrong size (expected: 48)" << endl;
+	}
+	
+	
 	PyObject *pArgs, *pValue;
 	PyObject *PList = PyList_New(0);
 	
@@ -186,7 +209,7 @@ double Classifier::getScore(std::vector <double> array){
 
 // Finally implement the Finalize() method.
 
-void Classifier::Finalize(){
+void Classifier::finalize(){
 	Py_XDECREF(pFunc);
 	Py_XDECREF(pTest);
     Py_DECREF(pModule);
