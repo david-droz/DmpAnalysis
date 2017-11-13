@@ -13,7 +13,7 @@ Classifier::Classifier(void){
 	if (pModule == NULL){
 		PyErr_Print();
 		//fprintf(stderr, "Failed to load Python module: \"%s\"\n", "calculateScore");
-		throw std::runtime_error("Failed to load Python module: \"%s\"\n", "calculateScore")
+		throw std::runtime_error("Failed to load Python module: \"calculateScore\"\n");
 	}
 	
 	pFunc = PyObject_GetAttrString(pModule, "calculateScore");
@@ -23,14 +23,14 @@ Classifier::Classifier(void){
 				PyErr_Print();
 			}
 		//fprintf(stderr, "Cannot find Python function \"%s\"\n", "calculateScore");
-		throw std::runtime_error("Cannot find Python function \"%s\"\n", "calculateScore");
+		throw std::runtime_error("Cannot find Python function \"calculateScore\"\n");
 	}
 	if (!pTest or !PyCallable_Check(pTest)) {
 		if (PyErr_Occurred()){
 				PyErr_Print();
 			}
 		//fprintf(stderr, "Cannot find Python function \"%s\"\n", "testMethod");
-		throw std::runtime_error("Cannot find Python function \"%s\"\n", "testMethod");
+		throw std::runtime_error("Cannot find Python function \"testMethod\"\n");
 	}
 }
 
@@ -39,20 +39,20 @@ Classifier::Classifier(std::string moduleName){
 	PyRun_SimpleString("import sys");
 	PyRun_SimpleString("sys.path.append(\".\")");
 	
-	const std::string ext(".py")
+	const std::string ext(".py");
 	if (moduleName.find(ext) != std::string::npos){
-		moduleName = moduleName.substr(0, moduleName.size() - ext.size())
+		moduleName = moduleName.substr(0, moduleName.size() - ext.size());
 	}
 	
-	pName = PyString_FromString(moduleName);
+	pName = PyString_FromString(moduleName.c_str());
 	
 	pModule = PyImport_Import(pName);
 	Py_DECREF(pName);
 	
 	if (pModule == NULL){
 		PyErr_Print();
-		fprintf(stderr, "Failed to load Python module: \"%s\"\n", "calculateScore");
-		throw std::runtime_error("Failed to load Python module: \"%s\"\n", "calculateScore")
+		//~ fprintf(stderr, "Failed to load Python module: \"%s\"\n", "calculateScore");
+		throw std::runtime_error("Failed to load Python module: \"calculateScore\"\n");
 	}
 	pFunc = PyObject_GetAttrString(pModule, "calculateScore");
 	pTest = PyObject_GetAttrString(pModule, "testMethod");
@@ -61,24 +61,24 @@ Classifier::Classifier(std::string moduleName){
 				PyErr_Print();
 			}
 		//fprintf(stderr, "Cannot find Python function \"%s\"\n", "calculateScore");
-		throw std::runtime_error("Cannot find Python function \"%s\"\n", "calculateScore");
+		throw std::runtime_error("Cannot find Python function \"calculateScore\"\n");
 	}
 	if (!pTest or !PyCallable_Check(pTest)) {
 		if (PyErr_Occurred()){
 				PyErr_Print();
 			}
 		//fprintf(stderr, "Cannot find Python function \"%s\"\n", "testMethod");
-		throw std::runtime_error("Cannot find Python function \"%s\"\n", "testMethod");
+		throw std::runtime_error("Cannot find Python function \"testMethod\"\n");
 	}
 }
 
 
-double Classifier::runTest(const std::vector <double>& array){
+double Classifier::runTest(std::vector <double> array){
 	PyObject *pArgs, *pValue;
 	PyObject *PList = PyList_New(0);
 	
 	std::vector<double>::iterator it;
-	for(it = v.begin(); it != v.end() ; it++ ){
+	for(it = array.begin(); it != array.end() ; it++ ){
 		PyList_Append(PList, Py_BuildValue("d", *it));
 	}
 	
@@ -116,17 +116,17 @@ double Classifier::getScore(DmpEvtBgoRec* bgorec){
 	// Need to know the format of bgorec->GetRMS2() and bgorec->GetLayerHits(). Arrays of size 14? How to declare?
 	// double RMS2[14] = bgorec->GetRMS2()  ????
 	
-	double rms2[14] = &(bgorec->GetRMS2());
-	int hits(14) = &(bgorec->GetLayerHits());
+	float* rms2 = bgorec->GetRMS2();
+	int* hits = bgorec->GetLayerHits();
 	
 	for(unsigned int i(0);i<14;i++){
-		values.push_back(rms2[i])
+		values.push_back((double)rms2[i]);
 	}
 	for(unsigned int i(0);i<14;i++){
-		values.push_back((double)hits[i])
+		values.push_back((double)hits[i]);
 	}
 	
-	double rms_l = bgorec->GetRMS_l()
+	double rms_l = bgorec->GetRMS_l();
 	double rms_r = bgorec->GetRMS_r();
 	double Ecor = bgorec->GetElectronEcor();
 	double totalHits = (double)bgorec->GetTotalHits();
@@ -143,7 +143,7 @@ double Classifier::getScore(DmpEvtBgoRec* bgorec){
 	return getScore(values);
 }
 
-double Classifier::getScore(double const& eneLayer[14],double const& rmsLayer[14], double const& hitsLayer[14], double longitudinalRMS, double radialRMS, double EtotCorrected, double hits, double XZslope, double YZslope){
+double Classifier::getScore(double eneLayer[14],double rmsLayer[14], double hitsLayer[14], double longitudinalRMS, double radialRMS, double EtotCorrected, double hits, double XZslope, double YZslope){
 	std::vector <double> values;
 	
 	for(unsigned int i(0);i<14;i++){
@@ -167,17 +167,17 @@ double Classifier::getScore(double const& eneLayer[14],double const& rmsLayer[14
 	return getScore(values);
 }
 
-double Classifier::getScore(double const& array[48]){
+double Classifier::getScore(double array[48]){
 	std::vector <double> values;
 	
 	for(unsigned int i(0); i<48; i++){
-		values.push_back(array[i])
+		values.push_back(array[i]);
 	}
 	
 	return getScore(values);
 }
 
-double Classifier::getScore(const std::vector <double>& array){
+double Classifier::getScore(std::vector <double> array){
 	
 	if (array.size() != 48){
 		std::cerr << "Warning! Vector given to Classifier::getScore appears to have wrong size (expected: 48)" << endl;

@@ -45,29 +45,24 @@
 //@@ DMPSW includes
 #include "DmpEvtBgoRec.h"
 #include "DmpRootEvent.h"
-#include "DmpChain.h"
-
-//@@ ROOT includes
-#include <TROOT.h>
 
 
-
-#ifndef Classifier
-#define Classifier
+#ifndef Classifier_H
+#define Classifier_H
 
 
 
 
-class Classifier{
+class Classifier {
 	
 	PyObject *pName, *pModule;
 	
-	PyObject *pFunc, pTest;
+	PyObject *pFunc, *pTest;
 	
 	public:	
 	
 	/// Default constructor
-	Classifier(); 
+	Classifier(void); 
 	
 	/// Constructor. Argument is the name of the Python file. Default is "calculateScore"
 	Classifier(std::string moduleName);
@@ -79,16 +74,16 @@ class Classifier{
 	double getScore(DmpEvtBgoRec* bgorec);
 	
 	/// Returns the neural network score calculated from the raw values (vector of 48 elements)
-	double getScore(const std::vector <double>& array);
+	double getScore(std::vector <double> array);
 	
 	/// Returns the neural network score calculated from the raw values (array of 48 elements)
-	double Classifier::getScore(double const& array[48]);
+	double getScore(double array[48]);
 	
 	/// Returns the neural network score calculated from the raw values
-	double Classifier::getScore(double const& eneLayer[14],double const& rmsLayer[14], double const& hitsLayer[14], double longitudinalRMS, double radialRMS, double EtotCorrected, double hits, double XZslope, double YZslope);
+	double getScore(double eneLayer[14],double rmsLayer[14], double hitsLayer[14], double longitudinalRMS, double radialRMS, double EtotCorrected, double hits, double XZslope, double YZslope);
 	
 	///Runs a small test. Ignore.
-	double runTest(const std::vector <double>& array);
+	double runTest(std::vector <double> array);
 	
 	/// Cleans-up the process. Must be called at the end of every code
 	void finalize();
