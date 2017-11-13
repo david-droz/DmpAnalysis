@@ -1,4 +1,4 @@
-#include "dnnScore.h"
+#include "Classifier.h"
 
 Classifier::Classifier(void){
 	Py_Initialize();

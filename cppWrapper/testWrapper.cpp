@@ -1,6 +1,6 @@
 #include <vector>
 #include <iostream>
-#include "dnnScore.h"
+#include "Classifier.h"
 
 
 void main(int argc, char **argv){

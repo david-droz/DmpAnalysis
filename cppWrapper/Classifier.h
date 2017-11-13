@@ -11,6 +11,24 @@
  * 		Classifier c;
  * 		double score = c.getScore(bgorec);
  * 		c.finalize()
+ * 
+ * 
+ * 
+ * List of variables for the DNN classifier:
+ * 
+ *  | Variable index	|	Variable name					| 	DmpSoftware function call
+	------------------------------------------------------------------------------------
+	|		0 - 13		|	Energy in BGO layer i			|	DmpChain->pEvtBgoRec()->GetELayer(i)
+	|		14 - 27		|	RMS2 in individual BGO layers	|			---    		  ->GetRMS2()[i]
+	|		28 - 41		|	Hits in individual BGO layers	|			---    		  ->GetLayerHits()[i]
+	|		42			|	Longitudinal RMS				|			---    		  ->GetRMS_l()
+	|		43			| 	Radial RMS						|			---    		  ->GetRMS_r()
+	|		44			|	Total BGO energy (corrected)	|			---    		  ->GetElectronEcor()
+	|		45			|	Total BGO hits					|			---    		  ->GetTotalHits() 
+	|		46			|	XZ slope (angle calculation)	|			---    		  ->GetSlopeXZ()
+	|		47			|	YZ slope (angle calculation)	|			---    		  ->GetSlopeYZ()
+ * 
+ * 
  *   
  * @author David Droz (david.droz@cern.ch)
  * @version 0.1
