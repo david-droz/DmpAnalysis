@@ -37,21 +37,25 @@ def getXTR(arr):
 	FLast = arr[:,13]/arr[:,44]				# Fraction of energy in last layer
 	sumRMS = np.zeros((arr.shape[0],))
 	for i in range(14,28):
-		sumRMS += np.sqrt(arr[:,i])
+		#~ sumRMS += np.sqrt(arr[:,i])
+		sumRMS += arr[:,i]
 		
-	return FLast * sumRMS**4 / 8e+6
+	return FLast * sumRMS**2 / 8e+6
 	
 def getXTRL(arr):
 	
 	energies = arr[:,0:14]
 	FLast = energies[np.arange(energies.shape[0]),energies.shape[1] - 1 - (energies[:,::-1]!=0).argmax(1)]	# Fraction of energy in last non-zero layer
 				# Black magic by Stack Overflow : https://stackoverflow.com/questions/39959435/set-last-non-zero-element-of-each-row-to-zero-numpy
+				
+	FLast = FLast / arr[:,44]
 	
 	sumRMS = np.zeros((arr.shape[0],))
 	for i in range(14,28):
-		sumRMS += np.sqrt(arr[:,i])
+		#~ sumRMS += np.sqrt(arr[:,i])
+		sumRMS += arr[:,i]
 		
-	return FLast * sumRMS**4 / 8e+6
+	return FLast * sumRMS**2 / 8e+6
 	
 	
 def getCutBased(f,X_val,truth):
@@ -327,7 +331,7 @@ def evaluation(e_min,e_max,modelname):
 	l_eff_xtr = []
 	l_bkg_xtrl = []
 	l_eff_xtrl = []
-	npoints = 500
+	npoints = 5000
 	
 	fig1 = plt.figure()
 	
@@ -452,6 +456,8 @@ def beamTest(modelname):
 		plt.yscale('log')
 		plt.title('Electron 250 GeV \n' + labs[i] )
 		plt.savefig(pp_e, format='pdf')
+		if i in [44,45,0,13,15,16,14]:
+			plt.savefig('beamtest/vars/electron_'+labs[i])
 		plt.close(fig_t_e)
 		
 		fig_t_p = plt.figure()
@@ -461,27 +467,12 @@ def beamTest(modelname):
 		plt.yscale('log')
 		plt.title('Proton 400 GeV \n' + labs[i] )
 		plt.savefig(pp_p, format='pdf')
+		if i in [44,45,0,13,15,16,14]:
+			plt.savefig('beamtest/vars/proton_'+labs[i])
 		plt.close(fig_t_p)
 	pp_e.close()
 	pp_p.close()
 	
-	fig_energy_elec = plt.figure()
-	plt.hist(arr_bt_e[:,44],50,normed=True,histtype='step',label='BT')
-	plt.hist(arr_mc_e[:,44],50,normed=True,histtype='step',label='MC')
-	plt.legend(loc='best')
-	plt.yscale('log')
-	plt.title('Electron 250 GeV \n' + labs[44] )
-	plt.savefig('beamtest/energy_electron')
-	plt.close(fig_energy_elec)
-	
-	fig_hits_elec = plt.figure()
-	plt.hist(arr_bt_e[:,45],50,normed=True,histtype='step',label='BT')
-	plt.hist(arr_mc_e[:,45],50,normed=True,histtype='step',label='MC')
-	plt.legend(loc='best')
-	plt.yscale('log')
-	plt.title('Electron 250 GeV \n' + labs[45] )
-	plt.savefig('beamtest/hits_electron')
-	plt.close(fig_hits_elec)
 	
 	
 	BT = np.concatenate(( arr_bt_e, arr_bt_p ))
@@ -537,7 +528,7 @@ def beamTest(modelname):
 	plt.xlabel('Classifier score')
 	plt.ylabel('Fraction of events')
 	plt.title('Beamtest, electron 250GeV, proton 400GeV')
-	plt.legend(loc='upper center')
+	plt.legend(loc='upper right')
 	plt.grid(True)
 	plt.xlim((-50,50))
 	#~ plt.ylim((0.9,1e+6))
@@ -575,25 +566,67 @@ def beamTest(modelname):
 	############################################################################################################
 	############################################################################################################
 	############################################################################################################
+	
+	
+def plotXTR():
+	
+	train_e = np.load(TRAIN_E_PATH)
+	train_p = np.load(TRAIN_P_PATH)
+	
+	XTR_e = getXTR(train_e)
+	XTR_p = getXTR(train_p)
+	XTRL_e = getXTRL(train_e)
+	XTRL_p = getXTRL(train_p)
+	
+	XTR_p = XTR_p[XTR_p < 1.1*XTR_e.max()]
+	XTRL_p = XTRL_p[XTRL_p < 1.1*XTRL_e.max()]
+	
+	fig1 = plt.figure()
+	plt.hist(XTR_e,50,histtype='step',label='e')
+	plt.hist(XTR_p,50,histtype='step',label='p')
+	plt.title('XTR')
+	plt.xlabel('XTR')
+	plt.yscale('log')
+	plt.legend(loc='upper right')
+	plt.savefig('xtr/xtr')
+	plt.close(fig1)
+	
+	fig2 = plt.figure()
+	plt.hist(XTRL_e,50,histtype='step',label='e')
+	plt.hist(XTRL_p,50,histtype='step',label='p')
+	plt.title('XTRL')
+	plt.xlabel('XTRL')
+	plt.yscale('log')
+	plt.legend(loc='upper right')
+	plt.savefig('xtr/xtrl')
+	plt.close(fig2)
+		
+		
+		
+		
+	############################################################################################################
+	############################################################################################################
 		
 	
 if __name__ == '__main__' :
 	
 	n_epochs = 80
 	
-	#~ for x in ['predHisto','ROC','pickles','beamtest']:
-		#~ if not os.path.isdir(x):
-			#~ os.mkdir(x)
+	for x in ['predHisto','ROC','pickles','beamtest','beamtest/vars','xtr']:
+		if not os.path.isdir(x):
+			os.mkdir(x)
+			
+	plotXTR()
 	
-	#~ if not os.path.isfile('trainedDNN_'+str(n_epochs)+'.h5'):
-		#~ train(n_epochs)
+	if not os.path.isfile('trainedDNN_'+str(n_epochs)+'.h5'):
+		train(n_epochs)
 		
-	#~ N_bins = 7
-	#~ energies = np.geomspace(10 * 1e+3,10 * 1e+6,N_bins+1)
-	#~ for i in range(N_bins):
-		#~ evaluation(energies[i],energies[i+1],'trainedDNN_'+str(n_epochs)+'.h5')
+	N_bins = 7
+	energies = np.geomspace(10 * 1e+3,10 * 1e+6,N_bins+1)
+	for i in range(N_bins):
+		evaluation(energies[i],energies[i+1],'trainedDNN_'+str(n_epochs)+'.h5')
 		
-	#~ rocEnergies(energies,N_bins)
+	rocEnergies(energies,N_bins)
 	
 	beamTest('trainedDNN_'+str(n_epochs)+'.h5')
 
