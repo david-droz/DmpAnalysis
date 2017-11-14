@@ -29,7 +29,8 @@ def getBGOvalues(bgorec):
 	templist.append( bgorec.GetRMS_l() )
 	templist.append( bgorec.GetRMS_r() )
 
-	templist.append( bgorec.GetElectronEcor() )
+	#~ templist.append( bgorec.GetElectronEcor() )
+	templist.append( bgorec.GetTotalEnergy() )
 	templist.append( bgorec.GetTotalHits() )
 	
 	# Angle of reconstructed trajectory
