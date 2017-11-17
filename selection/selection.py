@@ -140,7 +140,8 @@ def getBGOvalues(pev):
 	templist.append( pev.pEvtBgoRec().GetRMS_l() )
 	templist.append( pev.pEvtBgoRec().GetRMS_r() )
 
-	templist.append( pev.pEvtBgoRec().GetElectronEcor() )
+	#~ templist.append( pev.pEvtBgoRec().GetElectronEcor() )
+	templist.append( pev.pEvtBgoRec().GetTotalEnergy() )
 	templist.append( pev.pEvtBgoRec().GetTotalHits() )
 	
 	# Angle of reconstructed trajectory
@@ -254,7 +255,7 @@ def getValues(pev,i):
 		
 		42 : longitudinal RMS ( DmpEvtBgoRec::GetRMS_l )
 		43 : radial RMS ( DmpEvtBgoRec::GetRMS_r )
-		44 : total BGO energy (corrected)
+		44 : total BGO energy 
 		45 : total BGO hits
 		46 : theta angle of BGO trajectory
 		----
