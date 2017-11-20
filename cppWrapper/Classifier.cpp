@@ -159,7 +159,7 @@ double Classifier::getScore(double eneLayer[14],double rmsLayer[14], double hits
 	// There has to be a smarter way of doing what I'm doing here...
 	values.push_back(longitudinalRMS);
 	values.push_back(radialRMS);
-	values.push_back(EtotCorrected);
+	values.push_back(Etot);
 	values.push_back(hits);
 	values.push_back(XZslope);
 	values.push_back(YZslope);
