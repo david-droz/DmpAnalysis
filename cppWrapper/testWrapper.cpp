@@ -8,6 +8,7 @@
 
 int main(int argc, char **argv){
 	
+	// Initialisation
 	Classifier c;
 	
 	std::vector <double> v;
@@ -16,6 +17,7 @@ int main(int argc, char **argv){
 	v.push_back(42);
 	v.push_back(56);
 	
+	// Run a first test
 	std::cout << c.runTest(v) << endl;
 	
 	std::vector <double> u;
@@ -24,30 +26,21 @@ int main(int argc, char **argv){
 	u.push_back(84);
 	u.push_back(112);
 	
+	// Run a second test. Purpose was to see if all libraries were still in memory or if the Python interpreter had to reload everything
+	// Result: doesn't have to, the second test is much faster than the first one
 	std::cout << c.runTest(u) << endl;
 	
-	std::cout << "Now for Dampe Events..." << endl;
 	
+	//std::cout << "Now for Dampe Events..." << endl;
+	
+	
+	// Building a random vector and calling the classifier on it. Will return a meaningless number, this is only to see
+	// if the method and wrapper work
 	std::vector <double> w;
 	for(unsigned int i(0);i<48;i++){
 		w.push_back(100*i);
 	}
 	std::cout << c.getScore(w) << endl;
-	
-	//~ const char* file = "/dampe/data3/users/public/high_energy_events__trunk_r5202/5.4.2/fullBGO/allProton-v5r4p2_100GeV_10TeV_data3_p2_fullBGO/allProton-v5r4p2_100GeV_10TeV_data3_p2.noOrb.206001_207000.reco.root";
-	
-	//~ DmpChain *dmpch = new DmpChain("CollectionTree");
-	//~ dmpch->Add(file);
-	//~ long int nevents = dmpch->GetEntries();
-	
-	//~ DmpEvent* evt01 = dmpch->GetEvent();
-	
-	//~ std::cout << c.getScore(evt01) << endl;
-	
-	//~ DmpEvent* evt02 = dmpch->GetEvent();
-	//~ DmpEvtBgoRec* bgorec = evt02->pEvtBgoRec();
-	
-	//~ std::cout << c.getScore(bgorec) << endl;
 	
 	c.finalize();
 	
