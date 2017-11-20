@@ -5,3 +5,4 @@ wget -nv -O trainedDNN.h5 https://github.com/david-droz/DmpAnalysis/blob/master/
 wget -nv https://raw.githubusercontent.com/david-droz/DmpAnalysis/master/cppWrapper/calculateScore.py
 wget -nv https://raw.githubusercontent.com/david-droz/DmpAnalysis/master/cppWrapper/Classifier.cpp
 wget -nv https://raw.githubusercontent.com/david-droz/DmpAnalysis/master/cppWrapper/Classifier.h
+wget -nv https://raw.githubusercontent.com/david-droz/DmpAnalysis/master/cppWrapper/testWrapper.cpp
