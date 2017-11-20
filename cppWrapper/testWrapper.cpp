@@ -8,40 +8,42 @@
 
 int main(int argc, char **argv){
 	
-	// Initialisation
+	// Initialise
 	Classifier c;
 	
-	std::vector <double> v;
-	v.push_back(15);
-	v.push_back(33);
-	v.push_back(42);
-	v.push_back(56);
+	// Storage for the scores. Can fill a Root histogram instead
+	std::vector <double> scores;
+
+	// Declare a DmpChain and add a file to it
+	DmpChain *dmpch = new DmpChain("CollectionTree");
 	
-	// Run a first test
-	std::cout << c.runTest(v) << endl;
+	// File1 : 66k events (skimmed MC). Long!
+	//dmpch->Add("/dampe/data3/users/public/high_energy_events__trunk_r5202/5.4.2/fullBGO/allProton-v5r4p2_100GeV_10TeV_data3_p2_fullBGO/allProton-v5r4p2_100GeV_10TeV_data3_p2.noOrb.206001_207000.reco.root");
 	
-	std::vector <double> u;
-	u.push_back(30);
-	u.push_back(66);
-	u.push_back(84);
-	u.push_back(112);
+	// File2 : 32 events (skimmed flight data). Short.
+	dmpch->Add("/dampe/data3/users/public/high_energy_events__trunk_r6512/6.0.0/data/2017/08/07_data_500_000.root");
 	
-	// Run a second test. Purpose was to see if all libraries were still in memory or if the Python interpreter had to reload everything
-	// Result: doesn't have to, the second test is much faster than the first one
-	std::cout << c.runTest(u) << endl;
+	long int nevents = dmpch->GetEntries();
+	std::cout << "Processing " << nevents << " events" << std::endl;
 	
-	
-	//std::cout << "Now for Dampe Events..." << endl;
-	
-	
-	// Building a random vector and calling the classifier on it. Will return a meaningless number, this is only to see
-	// if the method and wrapper work
-	std::vector <double> w;
-	for(unsigned int i(0);i<48;i++){
-		w.push_back(100*i);
+	DmpEvent *pev = DmpEvent::GetHead();
+	for(long int event(0);event<nevents;event++){
+		
+		pev = dmpch->GetDmpEvent(event);
+		
+		// Get the score associated to that event
+		scores.push_back( c.getScore(pev) );
+		
 	}
-	std::cout << c.getScore(w) << endl;
+
+	std::cout << "Analysed " << scores.size() << " events" << std::endl;
 	
+	// Print a few scores:
+	for(unsigned int i(0);i<4;i++){
+		std::cout << scores[i] << std::endl;
+	}
+	
+	// Important! Close the Python interpreter
 	c.finalize();
 	
 	
