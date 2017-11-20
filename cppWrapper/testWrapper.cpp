@@ -1,3 +1,10 @@
+/**
+ * 
+ * Small working example using DmpChain/DmpEvent package and the Classifier class for DNN-based analysis
+ * 
+ **/
+
+
 #include <vector>
 #include <iostream>
 #include "DmpEvtBgoRec.h"
@@ -17,10 +24,10 @@ int main(int argc, char **argv){
 	// Declare a DmpChain and add a file to it
 	DmpChain *dmpch = new DmpChain("CollectionTree");
 	
-	// File1 : 66k events (skimmed MC). Long!
+	// File 1 : 66k events (skimmed MC). Long!
 	//dmpch->Add("/dampe/data3/users/public/high_energy_events__trunk_r5202/5.4.2/fullBGO/allProton-v5r4p2_100GeV_10TeV_data3_p2_fullBGO/allProton-v5r4p2_100GeV_10TeV_data3_p2.noOrb.206001_207000.reco.root");
 	
-	// File2 : 32 events (skimmed flight data). Short.
+	// File 2 : 32 events (skimmed flight data). Short.
 	dmpch->Add("/dampe/data3/users/public/high_energy_events__trunk_r6512/6.0.0/data/2017/08/07_data_500_000.root");
 	
 	long int nevents = dmpch->GetEntries();
@@ -42,6 +49,7 @@ int main(int argc, char **argv){
 	for(unsigned int i(0);i<4;i++){
 		std::cout << scores[i] << std::endl;
 	}
+	// These scores were cross-checked with usual Python analysis and are consistent
 	
 	// Important! Close the Python interpreter
 	c.finalize();
