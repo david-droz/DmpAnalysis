@@ -26,7 +26,8 @@ import numpy as np
 import ctypes
 from keras.models import load_model
 
-
+model = load_model('trainedDNN.h5')
+X_max = np.load('X_max.npy')
 
 def calculateScore(event):
 	
@@ -40,9 +41,6 @@ def calculateScore(event):
 	array[-1] = tgZ*180./math.pi
 	
 	array = array.reshape((1,47))
-	
-	model = load_model('trainedDNN.h5')
-	X_max = np.load('X_max.npy')
 	
 	pred = model.predict(array / X_max)
 	
