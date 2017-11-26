@@ -117,29 +117,14 @@ def main(filelist,outputdir):
 		
 		goodEvent = True
 		
-		if not containmentCut(bgorec):
-			cuts['Containment']['cut'] += 1
-			goodEvent = False
-		else:
-			cuts['Containment']['passed'] += 1
-			
-		if not cutMaxELayer(bgorec):
-			cuts['MaxELayer']['cut'] += 1
-			goodEvent = False
-		else:
-			cuts['MaxELayer']['passed'] += 1
-			
-		if not maxBarCut(pev):
-			cuts['MaxBar']['cut'] += 1
-			goodEvent = False
-		else:
-			cuts['MaxBar']['passed'] += 1
-			
-		if not pev.pEvtHeader().GeneratedTrigger(3):
-			cuts['HET']['cut'] += 1
-			goodEvent = False
-		else:
-			cuts['HET']['passed'] += 1
+		listOfCuts = [ ['Containment',containmentCut(bgorec)] , ['MaxELayer',cutMaxELayer(bgorec)] , ['MaxBar',maxBarCut(pev)] , ['HET',pev.pEvtHeader().GeneratedTrigger(3)] ]
+		
+		for tag,result in listOfCuts:
+			if not result:
+				cuts[tag]['cut'] += 1
+				goodEvent = False
+			else:
+				cuts[tag]['passed'] += 1
 			
 		if goodEvent:
 			cuts['passed'] += 1
