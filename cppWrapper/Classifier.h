@@ -23,7 +23,7 @@
 	|		28 - 41		|	Hits in individual BGO layers	|			---    		  ->GetLayerHits()[i]
 	|		42			|	Longitudinal RMS				|			---    		  ->GetRMS_l()
 	|		43			| 	Radial RMS						|			---    		  ->GetRMS_r()
-	|		44			|	Total BGO energy (corrected)	|			---    		  ->GetElectronEcor()
+	|		44			|	Total BGO energy				|			---    		  ->GetTotalEnergy()
 	|		45			|	Total BGO hits					|			---    		  ->GetTotalHits() 
 	|		46			|	XZ slope (angle calculation)	|			---    		  ->GetSlopeXZ()
 	|		47			|	YZ slope (angle calculation)	|			---    		  ->GetSlopeYZ()
@@ -80,7 +80,7 @@ class Classifier {
 	double getScore(double array[48]);
 	
 	/// Returns the neural network score calculated from the raw values
-	double getScore(double eneLayer[14],double rmsLayer[14], double hitsLayer[14], double longitudinalRMS, double radialRMS, double EtotCorrected, double hits, double XZslope, double YZslope);
+	double getScore(double eneLayer[14],double rmsLayer[14], double hitsLayer[14], double longitudinalRMS, double radialRMS, double Etot, double hits, double XZslope, double YZslope);
 	
 	///Runs a small test. Ignore.
 	double runTest(std::vector <double> array);

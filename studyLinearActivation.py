@@ -203,8 +203,8 @@ def train(n_epochs=200):
 	binList = [x/50 for x in range(0,51)]
 	plt.hist(elecs_p,bins=binList,label='e',alpha=1.,histtype='step',color='green',weights=weights_e)
 	plt.hist(prots_p,bins=binList,label='p',alpha=1.,histtype='step',color='red',weights=weights_p)
-	plt.hist(elecs_p,bins=binList,label='e unweighted',alpha=1.,histtype='step',color='green',ls='dashed')
-	plt.hist(prots_p,bins=binList,label='p unweighted',alpha=1.,histtype='step',color='red',ls='dashed')
+	#~ plt.hist(elecs_p,bins=binList,label='e unweighted',alpha=1.,histtype='step',color='green',ls='dashed')
+	#~ plt.hist(prots_p,bins=binList,label='p unweighted',alpha=1.,histtype='step',color='red',ls='dashed')
 	plt.xlabel('Classifier score')
 	plt.ylabel('Number of events')
 	plt.legend(loc='upper center')
@@ -239,9 +239,11 @@ def train(n_epochs=200):
 
 	w_e_redux = weights_e.reshape((weights_e.shape[0],1))[elecs_p < 300]
 	w_p_redux = weights_p.reshape((weights_p.shape[0],1))[prots_p > -500]
+	
+	binList = [i for i in range(p_redux.min(),e_redux.max())]
 
-	plt.hist(e_redux,bins=100,label='e',alpha=1.,histtype='step',color='green',weights=w_e_redux)
-	plt.hist(p_redux,bins=100,label='p',alpha=1.,histtype='step',color='red',weights=w_p_redux)
+	plt.hist(e_redux,bins=binList,label='e',alpha=1.,histtype='step',color='green',weights=w_e_redux)
+	plt.hist(p_redux,bins=binList,label='p',alpha=1.,histtype='step',color='red',weights=w_p_redux)
 	plt.xlabel('Classifier score')
 	plt.ylabel('Number of events')
 	plt.legend(loc='upper center')
@@ -292,9 +294,10 @@ def evaluation(e_min,e_max,modelname):
 	weights_e = weights_e.reshape((weights_e.shape[0],1))[elecs_p < 300]
 	weights_p = weights_p.reshape((weights_p.shape[0],1))[prots_p > -500]
 	
+	binList = [i for i in range(prots_p_redux.min(),elecs_p_redux.max())]
 	fig1 = plt.figure()
-	plt.hist(elecs_p_redux,bins=100,label='e',alpha=1.,histtype='step',color='green',weights=weights_e)
-	plt.hist(prots_p_redux,bins=100,label='p',alpha=1.,histtype='step',color='red',weights=weights_p)
+	plt.hist(elecs_p_redux,bins=binList,label='e',alpha=1.,histtype='step',color='green',weights=weights_e)
+	plt.hist(prots_p_redux,bins=binList,label='p',alpha=1.,histtype='step',color='red',weights=weights_p)
 	plt.xlabel('Classifier score')
 	plt.ylabel('Number of events')
 	plt.legend(loc='upper center')
@@ -353,18 +356,22 @@ def evaluation(e_min,e_max,modelname):
 		tp_xtr,fp_xtr,tn_xtr,fn_xtr = getcountsFast(Y_val,predictions_sigmoid,thr_sigmoid)
 		tp_xtrl,fp_xtrl,tn_xtrl,fn_xtrl = getcountsXTRL(XTRL_e,XTRL_p,thr_xtrl)
 		
+		tp,fp,tn,fn = [ufloat(x,np.sqrt(x)) for x in [tp,fp,tn,fn ]]
+		tp_xtr,fp_xtr,tn_xtr,fn_xtr = [ufloat(x,np.sqrt(x)) for x in [tp_xtr,fp_xtr,tn_xtr,fn_xtr]]
+		tp_xtrl,fp_xtrl,tn_xtrl,fn_xtrl = [ufloat(x,np.sqrt(x)) for x in [tp_xtrl,fp_xtrl,tn_xtrl,fn_xtrl]]
+		
 		try:
 			bk = fp / (tp+fp)
 		except ZeroDivisionError :
-			bk = 1
+			bk = ufloat(1,0)
 		try:
 			bk_xtr = fp_xtr/(tp_xtr+fp_xtr)
 		except ZeroDivisionError :
-			bk_xtr = 1
+			bk_xtr = ufloat(1,0)
 		try:
 			bk_xtrl = fp_xtrl/(tp_xtrl+fp_xtrl)
 		except ZeroDivisionError :
-			bk_xtrl = 1
+			bk_xtrl = ufloat(1,0)
 		
 		eff = tp / (tp + fn)
 		eff_xtr = tp_xtr / (tp_xtr + fn_xtr)
@@ -380,12 +387,12 @@ def evaluation(e_min,e_max,modelname):
 			eff_90_xtrl = eff_xtrl
 			bkg_90_xtrl = bk_xtrl
 			
-		l_bkg.append( bk )
-		l_bkg_xtr.append( bk_xtr )
-		l_eff.append( eff )
-		l_eff_xtr.append( eff_xtr )
-		l_bkg_xtrl.append( bk_xtrl )
-		l_eff_xtrl.append( eff_xtrl )
+		l_bkg.append( bk.n )
+		l_bkg_xtr.append( bk_xtr.n )
+		l_eff.append( eff.n )
+		l_eff_xtr.append( eff_xtr.n )
+		l_bkg_xtrl.append( bk_xtrl.n )
+		l_eff_xtrl.append( eff_xtrl.n )
 	
 	print('-----',str(int(e_min/1000)),' - ',str(int(e_max/1000)), ' GeV -----')
 	print("Linear, background at efficiency ", eff_90, " : ", bkg_90)
@@ -537,8 +544,9 @@ def beamTest(modelname):
 	plt.close(fig4)
 	
 	fig4b = plt.figure()
-	plt.hist(pred_e_BT,bins=50,label='BT data',alpha=1.,histtype='step',normed=True)
-	plt.hist(pred_e_BTMC,bins=50,label='BT MC',alpha=1.,histtype='step',normed=True)
+	binList = [i for i in range( min([pred_e_BT.min(),pred_e_BTMC.min()]), max([pred_e_BT.max(),pred_e_BTMC.max()]))
+	plt.hist(pred_e_BT,bins=binList,label='BT data',alpha=1.,histtype='step',normed=True)
+	plt.hist(pred_e_BTMC,bins=binList,label='BT MC',alpha=1.,histtype='step',normed=True)
 	plt.xlabel('Classifier score')
 	plt.ylabel('Fraction of events')
 	plt.title('Beamtest, electron 250 GeV')

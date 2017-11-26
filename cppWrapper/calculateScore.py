@@ -11,7 +11,7 @@ Input must be a Python list that contains the following variables, in that order
 	|		28 - 41		|	Hits in individual BGO layers	|			---    		  ->GetLayerHits()[i]
 	|		42			|	Longitudinal RMS				|			---    		  ->GetRMS_l()
 	|		43			| 	Radial RMS						|			---    		  ->GetRMS_r()
-	|		44			|	Total BGO energy (corrected)	|			---    		  ->GetElectronEcor()
+	|		44			|	Total BGO energy				|			---    		  ->GetTotalEnergy()
 	|		45			|	Total BGO hits					|			---    		  ->GetTotalHits() 
 	|		46			|	XZ slope (angle calculation)	|			---    		  ->GetSlopeXZ()
 	|		47			|	YZ slope (angle calculation)	|			---    		  ->GetSlopeYZ()
@@ -26,7 +26,8 @@ import numpy as np
 import ctypes
 from keras.models import load_model
 
-
+model = load_model('trainedDNN.h5')
+X_max = np.load('X_max.npy')
 
 def calculateScore(event):
 	
@@ -40,9 +41,6 @@ def calculateScore(event):
 	array[-1] = tgZ*180./math.pi
 	
 	array = array.reshape((1,47))
-	
-	model = load_model('trainedDNN.h5')
-	X_max = np.load('X_max.npy')
 	
 	pred = model.predict(array / X_max)
 	

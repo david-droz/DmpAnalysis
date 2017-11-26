@@ -128,7 +128,7 @@ double Classifier::getScore(DmpEvtBgoRec* bgorec){
 	
 	double rms_l = bgorec->GetRMS_l();
 	double rms_r = bgorec->GetRMS_r();
-	double Ecor = bgorec->GetElectronEcor();
+	double Ecor = bgorec->GetTotalEnergy();
 	double totalHits = (double)bgorec->GetTotalHits();
 	double slope_xz = bgorec->GetSlopeXZ();
 	double slope_yz = bgorec->GetSlopeYZ();
@@ -143,7 +143,7 @@ double Classifier::getScore(DmpEvtBgoRec* bgorec){
 	return getScore(values);
 }
 
-double Classifier::getScore(double eneLayer[14],double rmsLayer[14], double hitsLayer[14], double longitudinalRMS, double radialRMS, double EtotCorrected, double hits, double XZslope, double YZslope){
+double Classifier::getScore(double eneLayer[14],double rmsLayer[14], double hitsLayer[14], double longitudinalRMS, double radialRMS, double Etot, double hits, double XZslope, double YZslope){
 	std::vector <double> values;
 	
 	for(unsigned int i(0);i<14;i++){
@@ -159,7 +159,7 @@ double Classifier::getScore(double eneLayer[14],double rmsLayer[14], double hits
 	// There has to be a smarter way of doing what I'm doing here...
 	values.push_back(longitudinalRMS);
 	values.push_back(radialRMS);
-	values.push_back(EtotCorrected);
+	values.push_back(Etot);
 	values.push_back(hits);
 	values.push_back(XZslope);
 	values.push_back(YZslope);
