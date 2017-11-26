@@ -89,7 +89,7 @@ def maxBarCut(event):
 	
 	
 	
-def main(filelist,outputdir):
+def main(filelist,outputdir='skim'):
 	
 	if not os.path.isdir(outputdir): os.mkdir(outputdir)
 	if not os.path.isdir('skimStats'): os.mkdir('skimStats')
