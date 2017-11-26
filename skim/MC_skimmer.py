@@ -21,6 +21,7 @@ from ROOT import *
 
 import sys
 import os
+import yaml
 
 def containmentCut(bgorec):
 	'''
@@ -106,6 +107,7 @@ def main(filelist,outputdir='skim'):
 			 'Containment' : { 'passed' : 0, 'cut' : 0},
 			 'MaxELayer' : {'passed' : 0, 'cut' : 0},
 			 'MaxBar' : {'passed' : 0, 'cut' : 0},
+			 'ZeroEnergy' : {'passed' : 0, 'cut' : 0},
 			 'selected': 0,
 			 'cut': 0				
 				}
@@ -119,7 +121,7 @@ def main(filelist,outputdir='skim'):
 		
 		goodEvent = True
 		
-		listOfCuts = [ ['Containment',containmentCut(bgorec)] , ['MaxELayer',cutMaxELayer(bgorec)] , ['MaxBar',maxBarCut(pev)] , ['HET',pev.pEvtHeader().GeneratedTrigger(3)] ]
+		listOfCuts = [ ['Containment',containmentCut(bgorec)] , ['MaxELayer',cutMaxELayer(bgorec)] , ['MaxBar',maxBarCut(pev)] , ['HET',pev.pEvtHeader().GeneratedTrigger(3)], ['ZeroEnergy',pev.pEvtBgoRec().GetTotalEnergy() > 0 ]
 		
 		for tag,result in listOfCuts:
 			if not result:
@@ -136,6 +138,15 @@ def main(filelist,outputdir='skim'):
 	
 	
 	dmpch.Terminate()
+	
+	try:
+		outname = 'skimStats/'+sys.argv[1]+'.yaml'
+	except IndexError:
+		print("Error when writing skim statistics. Writing them to 'stats.yaml' instead")
+		outname = 'stats.yaml'
+		
+	with open(outname,'w') as f:
+		yaml.dump(cuts,f)
 	
 		
 	
