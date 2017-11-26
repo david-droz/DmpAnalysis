@@ -2,12 +2,19 @@
 
 High-energy skimmer for Monte Carlo data.
 
-Applies the following cuts:
-	*
-	*
-	*
+Applies the following cuts, and records their statistics:
+	* Non-zero energy
+	* BGO Acceptance cut: top (Z=46) and bottom BGO (Z=448) projection within 280 mm from the center
+	* Fraction maximum layer cut: EneLayerMax/Etot > 0.35 is excluded 
+	* BGO Max Bar cut: the maximum of the 1st,2nd and 3rd (count starts from 0) layer does not have to be in the first and last column. 
 	* High-Energy Trigger
 
+
+Takes two arguments:
+	1. Text file with the list of Root files to process
+	2. Output directory to write the new root files  (default:  ./skim/)
+	
+Writes a yaml file containing the statistics of all cuts under  ./skimStats/
 
 @author: David Droz
 @date: 2017-11-27
@@ -25,7 +32,7 @@ import yaml
 
 def containmentCut(bgorec):
 	'''
-	Cut description here
+	BGO Acceptance cut: top (Z=46) and bottom BGO (Z=448) projection within 280 mm from the center
 	'''
 	
 	BGO_TopZ = 46
