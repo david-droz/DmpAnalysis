@@ -58,8 +58,11 @@ def cutMaxELayer(bgorec,cutValue=0.35):
 	for i in range(14):
 		e = bgorec.GetELayer(i)
 		if e > ELayer_max: ELayer_max = e
-		
-	rMaxELayerTotalE = ELayer_max / bgorec.GetTotalEnergy()
+	
+	try:
+		rMaxELayerTotalE = ELayer_max / bgorec.GetTotalEnergy()
+	except ZeroDivisionError:
+		return False
 	if rMaxELayerTotalE > cutValue: 
 		return False
 		
