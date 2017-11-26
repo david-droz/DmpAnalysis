@@ -31,7 +31,7 @@ def containmentCut(bgorec):
 	bgoRec_slope = [  bgorec.GetSlopeYZ() , bgorec.GetSlopeXZ() ]
 	bgoRec_intercept = [ bgorec.GetInterceptXZ() , bgorec.GetInterceptYZ() ]
 	
-	if (bgoRec_slope[1]==0 amd bgoRec_intercept[1]==0) or (bgoRec_slope[0]==0 and bgoRec_intercept[0]==0): 
+	if (bgoRec_slope[1]==0 and bgoRec_intercept[1]==0) or (bgoRec_slope[0]==0 and bgoRec_intercept[0]==0): 
 		return False
 	
 	topX = bgoRec_slope[1]*BGO_TopZ + bgoRec_intercept[1]
