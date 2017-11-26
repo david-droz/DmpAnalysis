@@ -143,7 +143,7 @@ def main(filelist,outputdir='skim'):
 	dmpch.Terminate()
 	
 	try:
-		outname = 'skimStats/'+sys.argv[1]+'.yaml'
+		outname = 'skimStats/'+os.path.splitext(os.path.basename(sys.argv[1]))[0]+'.yaml'
 	except IndexError:
 		print("Error when writing skim statistics. Writing them to 'stats.yaml' instead")
 		outname = 'stats.yaml'
