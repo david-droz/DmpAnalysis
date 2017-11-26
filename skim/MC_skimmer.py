@@ -134,7 +134,7 @@ def main(filelist,outputdir='skim'):
 				cuts[tag]['passed'] += 1
 			
 		if goodEvent:
-			cuts['passed'] += 1
+			cuts['selected'] += 1
 			dmpch.SaveCurrentEvent()
 		else:
 			cuts['cut'] += 1
