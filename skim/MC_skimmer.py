@@ -82,7 +82,7 @@ def maxBarCut(event):
 		lay = (event.pEvtBgoHits().GetLayerID)(ihit)
 		if lay in [1,2,3]:
 			if hitE > MaxEBarLay1_2_3[lay-1]:
-				iBar =  ((event.pEvtBgoHits().fGlobalBarId)[ihit]>>6) & 0x1f		# What the fuck?
+				iBar =  ((event.pEvtBgoHits().fGlobalBarID)[ihit]>>6) & 0x1f		# What the fuck?
 				MaxEBarLay1_2_3[lay-1] = hitE
 				barNumberMaxEBarLay1_2_3[lay-1] = iBar
 	for j in range(3):
