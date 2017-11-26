@@ -147,7 +147,7 @@ class Skim(object):
 		topX = bgoRec_slope[1]*BGO_TopZ + bgoRec_intercept[1]
 		topY = bgoRec_slope[0]*BGO_TopZ + bgoRec_intercept[0]
 		bottomX = bgoRec_slope[1]*BGO_BottomZ + bgoRec_intercept[1]
-		bgoRec_slope[0]*BGO_BottomZ + bgoRec_intercept[0]
+		bottomY = bgoRec_slope[0]*BGO_BottomZ + bgoRec_intercept[0]
 		if not all( [ abs(x) < 280 for x in [topX,topY,bottomX,bottomY] ] ):
 			return False
 		
