@@ -29,6 +29,29 @@ from ROOT import *
 import sys
 import os
 import yaml
+import time
+import signal
+
+
+class GracefulKiller:
+	'''
+	https://stackoverflow.com/questions/18499497/how-to-process-sigterm-signal-gracefully
+	'''
+	kill_now = False
+	def __init__(self):
+		signal.signal(signal.SIGINT, self.exit_gracefully)
+		signal.signal(signal.SIGTERM, self.exit_gracefully)
+	
+	def exit_gracefully(self,signum, frame):
+		self.kill_now = True
+
+def alreadyskimmed(f,out):
+	
+	existingFile = out + '/' + os.path.basename(f).replace('.root','_UserSel.root')
+	if os.path.isfile(existingFile):
+		return True
+	else:
+		return False
 
 def containmentCut(bgorec):
 	'''
@@ -107,7 +130,8 @@ def main(filelist,outputdir='skim'):
 	
 	dmpch = DmpChain("CollectionTree")
 	for f in filelist:
-		dmpch.Add(f)
+		if not alreadyskimmed(f,outputdir):
+			dmpch.Add(f)
 		
 	dmpch.SetOutputDir(outputdir)
 	
@@ -123,15 +147,16 @@ def main(filelist,outputdir='skim'):
 				}
 	
 	print("Processing ", nevents, " events")
+	
+	killer = GracefulKiller()
 				
 	for i in range(nevents):
 		
 		pev = dmpch.GetDmpEvent(i)
-		bgorec = pev.pEvtBgoRec()
 		
 		goodEvent = True
 		
-		listOfCuts = [ ['Containment',containmentCut(bgorec)] , ['MaxELayer',cutMaxELayer(bgorec)] , ['MaxBar',maxBarCut(pev)] , ['HET',pev.pEvtHeader().GeneratedTrigger(3)], ['ZeroEnergy',pev.pEvtBgoRec().GetTotalEnergy() > 0 ]]
+		listOfCuts = [ ['Containment',containmentCut(pev.pEvtBgoRec())] , ['MaxELayer',cutMaxELayer(pev.pEvtBgoRec())] , ['MaxBar',maxBarCut(pev)] , ['HET',pev.pEvtHeader().GeneratedTrigger(3)], ['ZeroEnergy',pev.pEvtBgoRec().GetTotalEnergy() > 0 ]]
 		
 		for tag,result in listOfCuts:
 			if not result:
@@ -145,6 +170,18 @@ def main(filelist,outputdir='skim'):
 			dmpch.SaveCurrentEvent()
 		else:
 			cuts['cut'] += 1
+			
+		if killer.kill_now:		# Job killed, e.g. by PBS or Slurm
+								# Killing a job while it runs can corrupt the opened file. So
+								# we remove the file that was under writing
+			currentFile = dmpch.GetFile().GetName()
+			try:
+				dmpch.Terminate()
+			except:
+				pass
+			writtenFile = outputdir + '/' + os.path.basename(f).replace('.root','_UserSel.root')
+			os.remove(writtenFile)	
+			sys.exit("Job killed")
 	
 	
 	dmpch.Terminate()
