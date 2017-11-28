@@ -167,7 +167,17 @@ def main(filelist,outputdir='skim'):
 			
 		if goodEvent:
 			cuts['selected'] += 1
-			dmpch.SaveCurrentEvent()
+			try:
+				dmpch.SaveCurrentEvent()
+			except SystemError:
+				currentFile = dmpch.GetFile().GetName()
+				try:
+					dmpch.Terminate()
+				except:
+					pass
+				writtenFile = outputdir + '/' + os.path.basename(f).replace('.root','_UserSel.root')
+				os.remove(writtenFile)	
+				raise
 		else:
 			cuts['cut'] += 1
 			
