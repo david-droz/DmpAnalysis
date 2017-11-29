@@ -150,7 +150,7 @@ def main(filelist,outputdir='skim'):
 	
 	killer = GracefulKiller()
 				
-	for i in range(nevents):
+	for i in xrange(nevents):
 		
 		pev = dmpch.GetDmpEvent(i)
 		
