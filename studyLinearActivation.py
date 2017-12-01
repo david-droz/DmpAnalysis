@@ -544,7 +544,7 @@ def beamTest(modelname):
 	plt.close(fig4)
 	
 	fig4b = plt.figure()
-	binList = [i for i in range( min([pred_e_BT.min(),pred_e_BTMC.min()]), max([pred_e_BT.max(),pred_e_BTMC.max()]))
+	binList = [i for i in range( min([pred_e_BT.min(),pred_e_BTMC.min()]), max([pred_e_BT.max(),pred_e_BTMC.max()]))]
 	plt.hist(pred_e_BT,bins=binList,label='BT data',alpha=1.,histtype='step',normed=True)
 	plt.hist(pred_e_BTMC,bins=binList,label='BT MC',alpha=1.,histtype='step',normed=True)
 	plt.xlabel('Classifier score')
@@ -589,9 +589,11 @@ def plotXTR():
 	XTR_p = XTR_p[XTR_p < 1.1*XTR_e.max()]
 	XTRL_p = XTRL_p[XTRL_p < 1.1*XTRL_e.max()]
 	
+	binList = [i for i in range(0,XTR_p.max())]
+	
 	fig1 = plt.figure()
-	plt.hist(XTR_e,50,histtype='step',label='e')
-	plt.hist(XTR_p,50,histtype='step',label='p')
+	plt.hist(XTR_e,bins=binList,histtype='step',label='e')
+	plt.hist(XTR_p,bins=binList,histtype='step',label='p')
 	plt.title('XTR')
 	plt.xlabel('XTR')
 	plt.yscale('log')
@@ -599,9 +601,10 @@ def plotXTR():
 	plt.savefig('xtr/xtr')
 	plt.close(fig1)
 	
+	binList = [i for i in range(0,XTRL_p.max())]
 	fig2 = plt.figure()
-	plt.hist(XTRL_e,50,histtype='step',label='e')
-	plt.hist(XTRL_p,50,histtype='step',label='p')
+	plt.hist(XTRL_e,bins=binList,histtype='step',label='e')
+	plt.hist(XTRL_p,bins=binList,histtype='step',label='p')
 	plt.title('XTRL')
 	plt.xlabel('XTRL')
 	plt.yscale('log')
