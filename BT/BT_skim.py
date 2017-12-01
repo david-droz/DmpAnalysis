@@ -14,10 +14,9 @@ Source of cuts: Andrii's code
 
 Inputs:
 		1. Input file
-		2. Particle name
-		3. Run number
-		4. Dataset name
-		5. Run type (MC/BT)
+		2. Run number
+		3. Dataset name
+		4. Run type (MC/BT)
 		
 Output:
 	- Root files under ..../UserSpace/ddroz
@@ -41,37 +40,55 @@ import pickle
 
 from BTeventSelection import BTselection 
 from BT_getValues import getValues
-from BT_to_numpy import identifyParticle
 
 
-def analysis(files,pid,nr,dataset,runtype):
+def analysis(infile,nr,dataset,runtype):
 	
+	# Build file list
+	if ".root" in infile:
+		files=[infile]
+	else:
+		files = []
+		with open(infile,'r') as f:
+			for lines in f:
+				if ".root" in lines:
+					files.append(lines.replace('\n',''))
+	
+	# Build file name for output numpy file
+	if not os.path.isdir('tmp'):
+		os.mkdir('tmp')
 	folder = './tmp/'
-	temp_basename = os.path.basename(sys.argv[1])
+	temp_basename = os.path.basename(infile)
 	temp_basename = os.path.splitext(temp_basename)[0]
 	folder = folder + temp_basename
 	
+	if not os.path.isdir(folder): os.mkdir(folder)
+	outstr = folder + '/array_' + str(nr) + '.npy'	
+	if os.path.isfile(outstr):
+		return
+		
+	# Build file name for skimmed data	
 	skim_out = '/beegfs/dampe/prod/UserSpace/ddroz/BT/'
 	if not os.path.isdir(skim_out): os.mkdir(skim_out)
 	
-	if not os.path.isdir(folder): os.mkdir(folder)
-	
-	if pid == 11:
-		outstr = folder + '/elec_' + str(nr) + '.npy'
-		skim_out = skim_out + 'BT_Electron'
-	elif pid == 2212:
-		outstr = folder + '/prot_' + str(nr) + '.npy'
-		skim_out = skim_out + 'BT_Electron'
-	elif pid == 22:
-		outstr = folder + '/gamma_' + str(nr) + '.npy'
-	
 	if runtype == "MC":
-		skim_out += '_MC.root'
+		skim_out += 'MC/'
 	else:
-		skim_out += '_BT.root'	
-		
-	if os.path.isfile(outstr):
-		return
+		skim_out += 'BT/'	
+	if not os.path.isdir(skim_out): os.mkdir(skim_out)
+
+	if 'part' in infile:
+		k = infile.find('-part')
+		skim_out = skim_out + infile[0:k] + '/'
+	else:
+		skim_out = skim_out + os.path.splittext(infile)[0] + '/'
+	if not os.path.isdir(skim_out): os.mkdir(skim_out)
+	
+	skim_out = skim_out + os.path.splittext(infile)[0] + '_' + str(nr) + '.root'
+	
+	###
+	
+	# Initialise TChain
 	
 	#~ dmpch = ROOT.DmpChain("CollectionTree")
 	dmpch = ROOT.TChain("CollectionTree")
@@ -135,7 +152,7 @@ def analysis(files,pid,nr,dataset,runtype):
 		else:
 			rejected += 1
 			
-	np.save(outstr,np.array(a))
+	
 	
 	print "Selected ", selected, " events"
 	print "Rejected ", rejected, " events"
@@ -144,6 +161,9 @@ def analysis(files,pid,nr,dataset,runtype):
 	#~ dmpch.Terminate()
 	newTree.Write()
 	skimFile.Close()
+	
+	np.save(outstr,np.array(a))
+	
 	return
 	
 
@@ -156,27 +176,13 @@ if __name__ == '__main__' :
 	Inputs:
 	'''
 	
-	if len(sys.argv) < 6:
+	if len(sys.argv) < 5:
 		print "ERROR - Expected arguments:"
 		print "1. Input file"
-		print "2. Particle name"
-		print "3. Run number"
-		print "4. Dataset name"
-		print "5. Run type (MC/BT)"
+		print "2. Run number"
+		print "3. Dataset name"
+		print "4. Run type (MC/BT)"
 		sys.exit(-1)
 	
-	if ".root" in sys.argv[1]:
-		filelist=[sys.argv[1]]
-	else:
-		filelist = []
-		with open(sys.argv[1],'r') as f:
-			for lines in f:
-				if ".root" in lines:
-					filelist.append(lines.replace('\n',''))
 	
-	particle = identifyParticle(sys.argv[2])
-	
-	if not os.path.isdir('tmp'):
-		os.mkdir('tmp')
-		
-	analysis(filelist,particle,int(sys.argv[3]),sys.argv[4],sys.argv[5])
+	analysis(sys.argv[1],int(sys.argv[2]),sys.argv[3],sys.argv[4])
