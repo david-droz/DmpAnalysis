@@ -77,14 +77,15 @@ def analysis(infile,nr,dataset,runtype):
 		skim_out += 'BT/'	
 	if not os.path.isdir(skim_out): os.mkdir(skim_out)
 
-	if 'part' in infile:
-		k = infile.find('-part')
-		skim_out = skim_out + infile[0:k] + '/'
+	baseInfile = os.path.basename(infile)
+	if 'part' in baseInfile:
+		k = baseInfile.find('-part')
+		skim_out = skim_out + baseInfile[0:k] + '/'
 	else:
-		skim_out = skim_out + os.path.splittext(infile)[0] + '/'
+		skim_out = skim_out + os.path.splittext(baseInfile)[0] + '/'
 	if not os.path.isdir(skim_out): os.mkdir(skim_out)
 	
-	skim_out = skim_out + os.path.splittext(infile)[0] + '_' + str(nr) + '.root'
+	skim_out = skim_out + os.path.splittext(baseInfile)[0] + '_' + str(nr) + '.root'
 	
 	###
 	
