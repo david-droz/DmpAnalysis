@@ -82,10 +82,10 @@ def analysis(infile,nr,dataset,runtype):
 		k = baseInfile.find('-part')
 		skim_out = skim_out + baseInfile[0:k] + '/'
 	else:
-		skim_out = skim_out + os.path.splittext(baseInfile)[0] + '/'
+		skim_out = skim_out + os.path.splitext(baseInfile)[0] + '/'
 	if not os.path.isdir(skim_out): os.mkdir(skim_out)
 	
-	skim_out = skim_out + os.path.splittext(baseInfile)[0] + '_' + str(nr) + '.root'
+	skim_out = skim_out + os.path.splitext(baseInfile)[0] + '_' + str(nr) + '.root'
 	
 	###
 	
