@@ -42,25 +42,6 @@ from BTeventSelection import BTselection
 from BT_getValues import getValues
 
 
-def identifyParticle(part):
-	'''
-	Particle identification based on either the argument or the file name
-	'''
-	e = ['elec','electron','11','Elec','Electron']
-	p = ['prot','proton','2212','Prot','Proton']
-	
-	for cat in [e,p]:
-		if part in cat:
-			return int(cat[2])
-	
-	for cat in [e,p]:
-		for x in cat[1:]:
-			if x in part:
-				return int(cat[2])
-	
-	raise Exception("Particle not identified - " + part)
-
-
 def analysis(infile,nr,dataset,runtype):
 	
 	# Build file list
@@ -108,7 +89,11 @@ def analysis(infile,nr,dataset,runtype):
 	
 	###
 	
-	pid = identifyParticle(os.path.basename(infile))
+	# Particle identification (for building numpy arrays - put a class label for the DNN)
+	if 'electron' in dataset:
+		pid = 11
+	elif 'proton' in dataset:
+		pid = 2212
 	
 	# Initialise TChain
 	
@@ -174,17 +159,16 @@ def analysis(infile,nr,dataset,runtype):
 		else:
 			rejected += 1
 			
-	
-	
 	print "Selected ", selected, " events"
 	print "Rejected ", rejected, " events"
 	
-	del a
 	#~ dmpch.Terminate()
 	newTree.Write()
 	skimFile.Close()
 	
 	np.save(outstr,np.array(a))
+	
+	del a
 	
 	return
 	
