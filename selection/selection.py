@@ -85,6 +85,72 @@ def getEventWeight(pev):
 		
 	return w
 
+def getXTRL(pev):
+	
+	'''
+	From a given event, returns the energy ratio and energy RMS in all BGO layers, and XTR/XTRL/zeta/whatever-it-is-called
+	'''
+	
+	NBGOLAYERS  = 14
+	NBARSLAYER  = 22
+	EDGEBARS    = [0,21]
+	BARPITCH    = 27.5
+	
+	edep = np.zeros((NBGOLAYERS,NBARSLAYER))
+	for i in xrange(NBGOLAYERS):
+		for j in xrange(NBARSLAYER):
+			edep[i,j] = pev.pEvtBgoRec().GetEdep(i,j)
+	
+	BHET = edep.sum()
+	BHXS = [0. for i in xrange(NBGOLAYERS)]
+	BHER = [0. for i in xrange(NBGOLAYERS)]
+	COG = [0. for i in xrange(NBGOLAYERS)]
+	bhm  = 0.
+	SIDE = [False for i in xrange(NBGOLAYERS)]
+	
+	for i in xrange(NBGOLAYERS):
+		# Find the bar with max energy deposition of a layer and record its number as im
+		im = None
+		em = 0.0;
+		for j in xrange(NBARSLAYER):
+			ebar = edep[i,j]
+			if ebar < em : continue 
+			em = ebar
+			im = j
+		
+		if not em: continue
+		
+		if im in EDGEBARS:
+			cog = BARPITCH * im   #BHX[i][im]
+			
+		else:
+			ene = 0.
+			cog = 0.
+			for  j in [im-1, im, im+1]: 
+				ebar = edep[i,j]
+				ene += ebar
+				cog += BARPITCH * j * ebar
+			cog /= ene
+			
+		posrms   = 0.
+		enelayer = 0.
+		for j in xrange(NBARSLAYER):
+			ebar = edep[i,j]
+			posbar = BARPITCH * j 
+			enelayer += ebar
+			posrms += ebar * (posbar-cog)*(posbar-cog)
+		posrms = math.sqrt( posrms / enelayer)
+		BHXS[i] = posrms
+		COG[i] = cog
+		BHER[i] = enelayer / BHET
+	
+	sumRMS = sum(BHXS)
+	F = [r for r in reversed(BHER) if r][0]
+	XTRL = sumRMS**4.0 * F / 8000000.
+	
+	del edep
+	
+	return BHER, BHXS, XTRL
 
 def selection(pev,particle,cutStat):
 	'''
@@ -120,17 +186,14 @@ def getBGOvalues(pev):
 	'''
 	templist = []
 	
-	RMS2 = pev.pEvtBgoRec().GetRMS2()
+	#~ RMS2 = pev.pEvtBgoRec().GetRMS2()		# Obsolete. Let's use the manual computation instead.
+	ELayer, RMS, zeta = getXTRL(pev)
 	
 	# Energy per layer
-	for i in xrange(14): templist.append(  pev.pEvtBgoRec().GetELayer(i)  )
+	for i in xrange(14): templist.append( ELayer[i]  )
 	
 	# RMS2 per layer
-	for j in xrange(14): 
-		if RMS2[j] < 0 :		# In PMO code, if RMS is not defined then RMS2 = -999. Prefer to move it to 0.
-			templist.append( 0 )
-		else:
-			templist.append( RMS2[j] )
+	for j in xrange(14): templist.append( RMS[j] )
 	
 	# Hits on every layer		
 	hitsPerLayer = pev.pEvtBgoRec().GetLayerHits()
@@ -250,7 +313,7 @@ def getValues(pev,i):
 	'''
 	List of variables:
 		0 - 13 : Energy in BGO layer i
-		14 - 27 : RMS2 of energy deposited in layer i
+		14 - 27 : RMS of energy deposited in layer i
 		28 - 41 : Number of hits in layer i
 		
 		42 : longitudinal RMS ( DmpEvtBgoRec::GetRMS_l )
@@ -275,7 +338,8 @@ def getValues(pev,i):
 		67 : True energy (EKin). Set to 0 if missing (i.e. flight data)
 		68 : Event index
 		69 : Event weight (weight according to energy spectrum)
-		70 : Particle ID (0 for proton, 1 for electron, 2 for photon)
+		70 : XTRL
+		71 : Particle ID (0 for proton, 1 for electron, 2 for photon)
 	'''
 	templist = []
 
@@ -322,6 +386,11 @@ def getValues(pev,i):
 		w = 1
 		raise
 	templist.append(w)
+	
+	### XTRL
+	ELayer, RMS, zeta = getXTRL(pev)
+	templist.append(zeta)	
+	del ELayer, RMS, zeta
 	
 	### Event label
 	if pev.pEvtSimuPrimaries().pvpart_pdg == 11 :		# Electron
