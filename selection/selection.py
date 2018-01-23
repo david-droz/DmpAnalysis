@@ -32,6 +32,8 @@ import gc
 gc.enable()
 import yaml
 
+from ../skim/MC_skimmer import containmentCut, cutMaxELayer, maxBarCut
+
 def openRootFile(efilelist): 
 	'''
 	Returns a TChain from a filelist
@@ -165,6 +167,16 @@ def selection(pev,particle,cutStat):
 	if not pev.pEvtHeader().GeneratedTrigger(3): 
 		incrementKey(cutStat,'HET')
 		return False
+		
+	if not containmentCut(pev.pEvtBgoRec()):
+		incrementKey(cutStat,'Containment')
+		return False
+	elif not cutMaxELayer(pev.pEvtBgoRec()):
+		incrementKey(cutStat,'MaxELayer')
+		return False
+	elif not maxBarCut(pev):
+		incrementKey(cutStat,'maxBar')
+		return Falsei
 	
 	erec = pev.pEvtBgoRec().GetElectronEcor()
 	
