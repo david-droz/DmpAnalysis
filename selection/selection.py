@@ -243,7 +243,7 @@ def selection(pev,particle,cutStat):
 		return False
 	elif not maxBarCut(pev):
 		incrementKey(cutStat,'maxBar')
-		return Falsei
+		return False
 	
 	erec = pev.pEvtBgoRec().GetElectronEcor()
 	
