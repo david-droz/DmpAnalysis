@@ -156,7 +156,8 @@ def main(filelist,outputdir='skim'):
 		
 		goodEvent = True
 		
-		listOfCuts = [ ['Containment',containmentCut(pev.pEvtBgoRec())] , ['MaxELayer',cutMaxELayer(pev.pEvtBgoRec())] , ['MaxBar',maxBarCut(pev)] , ['HET',pev.pEvtHeader().GeneratedTrigger(3)], ['ZeroEnergy',pev.pEvtBgoRec().GetTotalEnergy() > 0 ]]
+		#~ listOfCuts = [ ['Containment',containmentCut(pev.pEvtBgoRec())] , ['MaxELayer',cutMaxELayer(pev.pEvtBgoRec())] , ['MaxBar',maxBarCut(pev)] , ['HET',pev.pEvtHeader().GeneratedTrigger(3)], ['ZeroEnergy',pev.pEvtBgoRec().GetTotalEnergy() > 0 ]]
+		listOfCuts = [ ['Containment',containmentCut(pev.pEvtBgoRec())] , ['MaxELayer',cutMaxELayer(pev.pEvtBgoRec())] , ['MaxBar',maxBarCut(pev)] , ['ZeroEnergy',pev.pEvtBgoRec().GetTotalEnergy() > 0 ]]
 		
 		for tag,result in listOfCuts:
 			if not result:
