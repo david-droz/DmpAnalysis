@@ -1,6 +1,6 @@
 '''
 
-miniDNN.py
+simpleDNN.py
 
 Trains a simple DNN to test if it works
 
@@ -32,59 +32,6 @@ import getModel
 ##############################################
 
 # Possible parameters
-
-def ParamsID(a):
-	'''
-	Using hash function to build an unique identifier for each dictionary
-	'''
-	ID = 1
-	for x in ['acti_out','init','optimizer']:
-		ID = ID + int(hashlib.sha256(a[x].encode('utf-8')).hexdigest(), 16)
-	ID = ID + int(hashlib.sha256(str(a['activation'] + 'b').encode('utf-8')).hexdigest(), 16) 
-	ID = ID + int(hashlib.sha256(str(a['dropout']).encode('utf-8')).hexdigest(), 16) 
-	ID = ID + int(hashlib.sha256(str(len(a['architecture'])).encode('utf-8')).hexdigest(), 16)
-	for y in a['architecture']:
-		ID = ID + int(hashlib.sha256(str(y).encode('utf-8')).hexdigest(), 16) 
-	ID = ID + int(a['batchnorm'])
-	return (ID % 10**10)
-
-def getRandomParams():
-	'''
-	Returns a dictionary containing all the parameters to train the Keras DNN. Is then fed to getModel::getModel()
-	'''
-	p_dropout = [0.,0.1,0.2,0.5]
-	p_batchnorm = [True, True, False]			# Repetition of values to increase probability
-	p_activation = ['relu','relu','relu','sigmoid','softplus','elu','elu']
-	#~ p_activation = ['relu','relu','relu','sigmoid','softplus','elu','elu',PRelu(),PRelu(),ELU(),LeakyReLU()]	 
-	p_acti_out = ['sigmoid']
-	p_init = ['uniform','glorot_uniform','glorot_normal','lecun_uniform','he_uniform','he_normal']
-	p_loss = ['binary_crossentropy']
-	p_optimizer = ['adagrad','adadelta','adam','adamax','nadam','sgd']
-	p_metric = [['binary_accuracy']]
-	p_architecture = [ 	[50,20,1],
-						[50,25,12,1],
-						[60,20,1],
-						[60,30,15,1],
-						[100,50,25,1],
-						[100,100,100,1],
-						[200,100,50,1],
-						[200,100,50,25,1],
-						[300,300,300,1],
-						[300,150,75,1],
-						[300,200,100,50,1] ]
-						
-	mydic = {}
-	mydic['architecture'] = random.choice(p_architecture)
-	mydic['dropout'] = random.choice(p_dropout)
-	mydic['batchnorm'] = random.choice(p_batchnorm)
-	mydic['activation'] = random.choice(p_activation)
-	mydic['acti_out'] = random.choice(p_acti_out)
-	mydic['init'] = random.choice(p_init)
-	mydic['loss'] = random.choice(p_loss)
-	mydic['optimizer'] = random.choice(p_optimizer)
-	mydic['metrics'] = random.choice(p_metric)
-	
-	return mydic
 
 def getParticleSet(fname):
 	arr = np.load(fname)

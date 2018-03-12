@@ -7,6 +7,7 @@ Full study of a DNN method:
 - Evaluate performances on various energy bins
 - Evaluate performances on beamtest data
 
+Result: Seems to work well
 
 '''
 

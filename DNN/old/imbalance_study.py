@@ -2,6 +2,9 @@
 
 For the same trained model, compare results in balanced vs imbalanced
 
+--> Result: Training should be balanced. Validation, not necessarily. 
+	Save normalisation applied on training for future use
+
 '''
 
 from __future__ import division, print_function, absolute_import
