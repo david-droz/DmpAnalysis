@@ -116,6 +116,9 @@ def identifyParticle(part):
 	'''
 	Particle identification based on either the argument or the file name
 	'''
+	if part == 'flight':
+		return part
+		
 	e = ['e','elec','electron','11','E','Elec','Electron']
 	p = ['p','prot','proton','2212','P','Prot','Proton']
 	gamma = ['g','gamma','photon','22','Gamma','Photon']
@@ -266,7 +269,7 @@ def getBGOvalues(pev):
 	templist = []
 	
 	#~ RMS2 = pev.pEvtBgoRec().GetRMS2()		# Obsolete. Let's use the manual computation instead.
-	ELayer, RMS, zeta = getXTRL(pev)
+	#~ ELayer, RMS, zeta = getXTRL(pev)
 	
 	# Energy per layer
 	for i in xrange(14): templist.append( ELayer[i]  )
@@ -463,7 +466,7 @@ def getValues(pev,i):
 		w = getEventWeight(pev)
 	except:
 		w = 1
-		raise
+		#~ raise
 	templist.append(w)
 	
 	### XTRL
@@ -472,11 +475,14 @@ def getValues(pev,i):
 	del ELayer, RMS, zeta
 	
 	### Event label
-	if pev.pEvtSimuPrimaries().pvpart_pdg == 11 :		# Electron
-		templist.append(1)
-	elif pev.pEvtSimuPrimaries().pvpart_pdg == 22 :		# Photon
-		templist.append(2)
-	else:												# Proton
+	try:
+		if pev.pEvtSimuPrimaries().pvpart_pdg == 11 :		# Electron
+			templist.append(1)
+		elif pev.pEvtSimuPrimaries().pvpart_pdg == 22 :		# Photon
+			templist.append(2)
+		else:												# Proton
+			templist.append(0)
+	except:													# Flight
 		templist.append(0)
 
 	
@@ -503,6 +509,8 @@ def analysis(files,pid,nr):
 		outstr = folder + '/prot_' + str(nr) + '.npy'
 	elif pid == 22:
 		outstr = folder + '/gamma_' + str(nr) + '.npy'
+	elif pid == 'flight' :
+		outstr = folder + '/flight_' + str(nr) '.npy'
 		
 	if os.path.isfile(outstr):
 		return
