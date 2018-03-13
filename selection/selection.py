@@ -269,7 +269,7 @@ def getBGOvalues(pev):
 	templist = []
 	
 	#~ RMS2 = pev.pEvtBgoRec().GetRMS2()		# Obsolete. Let's use the manual computation instead.
-	#~ ELayer, RMS, zeta = getXTRL(pev)
+	ELayer, RMS, zeta = getXTRL(pev)
 	
 	# Energy per layer
 	for i in xrange(14): templist.append( ELayer[i]  )
