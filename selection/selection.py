@@ -510,7 +510,7 @@ def analysis(files,pid,nr):
 	elif pid == 22:
 		outstr = folder + '/gamma_' + str(nr) + '.npy'
 	elif pid == 'flight' :
-		outstr = folder + '/flight_' + str(nr) '.npy'
+		outstr = folder + '/flight_' + str(nr) + '.npy'
 		
 	if os.path.isfile(outstr):
 		return
