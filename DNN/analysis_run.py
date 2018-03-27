@@ -626,7 +626,7 @@ if __name__ == '__main__' :
 	parser.add_argument("--emin","-e", dest="emin", default=40*1e+3, type=float, help="Minimum BGO energy (MeV)")
 	parser.add_argument("--emax","-E", dest="emax", default=10*1e+6, type=float, help="Maximum BGO energy (MeV)")
 	parser.add_argument("--setpath","-p", dest="path", default='/home/drozd/analysis/ntuples/MC-skim-RMS-07Feb18/', help="Path to numpy files")
-	parser.add_argument("--autoencoder","-a", dest="autoencoder", default=False, help="Use a variational autoencoder pre-training")
+	parser.add_argument("--autoencoder","-a", dest="autoencoder", action='store_true', default=False, help="Use a variational autoencoder pre-training")
 	opts = parser.parse_args()
 	
 	for x in ['predHisto','ROC','pickles','beamtest','beamtest/vars','xtr','models']:
