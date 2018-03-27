@@ -175,6 +175,7 @@ def getXTRL(pev):
 	
 	BHET = edep.sum()
 	BHXS = [0. for i in xrange(NBGOLAYERS)]
+	BHE = [0. for i in xrange(NBGOLAYERS)]
 	BHER = [0. for i in xrange(NBGOLAYERS)]
 	COG = [0. for i in xrange(NBGOLAYERS)]
 	bhm  = 0.
@@ -214,6 +215,7 @@ def getXTRL(pev):
 		posrms = math.sqrt( posrms / enelayer)
 		BHXS[i] = posrms
 		COG[i] = cog
+		BHE[i] = enelayer
 		BHER[i] = enelayer / BHET
 	
 	sumRMS = sum(BHXS)
@@ -222,7 +224,7 @@ def getXTRL(pev):
 	
 	del edep
 	
-	return BHER, BHXS, XTRL
+	return BHE, BHER, BHXS, XTRL
 
 def selection(pev,particle,cutStat):
 	'''
@@ -248,7 +250,7 @@ def selection(pev,particle,cutStat):
 		incrementKey(cutStat,'maxBar')
 		return False
 	
-	erec = pev.pEvtBgoRec().GetElectronEcor()
+	erec = pev.pEvtBgoRec().GetTotalEnergy()
 	
 	if erec < 10 * 1e+3:		# 10 GeV
 		incrementKey(cutStat,'10GeV')
@@ -269,7 +271,7 @@ def getBGOvalues(pev):
 	templist = []
 	
 	#~ RMS2 = pev.pEvtBgoRec().GetRMS2()		# Obsolete. Let's use the manual computation instead.
-	ELayer, RMS, zeta = getXTRL(pev)
+	ELayer, ELayerRatio, RMS, zeta = getXTRL(pev)
 	
 	# Energy per layer
 	for i in xrange(14): templist.append( ELayer[i]  )
@@ -470,9 +472,9 @@ def getValues(pev,i):
 	templist.append(w)
 	
 	### XTRL
-	ELayer, RMS, zeta = getXTRL(pev)
+	ELayer, ELayerFrac, RMS, zeta = getXTRL(pev)
 	templist.append(zeta)	
-	del ELayer, RMS, zeta
+	del ELayer, ELayerFrac, RMS
 	
 	### Event label
 	try:
