@@ -6,7 +6,7 @@ Code that takes as input one of Xin's analysis ntuples, and should return a root
 
 from __future__ import print_function, division, absolute_import
 
-from ROOT import TTree, TFile
+from ROOT import TTree, TFile, TBranch
 from keras.models import load_model
 import numpy as np
 import sys
@@ -62,6 +62,21 @@ class MLntuple(object):
 		
 	def getPredictions(self):
 		return self.predictions	
+	
+	def savePredictions(self,outdir=None):
+		if outdir is not None: self.outdir = outdir
+		if not self.predictions: return
+		for d in self.predictions.keys():
+			np.save(self.outdir+'/'+d,self.predictions[d])
+	def loadPredictions(self,outdir=None):
+		if outdir is not None: self.outdir = outdir
+		if not os.path.isdir(self.outdir): raise IOError("Cannot find directory:",self.outdir)
+		
+		from glob import glob 
+		arrays = glob(outdir+'/*.npy')
+		for d in arrays:
+			keyName = os.path.splitext(os.path.basename(d))[0]
+			self.predictions[keyName] = np.load(d)
 		
 	def run(self):
 		if not os.path.isdir(self.outdir): os.mkdir(self.outdir)
@@ -100,7 +115,36 @@ class MLntuple(object):
 			np.save('data.npy',predArray)
 			
 			TF.Close()
-				
+	
+	def writePredictions(self,outdir=None,suffix="DNN"):
+		if outdir is not None: self.outdir = outdir
+		
+		from shutil import copyfile
+		from array import array
+		
+		for f in self.infiles:
+			
+			newF = self.outdir + "/" + os.path.basename(f).replace(".root","."+suffix+".root")
+			
+			copyfile(f,newF)
+			
+			data = self.predictions[os.path.basename(f)]
+			
+			# https://root-forum.cern.ch/t/adding-a-branch-to-an-existing-tree/9449
+			# https://root-forum.cern.ch/t/pyroot-adding-a-branch-to-a-tree/2918/2
+			# https://root-forum.cern.ch/t/creating-branches-in-python/16677
+			# https://web.archive.org/web/20150124185243/http://wlav.web.cern.ch/wlav/pyroot/tpytree.html
+			# https://root.cern.ch/root/roottalk/roottalk01/0363.html
+			TF = TFile(newF,'update')
+			TT = TF.Get("DmlNtup")
+			myScore = array("f",[0.0])
+			bpt = TT.Branch("MLscore",myScore,"MLscore/F")
+			
+			for i in range(TT.GetEntries()):
+				myScore[0] = data[i]
+				bpt.Fill()
+			TT.Write()
+			TF.Close()
 
 
 
@@ -119,6 +163,7 @@ if __name__ == '__main__' :
 	for f in d.keys():
 		arr = d[f]
 		arr = arr[ np.absolute(arr) < 40 ]
-		plt.hist(arr,50,histtype='step',label=f)
+		plt.hist(arr,50,histtype='step',label=os.path.basename(f))
 	plt.legend(loc='best')
 	plt.savefig('test')
+	analyser.writePredictions()
