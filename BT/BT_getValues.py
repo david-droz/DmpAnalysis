@@ -21,6 +21,7 @@ def getXTRL(bgorec):
 	
 	BHET = edep.sum()
 	BHXS = [0. for i in xrange(NBGOLAYERS)]
+	BHE = [0. for i in xrange(NBGOLAYERS)]
 	BHER = [0. for i in xrange(NBGOLAYERS)]
 	COG = [0. for i in xrange(NBGOLAYERS)]
 	bhm  = 0.
@@ -60,6 +61,7 @@ def getXTRL(bgorec):
 		posrms = math.sqrt( posrms / enelayer)
 		BHXS[i] = posrms
 		COG[i] = cog
+		BHE[i] = enelayer
 		BHER[i] = enelayer / BHET
 	
 	sumRMS = sum(BHXS)
@@ -68,7 +70,7 @@ def getXTRL(bgorec):
 	
 	del edep
 	
-	return BHER, BHXS, XTRL
+	return BHE, BHER, BHXS, XTRL
 
 def getBGOvalues(bgorec):
 	'''
@@ -77,7 +79,7 @@ def getBGOvalues(bgorec):
 	templist = []
 	
 	#~ RMS2 = bgorec.GetRMS2()
-	ELayer, RMS, zeta = getXTRL( bgorec )
+	ELayer, ELayerFrac, RMS, zeta = getXTRL( bgorec )
 	
 	# Energy per layer
 	for i in xrange(14): templist.append(  ELayer[i]  )
@@ -241,7 +243,7 @@ def getValues(bgorec, b_bgorec, nudraw, b_nudraw, evtheader, psdhits, bgohits, s
 	templist = templist + getNUDvalues(nudraw)
 	
 	### XTRL
-	ELayer, RMS, zeta = getXTRL(bgorec)
+	ELayer, ELayerFrac, RMS, zeta = getXTRL(bgorec)
 	templist.append(zeta)	
 	del ELayer, RMS, zeta
 	
