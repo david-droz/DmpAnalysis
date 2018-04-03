@@ -16,7 +16,7 @@ import math
 
 class MLntuple(object):
 	
-	def __init__(self,model_path='model_100.h5',xmax_path='X_max.npy',infiles=[]):
+	def __init__(self,model_path='/beegfs/users/ddroz/machineLearning/ntuples/model_100.h5',xmax_path='/beegfs/users/ddroz/machineLearning/ntuples/X_max.npy',infiles=[]):
 		
 		try:
 			self.xmax = np.load(xmax_path)
