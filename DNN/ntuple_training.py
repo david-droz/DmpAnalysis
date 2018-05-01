@@ -86,12 +86,12 @@ def trainOne(weights=True):
 	# LOAD TRAINING
 	###
 	arr_e = np.load('DmlNtup_allElectron-v6r0p0_1GeV_10TeV_merged_20GeV_100GeV.npy')[0:ne]
-	arr_p = np.load('DmlNtup_allProton-v6r0p0_1GeV_10TeV_merged_20GeV_100GeV.npy')[0:ne]
+	arr_p = np.load('DmlNtup_allProton-v6r0p0_1GeV_100TeV_merged_20GeV_100GeV.npy')[0:ne]
 	
 	for erange in ['100GeV_1TeV','1TeV_10TeV']:
 		try:
 			arr_e = np.concatenate(( arr_e, np.load('DmlNtup_allElectron-v6r0p0_1GeV_10TeV_merged_'+erange+'.npy')[0:ne] ))
-			arr_p = np.concatenate(( arr_p, np.load('DmlNtup_allProton-v6r0p0_1GeV_10TeV_merged_'+erange+'.npy')[0:ne] ))
+			arr_p = np.concatenate(( arr_p, np.load('DmlNtup_allProton-v6r0p0_1GeV_100TeV_merged_'+erange+'.npy')[0:ne] ))
 		except MemoryError :
 			print(erange)
 			raise
@@ -109,10 +109,10 @@ def trainOne(weights=True):
 	# LOAD TEST
 	###
 	arr_e = np.load('DmlNtup_allElectron-v6r0p0_1GeV_10TeV_merged_20GeV_100GeV.npy')[ne:ntest]
-	arr_p = np.load('DmlNtup_allProton-v6r0p0_1GeV_10TeV_merged_20GeV_100GeV.npy')[ne:ntest]
+	arr_p = np.load('DmlNtup_allProton-v6r0p0_1GeV_100TeV_merged_20GeV_100GeV.npy')[ne:ntest]
 	for erange in ['100GeV_1TeV','1TeV_10TeV']:
 		arr_e = np.concatenate(( arr_e, np.load('DmlNtup_allElectron-v6r0p0_1GeV_10TeV_merged_'+erange+'.npy')[ne:ntest] ))
-		arr_p = np.concatenate(( arr_p, np.load('DmlNtup_allProton-v6r0p0_1GeV_10TeV_merged_'+erange+'.npy')[ne:ntest] ))
+		arr_p = np.concatenate(( arr_p, np.load('DmlNtup_allProton-v6r0p0_1GeV_100TeV_merged_'+erange+'.npy')[ne:ntest] ))
 	test = np.concatenate(( arr_e , arr_p ))
 	np.random.shuffle(test)
 	del arr_e, arr_p
@@ -153,7 +153,7 @@ def trainOne(weights=True):
 	else: plt.savefig('plots/history_full_unweighted')
 	plt.close(fig1)
 	
-	for m, n in [ [model,'sigmoid'],[model2,'linear'] ]
+	for m, n in [ [model,'sigmoid'],[model2,'linear'] ] :
 		predictions = m.predict(X_test)
 		elecs_p, prots_p = getClassifierScore(Y_test,predictions)
 		weights_elec = weight_test[ Y_test.astype(bool) ]
@@ -181,7 +181,7 @@ def trainThree():
 		
 		try:
 			arr_e = np.load('DmlNtup_allElectron-v6r0p0_1GeV_10TeV_merged_'+erange+'.npy')
-			arr_p = np.load('DmlNtup_allProton-v6r0p0_1GeV_10TeV_merged_'+erange+'.npy')
+			arr_p = np.load('DmlNtup_allProton-v6r0p0_1GeV_100TeV_merged_'+erange+'.npy')
 		except MemoryError :
 			print(erange)
 			raise
@@ -235,7 +235,7 @@ def trainThree():
 		plt.savefig('plots/history_'+erange)
 		plt.close(fig1)
 		
-		for m, n in [ [model,'sigmoid'],[model2,'linear'] ]
+		for m, n in [ [model,'sigmoid'],[model2,'linear'] ] : 
 			predictions = m.predict(X_test)
 			elecs_p, prots_p = getClassifierScore(Y_test,predictions)
 			
