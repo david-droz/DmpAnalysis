@@ -74,7 +74,30 @@ def getClassifierScore(truth,pred):
 	elecs = pred[truth.astype(bool)]
 	prots = pred[~truth.astype(bool)]
 	return elecs, prots
-		
+
+def testIfGPU():
+	print("--- GPU CHECK ---")
+	from theano import function, config, shared, tensor
+	vlen = 10 * 30 * 768  # 10 x #cores x # threads per core
+	iters = 1000
+	rng = np.random.RandomState(22)
+	x = shared(np.asarray(rng.rand(vlen), config.floatX))
+	f = function([], tensor.exp(x))
+	print(f.maker.fgraph.toposort())
+	t0 = time.time()
+	for i in range(iters):
+		r = f()
+	t1 = time.time()
+	#~ print("Looping %d times took %f seconds" % (iters, t1 - t0))
+	#~ print("Result is %s" % (r,))
+	if np.any([isinstance(x.op, tensor.Elemwise) and
+	              ('Gpu' not in type(x.op).__name__)
+	              for x in f.maker.fgraph.toposort()]):
+	    print('Used the cpu')
+	else:
+	    print('Used the gpu')
+	
+	print('-------')
 	
 def trainOne(weights=True):
 	
@@ -179,6 +202,8 @@ def trainThree():
 	
 	for erange in ['20GeV_100GeV','100GeV_1TeV','1TeV_10TeV']:
 		
+		if os.path.isfile('out/model_'+erange+'.h5'): continue
+		
 		try:
 			arr_e = np.load('DmlNtup_allElectron-v6r0p0_1GeV_10TeV_merged_'+erange+'.npy')
 			arr_p = np.load('DmlNtup_allProton-v6r0p0_1GeV_100TeV_merged_'+erange+'.npy')
@@ -223,7 +248,7 @@ def trainThree():
 		
 		model2 = getLinearModel(X_train,model)
 		
-		model2.save('out/model_'+erange+'.h5')
+		
 		
 		fig1 = plt.figure()
 		plt.plot(history.history['loss'],label='loss')
@@ -251,9 +276,17 @@ def trainThree():
 			plt.yscale('log')
 			plt.savefig('plots/classScore_'+erange+'_'+n)
 			plt.close(fig2)
+			
+		model2.save('out/model_'+erange+'.h5')
 
 
 if __name__ == '__main__':
+	
+	try:
+		testIfGPU()
+	except Exception as Ex:
+		print("GPU Test failed")
+		print(str(Ex))
 	
 	for d in ['out','plots']:
 		if not os.path.isdir(d): os.mkdir(d)
