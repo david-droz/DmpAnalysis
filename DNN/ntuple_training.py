@@ -39,28 +39,29 @@ from sklearn.metrics import f1_score
 from keras.models import Sequential, load_model
 from keras.layers.core import Dense, Dropout
 from keras.callbacks import ModelCheckpoint, EarlyStopping, Callback, LearningRateScheduler, ReduceLROnPlateau
+from keras import regularizers
 
 
 def getModel(X_train):
 	model = Sequential()
-	model.add(Dense(300,input_shape=(X_train.shape[1],),kernel_initializer='he_uniform',activation='relu'))
-	model.add(Dropout(0.1))
-	model.add(Dense(150,kernel_initializer='he_uniform',activation='relu'))
-	model.add(Dropout(0.1))
+	model.add(Dense(250,input_shape=(X_train.shape[1],),kernel_initializer='he_uniform',activation='relu',kernel_regularizer=regularizers.l2(0.),activity_regularizer=regularizers.l2(0.)))
+	model.add(Dropout(0.3))
+	model.add(Dense(150,kernel_initializer='he_uniform',activation='relu',kernel_regularizer=regularizers.l2(0.)))
+	model.add(Dropout(0.3))
 	model.add(Dense(75,kernel_initializer='he_uniform',activation='relu'))
-	model.add(Dropout(0.1))
+	model.add(Dropout(0.2))
 	model.add(Dense(1,kernel_initializer='he_uniform',activation='sigmoid'))
 	model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy'])
 	return model
 	
 def getLinearModel(X_train,model):
 	model2 = Sequential()
-	model2.add(Dense(300,input_shape=(X_train.shape[1],),kernel_initializer='he_uniform',activation='relu'))
-	model2.add(Dropout(0.1))
-	model2.add(Dense(150,kernel_initializer='he_uniform',activation='relu'))
-	model2.add(Dropout(0.1))
+	model2.add(Dense(250,input_shape=(X_train.shape[1],),kernel_initializer='he_uniform',activation='relu',kernel_regularizer=regularizers.l2(0.),activity_regularizer=regularizers.l2(0.)))
+	model2.add(Dropout(0.3))
+	model2.add(Dense(150,kernel_initializer='he_uniform',activation='relu',kernel_regularizer=regularizers.l2(0.)))
+	model2.add(Dropout(0.3))
 	model2.add(Dense(75,kernel_initializer='he_uniform',activation='relu'))
-	model2.add(Dropout(0.1))
+	model2.add(Dropout(0.2))
 	model2.add(Dense(1,kernel_initializer='he_uniform'))
 	model2.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy'])
 	
@@ -77,19 +78,21 @@ def getClassifierScore(truth,pred):
 
 def testIfGPU():
 	print("--- GPU CHECK ---")
-	from theano import function, config, shared, tensor
+	
+	try:
+		from theano import function, config, shared, tensor
+	except ImportError:
+		import tensorflow as tf
+		sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
+		return
 	vlen = 10 * 30 * 768  # 10 x #cores x # threads per core
 	iters = 1000
 	rng = np.random.RandomState(22)
 	x = shared(np.asarray(rng.rand(vlen), config.floatX))
 	f = function([], tensor.exp(x))
 	print(f.maker.fgraph.toposort())
-	t0 = time.time()
 	for i in range(iters):
 		r = f()
-	t1 = time.time()
-	#~ print("Looping %d times took %f seconds" % (iters, t1 - t0))
-	#~ print("Result is %s" % (r,))
 	if np.any([isinstance(x.op, tensor.Elemwise) and
 	              ('Gpu' not in type(x.op).__name__)
 	              for x in f.maker.fgraph.toposort()]):
@@ -102,7 +105,7 @@ def testIfGPU():
 def trainOne(weights=True):
 	
 	ne = int(4e+5)				# 400k events _per energy range_
-	ntest = ne + int(3e+5)
+	ntest = ne + int(2e+5)
 	
 	
 	###
@@ -183,7 +186,10 @@ def trainOne(weights=True):
 		weights_prot = weight_test[ ~Y_test.astype(bool) ]
 		
 		fig2 = plt.figure()
-		binList = [x/50 for x in range(0,51)]
+		if n == 'sigmoid':
+			binList = [x/50 for x in range(0,51)]
+		else :
+			binList = [x for x in range(-60,60,2)]
 		plt.hist(elecs_p,bins=binList,label='e',histtype='step',color='green')
 		plt.hist(prots_p,bins=binList,label='p',histtype='step',color='red')
 		plt.xlabel('Classifier score')
@@ -198,11 +204,13 @@ def trainOne(weights=True):
 	
 	
 	
-def trainThree():
+def trainThree(er=None,rerun=False):
 	
 	for erange in ['20GeV_100GeV','100GeV_1TeV','1TeV_10TeV']:
 		
-		if os.path.isfile('out/model_'+erange+'.h5'): continue
+		if os.path.isfile('out/model_'+erange+'.h5') and not rerun : continue
+		
+		if er is not None and er != erange: continue
 		
 		try:
 			arr_e = np.load('DmlNtup_allElectron-v6r0p0_1GeV_10TeV_merged_'+erange+'.npy')
@@ -211,11 +219,14 @@ def trainThree():
 			print(erange)
 			raise
 		
-		n_e = int( 0.6* arr_e.shape[0] )
+		n_e = min( [int( 0.6* arr_e.shape[0]) , int(6e+5) ] )
 		train_e = arr_e[ 0:n_e ]
 		train_p = arr_p[ 0:n_e ]
-		test_e = arr_e[ n_e:-1 ]
-		test_p = arr_p[ n_e:-1 ]
+		
+		n_t = min( [n_e + int(4e+5) , arr_e.shape[0]] )
+		
+		test_e = arr_e[ n_e:n_t ]
+		test_p = arr_p[ n_e:n_t ]
 		
 		del arr_e , arr_p 
 		
@@ -239,16 +250,17 @@ def trainThree():
 		X_train = X_train / X_max
 		X_test = X_test / X_max
 		np.save('out/Xmax_'+erange+'.npy',X_max)
+		del X_max
 		
 		model = getModel(X_train)
 		
 		rdlronplt = ReduceLROnPlateau(monitor='loss',patience=3,min_lr=0.0001)	
 		callbacks = [rdlronplt]
-		history = model.fit(X_train,Y_train,batch_size=20,epochs=100,verbose=0,callbacks=callbacks,validation_data=(X_test,Y_test))
+		history = model.fit(X_train,Y_train,batch_size=5,epochs=200,verbose=0,callbacks=callbacks,validation_data=(X_test,Y_test))
 		
 		model2 = getLinearModel(X_train,model)
 		
-		
+		del X_train, Y_train
 		
 		fig1 = plt.figure()
 		plt.plot(history.history['loss'],label='loss')
@@ -291,10 +303,29 @@ if __name__ == '__main__':
 	for d in ['out','plots']:
 		if not os.path.isdir(d): os.mkdir(d)
 	
-	if not os.path.isfile('out/model_full_weighted.h5'):
-		trainOne()
+	# There HAS to be a smarter way to do that	
+	if len(sys.argv) > 1 :
+		if sys.argv[1] == '1':
+			trainOne()
+		elif sys.argv[1] == '2':
+			trainOne(False)
+		elif sys.argv[1] == '3':
+			trainThree()
+		elif sys.argv[1] == '4':
+			trainThree(er='20GeV_100GeV',rerun=True)
+		elif sys.argv[1] == '5':
+			trainThree(er='100GeV_1TeV',rerun=True)
+		elif sys.argv[1] == '6':	
+			trainThree(er='1TeV_10TeV',rerun=True)
+		else:
+			print("Doing nothing")
 	
-	if not os.path.isfile('out/model_1TeV_10TeV.h5'):
-		trainThree()
-	if not os.path.isfile('out/model_full_unweighted.h5'):
-		trainOne(False)
+	else:
+		if not os.path.isfile('out/model_full_weighted.h5'):
+			trainOne()
+		
+		if not os.path.isfile('out/model_1TeV_10TeV.h5'):
+			trainThree()
+		if not os.path.isfile('out/model_full_unweighted.h5'):
+			trainOne(False)
+	
