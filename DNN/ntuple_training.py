@@ -40,6 +40,7 @@ from keras.models import Sequential, load_model
 from keras.layers.core import Dense, Dropout
 from keras.callbacks import ModelCheckpoint, EarlyStopping, Callback, LearningRateScheduler, ReduceLROnPlateau
 from keras import regularizers
+from keras.optimizers import Adam
 
 
 def getModel(X_train):
@@ -51,7 +52,8 @@ def getModel(X_train):
 	model.add(Dense(75,kernel_initializer='he_uniform',activation='relu'))
 	model.add(Dropout(0.2))
 	model.add(Dense(1,kernel_initializer='he_uniform',activation='sigmoid'))
-	model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy'])
+	#~ model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy'])
+	model.compile(loss='binary_crossentropy', optimizer=Adam(lr=0.01), metrics=['binary_accuracy'])
 	return model
 	
 def getLinearModel(X_train,model):
@@ -101,11 +103,30 @@ def testIfGPU():
 	    print('Used the gpu')
 	
 	print('-------')
+
+class TimeHistory(Callback):
+	'''
+	https://stackoverflow.com/questions/43178668/record-the-computation-time-for-each-epoch-in-keras-during-model-fit
+	'''
+	def on_train_begin(self, logs={}):
+		self.times = []
+
+	def on_epoch_begin(self, batch, logs={}):
+		self.epoch_time_start = time.time()
+
+	def on_epoch_end(self, batch, logs={}):
+		self.times.append(time.time() - self.epoch_time_start)
+		print("Epoch time: ", time.time() - self.epoch_time_start )
+
+
 	
 def trainOne(weights=True):
 	
-	ne = int(4e+5)				# 400k events _per energy range_
-	ntest = ne + int(2e+5)
+	#~ ne = int(3e+5)				# 300k events _per energy range_
+	#~ ntest = ne + int(2e+5)
+	
+	ne = int(4e+4)
+	ntest = ne + int(3e+4)
 	
 	
 	###
@@ -155,16 +176,19 @@ def trainOne(weights=True):
 	X_max = X_train.max(axis=0)
 	X_train = X_train / X_max
 	X_test = X_test / X_max
-	np.save('out/Xmax_full.npy',X_max)
+	
 	
 	model = getModel(X_train)
-	rdlronplt = ReduceLROnPlateau(monitor='loss',patience=3,min_lr=0.0001)	
+	rdlronplt = ReduceLROnPlateau(monitor='loss',patience=2,min_lr=0.00005)	
+	time_c = TimeHistory()
 	if weights :
-		history = model.fit(X_train,Y_train,batch_size=20,epochs=100,verbose=0,callbacks=[rdlronplt],validation_data=(X_test,Y_test),sample_weight=weight_train)
+		np.save('out/Xmax_full_w.npy',X_max)
+		history = model.fit(X_train,Y_train,batch_size=40,epochs=50,verbose=2,callbacks=[rdlronplt,time_c],validation_data=(X_test,Y_test),sample_weight=weight_train)
 		model2 = getLinearModel(X_train,model)
 		model2.save('out/model_full_weighted.h5')
 	else:
-		history = model.fit(X_train,Y_train,batch_size=20,epochs=100,verbose=0,callbacks=[rdlronplt],validation_data=(X_test,Y_test))
+		np.save('out/Xmax_full_uw.npy',X_max)
+		history = model.fit(X_train,Y_train,batch_size=40,epochs=50,verbose=2,callbacks=[rdlronplt,time_c],validation_data=(X_test,Y_test))
 		model2 = getLinearModel(X_train,model)
 		model2.save('out/model_full_unweighted.h5')
 	
@@ -218,12 +242,16 @@ def trainThree(er=None,rerun=False):
 		except MemoryError :
 			print(erange)
 			raise
+		np.random.shuffle(arr_e)
+		np.random.shuffle(arr_p)
 		
-		n_e = min( [int( 0.6* arr_e.shape[0]) , int(6e+5) ] )
+		#~ n_e = min( [int( 0.6* arr_e.shape[0]) , int(6e+5) ] )
+		n_e = int(1e+5)
 		train_e = arr_e[ 0:n_e ]
 		train_p = arr_p[ 0:n_e ]
 		
-		n_t = min( [n_e + int(4e+5) , arr_e.shape[0]] )
+		#~ n_t = min( [n_e + int(4e+5) , arr_e.shape[0]] )
+		n_t = int(2e+5)
 		
 		test_e = arr_e[ n_e:n_t ]
 		test_p = arr_p[ n_e:n_t ]
@@ -254,9 +282,10 @@ def trainThree(er=None,rerun=False):
 		
 		model = getModel(X_train)
 		
-		rdlronplt = ReduceLROnPlateau(monitor='loss',patience=3,min_lr=0.0001)	
+		rdlronplt = ReduceLROnPlateau(monitor='loss',patience=2,min_lr=0.00005)	
+		#~ time_c = TimeHistory()
 		callbacks = [rdlronplt]
-		history = model.fit(X_train,Y_train,batch_size=5,epochs=200,verbose=0,callbacks=callbacks,validation_data=(X_test,Y_test))
+		history = model.fit(X_train,Y_train,batch_size=30,epochs=50,verbose=2,callbacks=callbacks,validation_data=(X_test,Y_test))
 		
 		model2 = getLinearModel(X_train,model)
 		
@@ -294,11 +323,11 @@ def trainThree(er=None,rerun=False):
 
 if __name__ == '__main__':
 	
-	try:
-		testIfGPU()
-	except Exception as Ex:
-		print("GPU Test failed")
-		print(str(Ex))
+	#~ try:
+		#~ testIfGPU()
+	#~ except Exception as Ex:
+		#~ print("GPU Test failed")
+		#~ print(str(Ex))
 	
 	for d in ['out','plots']:
 		if not os.path.isdir(d): os.mkdir(d)
