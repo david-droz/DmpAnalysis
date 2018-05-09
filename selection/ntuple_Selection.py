@@ -43,6 +43,18 @@ def computeWeight(TT,f):
 		raise Exception("Particle non identified from name: ", f)
 
 
+def selection(TT):
+	
+	selBits = TT.tt_selection_bits
+	
+	cuts = [1,2]			#  Cut #1 is HE trigger, cut #2 is fiducial cut
+	
+	for i in cuts:
+		if not (selBits & (0x1 << i)) : return False			# Bit mask shifting black magic fuckery
+	
+	return True
+
+
 def main(f):
 	
 	'''
@@ -69,6 +81,8 @@ def main(f):
 	
 	for n in range(0,TT.GetEntries()):
 		pev = TT.GetEntry(n)
+		
+		if not selection(TT): continue
 		
 		erec = TT.tt_bgoTotalE_GeV * 1000		# DNN trained in MeV
 		
@@ -103,7 +117,7 @@ def main(f):
 	
 	outname = 'outfiles/' + os.path.splitext(os.path.basename(f))[0] + '.npy'
 	
-	np.save(outname,predArray)
+	np.save(outname,predArray[np.any(predArray,axis=1)])
 	
 	TF.Close()
 	
