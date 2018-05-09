@@ -46,10 +46,12 @@ from keras.optimizers import Adam
 def getModel(X_train):
 	model = Sequential()
 	model.add(Dense(250,input_shape=(X_train.shape[1],),kernel_initializer='he_uniform',activation='relu',kernel_regularizer=regularizers.l2(0.),activity_regularizer=regularizers.l2(0.)))
-	model.add(Dropout(0.3))
+	model.add(Dropout(0.4))
 	model.add(Dense(150,kernel_initializer='he_uniform',activation='relu',kernel_regularizer=regularizers.l2(0.)))
 	model.add(Dropout(0.3))
-	model.add(Dense(75,kernel_initializer='he_uniform',activation='relu'))
+	model.add(Dense(100,kernel_initializer='he_uniform',activation='relu'))
+	model.add(Dropout(0.2))
+	model.add(Dense(50,kernel_initializer='he_uniform',activation='relu'))
 	model.add(Dropout(0.2))
 	model.add(Dense(1,kernel_initializer='he_uniform',activation='sigmoid'))
 	#~ model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy'])
@@ -62,7 +64,9 @@ def getLinearModel(X_train,model):
 	model2.add(Dropout(0.3))
 	model2.add(Dense(150,kernel_initializer='he_uniform',activation='relu',kernel_regularizer=regularizers.l2(0.)))
 	model2.add(Dropout(0.3))
-	model2.add(Dense(75,kernel_initializer='he_uniform',activation='relu'))
+	model2.add(Dense(100,kernel_initializer='he_uniform',activation='relu'))
+	model2.add(Dropout(0.2))
+	model2.add(Dense(50,kernel_initializer='he_uniform',activation='relu'))
 	model2.add(Dropout(0.2))
 	model2.add(Dense(1,kernel_initializer='he_uniform'))
 	model2.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy'])
@@ -122,11 +126,11 @@ class TimeHistory(Callback):
 	
 def trainOne(weights=True):
 	
-	#~ ne = int(3e+5)				# 300k events _per energy range_
-	#~ ntest = ne + int(2e+5)
-	
-	ne = int(4e+4)
-	ntest = ne + int(3e+4)
+	ne = int(3e+5)				# 300k events _per energy range_
+	ntest = ne + int(2e+5)
+	#~ 
+	#~ ne = int(4e+4)
+	#~ ntest = ne + int(3e+4)
 	
 	
 	###
@@ -183,12 +187,12 @@ def trainOne(weights=True):
 	time_c = TimeHistory()
 	if weights :
 		np.save('out/Xmax_full_w.npy',X_max)
-		history = model.fit(X_train,Y_train,batch_size=40,epochs=50,verbose=2,callbacks=[rdlronplt,time_c],validation_data=(X_test,Y_test),sample_weight=weight_train)
+		history = model.fit(X_train,Y_train,batch_size=40,epochs=80,verbose=2,callbacks=[rdlronplt,time_c],validation_data=(X_test,Y_test),sample_weight=weight_train)
 		model2 = getLinearModel(X_train,model)
 		model2.save('out/model_full_weighted.h5')
 	else:
 		np.save('out/Xmax_full_uw.npy',X_max)
-		history = model.fit(X_train,Y_train,batch_size=40,epochs=50,verbose=2,callbacks=[rdlronplt,time_c],validation_data=(X_test,Y_test))
+		history = model.fit(X_train,Y_train,batch_size=40,epochs=80,verbose=2,callbacks=[rdlronplt,time_c],validation_data=(X_test,Y_test))
 		model2 = getLinearModel(X_train,model)
 		model2.save('out/model_full_unweighted.h5')
 	
@@ -245,13 +249,13 @@ def trainThree(er=None,rerun=False):
 		np.random.shuffle(arr_e)
 		np.random.shuffle(arr_p)
 		
-		#~ n_e = min( [int( 0.6* arr_e.shape[0]) , int(6e+5) ] )
-		n_e = int(1e+5)
+		n_e = min( [int( 0.6* arr_e.shape[0]) , int(6e+5) ] )
+		#~ n_e = int(1e+5)
 		train_e = arr_e[ 0:n_e ]
 		train_p = arr_p[ 0:n_e ]
 		
-		#~ n_t = min( [n_e + int(4e+5) , arr_e.shape[0]] )
-		n_t = int(2e+5)
+		n_t = min( [n_e + int(4e+5) , arr_e.shape[0]] )
+		#~ n_t = int(2e+5)
 		
 		test_e = arr_e[ n_e:n_t ]
 		test_p = arr_p[ n_e:n_t ]
@@ -285,7 +289,7 @@ def trainThree(er=None,rerun=False):
 		rdlronplt = ReduceLROnPlateau(monitor='loss',patience=2,min_lr=0.00005)	
 		#~ time_c = TimeHistory()
 		callbacks = [rdlronplt]
-		history = model.fit(X_train,Y_train,batch_size=30,epochs=50,verbose=2,callbacks=callbacks,validation_data=(X_test,Y_test))
+		history = model.fit(X_train,Y_train,batch_size=40,epochs=80,verbose=2,callbacks=callbacks,validation_data=(X_test,Y_test))
 		
 		model2 = getLinearModel(X_train,model)
 		
