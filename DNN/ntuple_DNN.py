@@ -78,10 +78,13 @@ class MLntuple(object):
 			keyName = os.path.splitext(os.path.basename(d))[0]
 			self.predictions[keyName] = np.load(d)
 		
-	def run(self):
+	def run(self,suffix='DNN'):
 		if not os.path.isdir(self.outdir): os.mkdir(self.outdir)
 		
 		for f in self.infiles:
+			
+			newF = self.outdir + "/" + os.path.basename(f).replace(".root","."+suffix+".root")
+			if os.path.isfile(newF): continue
 			
 			TF = TFile(f,'READ')
 			TT = TF.Get("DmlNtup")
@@ -150,20 +153,22 @@ class MLntuple(object):
 
 if __name__ == '__main__' :
 	
+	suffix = 'DNN'
+	
 	analyser = MLntuple()
 	analyser.addFile(sys.argv[1])
-	analyser.run()
+	analyser.run(suffix=suffix)
 	
-	import matplotlib
-	matplotlib.use('Agg')
-	import matplotlib.pyplot as plt
+	#~ import matplotlib
+	#~ matplotlib.use('Agg')
+	#~ import matplotlib.pyplot as plt
 	
-	d = analyser.getPredictions()
-	fig1 = plt.figure()
-	for f in d.keys():
-		arr = d[f]
-		arr = arr[ np.absolute(arr) < 40 ]
-		plt.hist(arr,50,histtype='step',label=os.path.basename(f))
-	plt.legend(loc='best')
-	plt.savefig('test')
-	analyser.writePredictions()
+	#~ d = analyser.getPredictions()
+	#~ fig1 = plt.figure()
+	#~ for f in d.keys():
+		#~ arr = d[f]
+		#~ arr = arr[ np.absolute(arr) < 40 ]
+		#~ plt.hist(arr,50,histtype='step',label=os.path.basename(f))
+	#~ plt.legend(loc='best')
+	#~ plt.savefig('test')
+	analyser.writePredictions(suffix=suffix)
