@@ -74,15 +74,15 @@ def analysis(files,pid,nr):
 				edep[i,j] = pev.pEvtBgoRec().GetEdep(i,j)
 		a.append(edep)
 		
-			try:
-				if pev.pEvtSimuPrimaries().pvpart_pdg == 11 :		# Electron
-					y.append(1)
-				elif pev.pEvtSimuPrimaries().pvpart_pdg == 22 :		# Photon
-					y.append(2)
-				else:												# Proton
-					y.append(0)
-			except:													# Flight
+		try:
+			if pev.pEvtSimuPrimaries().pvpart_pdg == 11 :		# Electron
+				y.append(1)
+			elif pev.pEvtSimuPrimaries().pvpart_pdg == 22 :		# Photon
+				y.append(2)
+			else:												# Proton
 				y.append(0)
+		except:													# Flight
+			y.append(0)
 		
 		
 	arr = np.array(a)	
