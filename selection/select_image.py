@@ -71,7 +71,7 @@ def analysis(files,pid,nr):
 		edep = np.zeros((14,21))
 		for i in xrange(14):
 			for j in xrange(21):
-			edep[i,j] = pev.pEvtBgoRec().GetEdep(i,j)
+				edep[i,j] = pev.pEvtBgoRec().GetEdep(i,j)
 		a.append(edep)
 		
 			try:
