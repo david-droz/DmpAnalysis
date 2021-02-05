@@ -1,6 +1,6 @@
 '''
 
-Single function: from a DmpEvent instance, returns a boolean on whether or not this event should be kept.
+BTselection : Single function: from a DmpEvent instance, returns a boolean on whether or not this event should be kept.
 
 Source: Andrii's code
 
@@ -21,7 +21,7 @@ gSystem.Load("libDmpEvent.so")
 from ROOT import *
 import pickle
 
-from BTcuts import *
+from BTcuts import *   # Import global constants and definitions
 
 
 

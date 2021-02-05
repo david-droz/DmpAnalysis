@@ -6,7 +6,7 @@ import numpy as np
 def getXTRL(bgorec):
 	
 	'''
-	From a given event, returns the energy ratio and energy RMS in all BGO layers, and XTR/XTRL/zeta/whatever-it-is-called
+	From a given event, returns the energy ratio and energy RMS in all BGO layers, and XTRL/zeta
 	'''
 	
 	NBGOLAYERS  = 14

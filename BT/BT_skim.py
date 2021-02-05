@@ -1,12 +1,6 @@
 '''
 
-Whatever quests drives you 
-To read this source code,
-Forget it.
-You will find nothing
-In these desolated wastelands.
 
-----------------
 
 Select BeamTest data/MC and write ROOT files
 

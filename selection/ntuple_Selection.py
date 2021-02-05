@@ -45,12 +45,17 @@ def computeWeight(TT,f):
 
 def selection(TT):
 	
-	selBits = TT.tt_selection_bits
+	#~ selBits = TT.tt_selection_bits
+	#~ cuts = [1,2]			#  Cut #1 is HE trigger, cut #2 is fiducial cut
+	#~ for i in cuts:
+		#~ if not (selBits & (0x1 << i)) : return False			# Bit mask shifting black magic fuckery
+		
+	##
+		
+	inSaa = not (TT.tt_selection_bits & (0x1 << 0))		# Cut #0 is SAA, cut #27 is "allCases" (full preselection)
+	pass_all_cases = (TT.tt_decision_bits & (0x1 << 27))	# difference between selection_bits and decision_bits ?
 	
-	cuts = [1,2]			#  Cut #1 is HE trigger, cut #2 is fiducial cut
-	
-	for i in cuts:
-		if not (selBits & (0x1 << i)) : return False			# Bit mask shifting black magic fuckery
+	if inSaa or not pass_all_cases : return False
 	
 	return True
 
@@ -72,27 +77,41 @@ def main(f):
 		47 : True energy (EKin). Set to 0 if missing (i.e. flight data)
 		48 : Event weight (weight according to energy spectrum)
 		49 : XTRL
-		50 : Particle ID (0 for proton, 1 for electron)
+		50 - 63 : Fraction of energy in BGO layer i
+		64 - 77 : Log of "
+		78 : Particle ID (0 for proton, 1 for electron)
 	'''
 
 	TF = TFile(f,'READ')
 	TT = TF.Get("DmlNtup")
-	predArray = np.zeros( (int(TT.GetEntries()), 51) )
+	#~ predArray = np.zeros( (int(TT.GetEntries()), 51) )
+	predArray = np.zeros( (int(TT.GetEntries()), 79) )
+	
+	foundAnError = 0
 	
 	for n in range(0,TT.GetEntries()):
 		pev = TT.GetEntry(n)
 		
 		if not selection(TT): continue
 		
-		erec = TT.tt_bgoTotalE_GeV * 1000		# DNN trained in MeV
+		erec = TT.tt_bgoTotalEcorr_GeV * 1000		# DNN trained in MeV
 		
 		for frac_i in range(0,14):
 			predArray[n,frac_i] = getattr(TT,"tt_F"+str(frac_i)) * erec	# Energy fraction goes like tt_F0, tt_F1, ...
-			#~ predArray[n,frac_i] = getattr(TT,"tt_F"+str(frac_i))
+			predArray[n,frac_i+50] = getattr(TT,"tt_F"+str(frac_i))
+			predArray[n,frac_i+50+14] = np.log10(getattr(TT,"tt_F"+str(frac_i)))
 		for rms_i in range(0,14):
 			predArray[n,rms_i+14] = getattr(TT,"tt_Rms"+str(rms_i))
 		for hits_i in range(0,14):
-			predArray[n,hits_i+28] = ord(getattr(TT,"tt_nBarLayer"+str(hits_i)))
+			try:
+				predArray[n,hits_i+28] = ord(getattr(TT,"tt_nBarLayer"+str(hits_i)))
+			except AttributeError :
+				if not foundAnError : 
+					print("--- ERROR IN FILE: ", f)
+					foundAnError += 1
+				predArray[n,hits_i+28] = 0		# Not using BGO hits anyways
+				
+				
 					
 		predArray[n,42] = TT.tt_Rmsl
 		predArray[n,43] = TT.tt_Rmsr
@@ -105,11 +124,12 @@ def main(f):
 		
 		predArray[n,46] = tgZ*180./math.pi
 		predArray[n,47] = TT.tt_ekin
-		predArray[n,48] = computeWeight(TT,f)
+		#~ predArray[n,48] = computeWeight(TT,f)
+		predArray[n,48] = TT.tt_evtPoid
 		predArray[n,49] = TT.tt_Xtrl
 		
 		if "Electron" in f:
-			predArray[n,50] = 1
+			predArray[n,-1] = 1
 		
 	# END FOR
 	
@@ -124,4 +144,8 @@ def main(f):
 
 if __name__ == '__main__' :
 	
-	main(sys.argv[1])
+	try:
+		main(sys.argv[1])
+	except AttributeError :
+		print("--- ERROR IN : ", sys.argv[1])
+		raise

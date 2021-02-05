@@ -7,6 +7,8 @@ Train DNN on Xin's ntuples. Go for three methods:
 - Train a single model on full spectrum, no weights
 
 
+
+--- Without selection:
 DmlNtup_allElectron-v6r0p0_1GeV_10TeV_merged_100GeV_1TeV.npy (1 291 379, 51)
 DmlNtup_allElectron-v6r0p0_1GeV_10TeV_merged_1TeV_10TeV.npy (1 403 014, 51)
 DmlNtup_allElectron-v6r0p0_1GeV_10TeV_merged_20GeV_100GeV.npy (2 721 011, 51)
@@ -14,6 +16,15 @@ DmlNtup_allElectron-v6r0p0_1GeV_10TeV_merged_20GeV_100GeV.npy (2 721 011, 51)
 DmlNtup_allProton-v6r0p0_1GeV_100TeV_merged_100GeV_1TeV.npy (7 973 173, 51)
 DmlNtup_allProton-v6r0p0_1GeV_100TeV_merged_1TeV_10TeV.npy (4 687 308, 51)
 DmlNtup_allProton-v6r0p0_1GeV_100TeV_merged_20GeV_100GeV.npy (5 059 310, 51)
+
+--- With selection:
+DmlNtup_allElectron-v6r0p0_1GeV_10TeV_merged_100GeV_1TeV.npy (548 945, 51)
+DmlNtup_allElectron-v6r0p0_1GeV_10TeV_merged_1TeV_10TeV.npy (525 216, 51)
+DmlNtup_allElectron-v6r0p0_1GeV_10TeV_merged_20GeV_100GeV.npy (1 340 724, 51)
+
+DmlNtup_allProton-v6r0p0_1GeV_100TeV_merged_100GeV_1TeV.npy (794 708, 51)
+DmlNtup_allProton-v6r0p0_1GeV_100TeV_merged_1TeV_10TeV.npy (658 606, 51)
+DmlNtup_allProton-v6r0p0_1GeV_100TeV_merged_20GeV_100GeV.npy (402 337, 51)
 
 '''
 
@@ -178,8 +189,12 @@ def trainOne(weights=True):
 	###
 	
 	X_max = X_train.max(axis=0)
-	X_train = X_train / X_max
-	X_test = X_test / X_max
+	#~ X_train = X_train / X_max
+	#~ X_test = X_test / X_max
+	X_m = X_train.mean(axis=0)
+	X_std = X_train.std(axis=0)
+	X_train = (X_train - X_m)/X_std
+	X_test = (X_test - X_m)/X_std
 	
 	
 	model = getModel(X_train)
@@ -187,12 +202,12 @@ def trainOne(weights=True):
 	time_c = TimeHistory()
 	if weights :
 		np.save('out/Xmax_full_w.npy',X_max)
-		history = model.fit(X_train,Y_train,batch_size=40,epochs=80,verbose=2,callbacks=[rdlronplt,time_c],validation_data=(X_test,Y_test),sample_weight=weight_train)
+		history = model.fit(X_train,Y_train,batch_size=40,epochs=200,verbose=2,callbacks=[rdlronplt,time_c],validation_data=(X_test,Y_test),sample_weight=weight_train)
 		model2 = getLinearModel(X_train,model)
 		model2.save('out/model_full_weighted.h5')
 	else:
 		np.save('out/Xmax_full_uw.npy',X_max)
-		history = model.fit(X_train,Y_train,batch_size=40,epochs=80,verbose=2,callbacks=[rdlronplt,time_c],validation_data=(X_test,Y_test))
+		history = model.fit(X_train,Y_train,batch_size=40,epochs=200,verbose=2,callbacks=[rdlronplt,time_c],validation_data=(X_test,Y_test))
 		model2 = getLinearModel(X_train,model)
 		model2.save('out/model_full_unweighted.h5')
 	
@@ -249,13 +264,17 @@ def trainThree(er=None,rerun=False):
 		np.random.shuffle(arr_e)
 		np.random.shuffle(arr_p)
 		
-		n_e = min( [int( 0.6* arr_e.shape[0]) , int(6e+5) ] )
+		if arr_e.shape[0] < arr_p.shape[0] :
+			n_e = min( [int( 0.6* arr_e.shape[0]) , int(6e+5) ] )
+			n_t = min( [n_e + int(4e+5) , arr_e.shape[0]] )
+		else:
+			n_e = min( [int( 0.6* arr_p.shape[0]) , int(6e+5) ] )
+			n_t = min( [n_e + int(4e+5) , arr_p.shape[0]] )
+		
 		#~ n_e = int(1e+5)
+		#~ n_t = int(2e+5)
 		train_e = arr_e[ 0:n_e ]
 		train_p = arr_p[ 0:n_e ]
-		
-		n_t = min( [n_e + int(4e+5) , arr_e.shape[0]] )
-		#~ n_t = int(2e+5)
 		
 		test_e = arr_e[ n_e:n_t ]
 		test_p = arr_p[ n_e:n_t ]
@@ -279,8 +298,12 @@ def trainThree(er=None,rerun=False):
 		
 		
 		X_max = X_train.max(axis=0)
-		X_train = X_train / X_max
-		X_test = X_test / X_max
+		#~ X_train = X_train / X_max
+		#~ X_test = X_test / X_max
+		X_m = X_train.mean(axis=0)
+		X_std = X_train.std(axis=0)
+		X_train = (X_train - X_m)/X_std
+		X_test = (X_test - X_m)/X_std
 		np.save('out/Xmax_'+erange+'.npy',X_max)
 		del X_max
 		
@@ -289,7 +312,11 @@ def trainThree(er=None,rerun=False):
 		rdlronplt = ReduceLROnPlateau(monitor='loss',patience=2,min_lr=0.00005)	
 		#~ time_c = TimeHistory()
 		callbacks = [rdlronplt]
-		history = model.fit(X_train,Y_train,batch_size=40,epochs=80,verbose=2,callbacks=callbacks,validation_data=(X_test,Y_test))
+		if erange == '20GeV_100GeV':
+			nepoch = 150
+		else:
+			nepoch = 80
+		history = model.fit(X_train,Y_train,batch_size=40,epochs=nepoch,verbose=2,callbacks=callbacks,validation_data=(X_test,Y_test))
 		
 		model2 = getLinearModel(X_train,model)
 		
@@ -310,7 +337,10 @@ def trainThree(er=None,rerun=False):
 			elecs_p, prots_p = getClassifierScore(Y_test,predictions)
 			
 			fig2 = plt.figure()
-			binList = [x/50 for x in range(0,51)]
+			if n == 'sigmoid':
+				binList = [x/50 for x in range(0,51)]
+			else :
+				binList = [x for x in range(-60,60,2)]
 			plt.hist(elecs_p,bins=binList,label='e',histtype='step',color='green')
 			plt.hist(prots_p,bins=binList,label='p',histtype='step',color='red')
 			plt.xlabel('Classifier score')
@@ -339,7 +369,8 @@ if __name__ == '__main__':
 	# There HAS to be a smarter way to do that	
 	if len(sys.argv) > 1 :
 		if sys.argv[1] == '1':
-			trainOne()
+			#~ trainOne()
+			pass
 		elif sys.argv[1] == '2':
 			trainOne(False)
 		elif sys.argv[1] == '3':

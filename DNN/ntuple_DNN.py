@@ -81,59 +81,61 @@ class MLntuple(object):
 				continue
 			copyfile(f,newF)
 			
-			TF = TFile(newF,'update')
-			TT = TF.Get("DmlNtup")
-			
-			dicOfArrays = {}
-			dicOfBranches = {}
-			for k in self.models.keys():
-				dicOfArrays[k] = array("f",[0.0])
-				dicOfBranches[k] = TT.Branch( "MLscore_"+k,dicOfArrays[k], "MLscore_"+k+'/F')
-			
-			for n in range(0,TT.GetEntries()):
-				predArray = np.zeros( (1,47) ) 
-				pev = TT.GetEntry(n)
-				erec = TT.tt_bgoTotalE_GeV * 1000		# DNN trained in MeV
+			try:
+				TF = TFile(newF,'update')
+				TT = TF.Get("DmlNtup")
 				
-				for frac_i in range(0,14):
-					predArray[0,frac_i] = getattr(TT,"tt_F"+str(frac_i)) * erec	# Energy fraction goes like tt_F0, tt_F1, ...
-					#~ predArray[n,frac_i] = getattr(TT,"tt_F"+str(frac_i))
-				for rms_i in range(0,14):
-					predArray[0,rms_i+14] = getattr(TT,"tt_Rms"+str(rms_i))
-				for hits_i in range(0,14):
-					try:
-						predArray[0,hits_i+28] = ord(getattr(TT,"tt_nBarLayer"+str(hits_i)))
-					except AttributeError:
-						predArray[0,hits_i+28] = 0
-				
-				predArray[0,42] = TT.tt_Rmsl
-				predArray[0,43] = TT.tt_Rmsr			
-				predArray[0,44] = erec
-				predArray[0,45] = TT.tt_nBgoHits
-				
-				XZ = TT.tt_bgoRecSlopeX
-				YZ = TT.tt_bgoRecSlopeY
-				tgZ = math.atan(np.sqrt( (XZ*XZ) + (YZ*YZ) ) )
-				
-				predArray[0,46] = tgZ*180./math.pi
-				
-				#Prediction part
+				dicOfArrays = {}
+				dicOfBranches = {}
 				for k in self.models.keys():
+					dicOfArrays[k] = array("f",[0.0])
+					dicOfBranches[k] = TT.Branch( "MLscore_"+k,dicOfArrays[k], "MLscore_"+k+'/F')
+				
+				for n in range(0,TT.GetEntries()):
+					predArray = np.zeros( (1,47) ) 
+					pev = TT.GetEntry(n)
+					erec = TT.tt_bgoTotalE_GeV * 1000		# DNN trained in MeV
 					
-					print(self.modelIndices[k])
+					for frac_i in range(0,14):
+						predArray[0,frac_i] = getattr(TT,"tt_F"+str(frac_i)) * erec	# Energy fraction goes like tt_F0, tt_F1, ...
+						#~ predArray[n,frac_i] = getattr(TT,"tt_F"+str(frac_i))
+					for rms_i in range(0,14):
+						predArray[0,rms_i+14] = getattr(TT,"tt_Rms"+str(rms_i))
+					for hits_i in range(0,14):
+						try:
+							predArray[0,hits_i+28] = ord(getattr(TT,"tt_nBarLayer"+str(hits_i)))
+						except AttributeError:
+							predArray[0,hits_i+28] = 0
 					
-					try:
-						self.predictions[k][os.path.basename(f)].append( self.models[k].predict( predArray[:,self.modelIndices[k]]/self.modelXmax[k]) )
-					except KeyError:
-						self.predictions[k][os.path.basename(f)] = [ self.models[k].predict( predArray[:,self.modelIndices[k]]/self.modelXmax[k]) ]
+					predArray[0,42] = TT.tt_Rmsl
+					predArray[0,43] = TT.tt_Rmsr			
+					predArray[0,44] = erec
+					predArray[0,45] = TT.tt_nBgoHits
+					
+					XZ = TT.tt_bgoRecSlopeX
+					YZ = TT.tt_bgoRecSlopeY
+					tgZ = math.atan(np.sqrt( (XZ*XZ) + (YZ*YZ) ) )
+					
+					predArray[0,46] = tgZ*180./math.pi
+					
+					#Prediction part
+					for k in self.models.keys():
 						
-					
-					
-					dicOfArrays[k][0] = self.predictions[k][os.path.basename(f)][n]
-					dicOfBranches[k].Fill()
-			# END FOR
-			TT.Write()
-			TF.Close()
+						try:
+							self.predictions[k][os.path.basename(f)].append( self.models[k].predict( predArray[:,self.modelIndices[k]]/self.modelXmax[k]) )
+						except KeyError:
+							self.predictions[k][os.path.basename(f)] = [ self.models[k].predict( predArray[:,self.modelIndices[k]]/self.modelXmax[k]) ]
+							
+						
+						
+						dicOfArrays[k][0] = self.predictions[k][os.path.basename(f)][n]
+						dicOfBranches[k].Fill()
+				# END FOR
+				TT.Write()
+				TF.Close()
+			except:
+				os.remove(newF)
+				raise
 			
 	def savePredictions(self,outfile):
 		with open(outfile,'w') as f:
