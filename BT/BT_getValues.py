@@ -306,7 +306,7 @@ def getValues(bgorec, b_bgorec, nudraw, b_nudraw, evtheader, psdhits, bgohits, s
 		83 : Particle ID (0 for proton, 1 for electron)
 	'''
 	
-	predArray = np.zeros( 84) , dtype='float32')
+	predArray = np.zeros( (84,) , dtype='float32')
 	
 	ELayer, ELayerFrac, RMS, zeta = getXTRL( bgorec )
 	
