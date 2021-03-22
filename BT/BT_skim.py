@@ -62,7 +62,7 @@ def analysis(infile,nr,dataset,runtype):
 		return
 		
 	# Build file name for skimmed data	
-	skim_out = '/beegfs/dampe/prod/UserSpace/ddroz/BT/'
+	skim_out = '/beegfs/dampe/prod/UserSpace/ddroz/BT2021/'
 	if not os.path.isdir(skim_out): os.mkdir(skim_out)
 	
 	if runtype == "MC":
